@@ -34,7 +34,7 @@ get_camera_list=http://172.31.49.252/processor-control/collect/cameras/
 ;oss存储配置
 
 
-；用户登陆
+;用户登陆
 user_name       =admin
 password        =admin
 

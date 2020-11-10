@@ -35,7 +35,7 @@ var statusText = map[int]string{
 	StatusProcessing:           "Processing",
 	StatusEarlyHints:           "Early Hints",
 	StatusRepeatedRegistration: "Repeated Registration",
-	StatusPleaseRegister:       "Please Register",
+	StatusPleaseRegister:       "UserName Error",
 	StatusPasswordError:        "Password Error",
 	StatusSuccessfully:         "QuerySuccess",
 	StatusExportExcelError:     "Export Excel Error",

@@ -21,7 +21,7 @@ func RouteInit(IpAddress string) {
 	//url := ginSwagger.URL("http://127.0.0.1:8077/swagger/doc.json")
 	//router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 
-	apiV1 := router.Group("/operationplatform/api/v1")
+	apiV1 := router.Group("/vehicleLicensePlateRecognitionGateway/api/v1")
 	APIV1Init(apiV1)
 
 	http.Handle("/", router)
@@ -41,7 +41,7 @@ func AuthAPIInit(route *gin.RouterGroup) {
 	//用户注册
 	//route.POST("/user/register", controller.Register)
 	//用户登录
-	route.GET("/user/imagecaptcha", controller.Imagecaptcha)
+	//route.GET("/user/imagecaptcha", controller.Imagecaptcha)
 	route.POST("/user/login", controller.Login)
 
 }

@@ -18,7 +18,8 @@ func main() {
 	service.GwCaptureInformationUploadIpAddress = conf.GwCaptureInformationUploadIpAddress
 	service.Gettoken = conf.Gettoken
 	service.GetCameraListip = conf.GetCameraList
-
+	service.UserName = conf.UserName
+	service.Password = conf.Password
 	router.RouteInit(IpAddress)
 
 	tiker := time.NewTicker(time.Microsecond * 1) //每15秒执行一下
