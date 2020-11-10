@@ -5,8 +5,8 @@ import (
 	"gopkg.in/ini.v1"
 )
 
-var conffilepath = "./conf/config.toml" // go run main.go
-//var conffilepath = "../conf/config.toml"
+//var conffilepath = "./conf/config.toml" // go run main.go
+var conffilepath = "../conf/config.toml"
 
 type Config struct { //配置文件要通过tag来指定配置文件中的名称
 	//mysql 配置
@@ -32,6 +32,16 @@ type Config struct { //配置文件要通过tag来指定配置文件中的名称
 
 	//外网id
 	IpAddress string `ini:"ip_address"`
+
+	GwCaptureInformationUploadIpAddress string `ini:"gwCaptureInformationUpload_ip_address"`
+	Gettoken                            string `ini:"get_token"`
+	GetCameraList                       string `ini:"get_camera_list"`
+
+	UserName string `ini:"user_name"`
+	Password string `ini:"password"`
+
+	//
+
 }
 
 //读取配置文件并转成结构体

@@ -15,12 +15,26 @@ log_rotationSize = 1000000000;   ;//10M[10485760] 日志切割时间间隔（["1
 log_Path         = "./log"
 log_FileName     = "vehicleLicensePlateRecognition.log"
 
-
 ;[redis开发]
 redis_addr          = "192.168.200.204:6379"
 redis_databasename  = 2
 
-
 ;[ip_address]结算监控6089 运维管理6077 车牌识别6066
-ip_address          =192.168.200.204:6077
+ip_address          =192.168.200.204:6066
+
+;1.前置机抓拍信息上传接口 http://172.31.49.252/data-collect/report/frontend
+gwCaptureInformationUpload_ip_address = http://172.31.49.252/data-collect/report/frontend
+
+;2.获取token
+get_token=http://172.31.49.252/processor-control/collect/token/
+
+;3.根据token获取camera列表
+get_camera_list=http://172.31.49.252/processor-control/collect/cameras/
+
+;oss存储配置
+
+
+；用户登陆
+user_name       =admin
+password        =admin
 

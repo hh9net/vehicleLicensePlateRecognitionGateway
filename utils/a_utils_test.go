@@ -14,3 +14,15 @@ func TestByteToMB(t *testing.T) {
 
 	logrus.Print(ByteToGB(4029083648))
 }
+
+func TestQingStorGetFile(t *testing.T) {
+	QingStorGetFile("222.zip")
+}
+
+func TestQingStorUpload(t *testing.T) {
+	QingStorUpload("222.zip")
+}
+
+func TestQingStorDeleteFile(t *testing.T) {
+	QingStorDeleteFile("222.zip")
+}
