@@ -40,6 +40,8 @@ type Config struct { //配置文件要通过tag来指定配置文件中的名称
 	UserName string `ini:"user_name"`
 	Password string `ini:"password"`
 
+	Deviceid string `ini:"device_id"`
+
 	//
 
 }

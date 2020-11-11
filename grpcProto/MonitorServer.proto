@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+package monitorserver;
+
+// The greeting service definition.
+service MonitorServer {
+  rpc SayHello (HelloRequest) returns (HelloReply) {}
+  rpc GetCameraConfig (CameraConfigRequest) returns (CameraConfigReply) {}
+  rpc NotifyNewPictureCapture(NewPictureCaptureRequest) returns  (NewPictureCaptureReply) {}
+  rpc GetPicIndex (PictureIndexRequest) returns (PictureIndexReply) {}
+  rpc HeartbeatToLocalServer(HeartbeatMessageRequest) returns  (HeartbeatMessageReply) {}
+}
+ 
+
+// The request message containing the user's name.
+message HelloRequest {
+  string name = 1;
+}
+
+// The response message containing the greetings
+message HelloReply {
+  string message = 1;
+}
+
+
+message HeartbeatMessageRequest {
+  string processid = 1; 
+  string cameraid=2; 
+}
+
+message HeartbeatMessageReply {
+  string processid = 1; 
+  string cameraid=2; 
+}
+
+
+message PictureIndexRequest {
+  string processid = 1; 
+  string cameraid=2;  
+}
+
+message PictureIndexReply {
+  string processid = 1; 
+  string cameraid  = 2;  
+  string picindex  = 3;
+}
+
+
+message NewPictureCaptureRequest {
+  string Processid      =  1; 
+  string Cameraid       =  2;  
+  string LocalPicturePath= 3;
+  string LocalXmldataPath= 4;
+  string Plate           = 5;
+  string CaptureDateTime = 6;
+  
+}
+
+message NewPictureCaptureReply {
+  string Processid      =  1; 
+  string Cameraid       =  2;  
+  
+}
+
+
+message CameraConfigRequest {
+  string processid = 1; 
+  string cameraid  = 2;  
+}
+
+message CameraConfigReply {
+  string processid  = 1; 
+  string cameraid   = 2;
+  string name       = 3;
+  string stationId  = 4;
+  int32  laneType   = 5;
+  string devCompId  = 6;
+  int32  description= 7;
+  string devIp      = 8;
+  int32  port       = 9;
+  string userName   = 10;
+  string password   = 11;
+}
+
+
+
+
+

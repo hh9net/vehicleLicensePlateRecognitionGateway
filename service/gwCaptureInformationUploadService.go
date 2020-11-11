@@ -21,7 +21,8 @@ func GwCaptureInformationUploadPostWithXML(data *dto.DateXML) (*dto.ResultRespXM
 	//post请求提交xml数据
 
 	//data := dto.DateXML{}
-	ba, _ := xml.Marshal(data)
+	//MarshalIndent 有缩进 xml.Marshal ：无缩进
+	ba, _ := xml.MarshalIndent(data, "  ", "  ")
 	log.Println("+++++++++", string(ba))
 
 	log.Println("Address:", GwCaptureInformationUploadIpAddress, data)
@@ -34,6 +35,7 @@ func GwCaptureInformationUploadPostWithXML(data *dto.DateXML) (*dto.ResultRespXM
 	}
 	body, _ := ioutil.ReadAll(resp.Body)
 	Resp := new(dto.ResultRespXML)
+	//
 	unmerr := json.Unmarshal(body, &Resp)
 	if unmerr != nil {
 		log.Println("json.Unmarshal error", unmerr)

@@ -32,6 +32,10 @@ get_token=http://172.31.49.252/processor-control/collect/token/
 get_camera_list=http://172.31.49.252/processor-control/collect/cameras/
 
 ;oss存储配置
+oss=""
+
+//网关设备id 据此获取网关token
+device_id        = sfasdfdasfsdf
 
 
 ;用户登陆

@@ -1,0 +1,37 @@
+syntax="proto3";
+package grpcProto;
+
+//定义服务
+service HelloServer{
+
+//rpc服务的函数名（传入参数）return （返回参数）
+
+  //打招呼的服务
+  rpc Sayhello (HelloReq) returns (HelloRsp){}
+  // 说名字的服务
+  rpc Sayname(NameReq) returns (NameRsp){}
+
+}
+
+//客户端发送给服务端
+message HelloReq{
+    string msg =1;
+}
+
+//服务端返回给客户端
+message HelloRsp{
+   string msg =1;
+}
+
+
+//客户端发送给服务端
+message NameReq{
+ string name =1;
+}
+
+//服务端返回给客户端
+message NameRsp{
+   string name =1;
+}
+
+

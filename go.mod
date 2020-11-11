@@ -9,6 +9,7 @@ require (
 	github.com/garyburd/redigo v1.6.2
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-sql-driver/mysql v1.5.0
+	github.com/golang/protobuf v1.4.1
 	github.com/jinzhu/gorm v1.9.16
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
 	github.com/lestrrat-go/strftime v1.0.3 // indirect
@@ -20,5 +21,7 @@ require (
 	github.com/sirupsen/logrus v1.7.0
 	github.com/yunify/qingstor-sdk-go v2.2.15+incompatible
 	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
+	google.golang.org/grpc v1.33.2
+	google.golang.org/protobuf v1.25.0
 	gopkg.in/ini.v1 v1.62.0
 )

@@ -20,6 +20,8 @@ func main() {
 	service.GetCameraListip = conf.GetCameraList
 	service.UserName = conf.UserName
 	service.Password = conf.Password
+	service.Deviceid = conf.Deviceid
+
 	router.RouteInit(IpAddress)
 
 	tiker := time.NewTicker(time.Microsecond * 1) //每15秒执行一下
