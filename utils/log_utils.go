@@ -33,7 +33,7 @@ func InitLogrus(logPath string, logFileName string, maxAge time.Duration, Rotati
 	if _, err := os.Stat(logPath); os.IsNotExist(err) { //如果不存在该目录，那么创建该目录
 		os.MkdirAll(logPath, os.ModePerm)
 	}
-	fmt.Println(rotationTime, RotationCount)
+	fmt.Println("配置文件", "rotationTime:", rotationTime, "|  RotationCount:", RotationCount)
 	baseLogPath := path.Join(logPath, logFileName)
 	writer, err := rotatelogs.New(
 		baseLogPath+".%Y%m%d%H%M",

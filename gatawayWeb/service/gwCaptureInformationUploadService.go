@@ -47,7 +47,7 @@ func GwCaptureInformationUploadPostWithXML(data *dto.DateXML) (*dto.ResultRespXM
 //2.获取token
 func GetToken(deviceid string) (*dto.GetTokenRespXML, error) {
 
-	resp, err := http.Get(Gettoken + deviceid)
+	resp, err := http.Get(Gettoken + "{" + deviceid + "}")
 	if err != nil {
 		log.Println("GetToken http error!", err)
 		return nil, err
@@ -71,9 +71,9 @@ func GetToken(deviceid string) (*dto.GetTokenRespXML, error) {
 }
 
 //3.根据token获取camera列表
-func GetCameraList(token string) (*dto.GetTokenRespXML, error) {
+func GetCameraList(deviceid string) (*dto.GetTokenRespXML, error) {
 
-	resp, err := http.Get(GetCameraListip + token)
+	resp, err := http.Get(GetCameraListip + "{" + deviceid + "}")
 	if err != nil {
 		log.Println("GetToken http error!", err)
 		return nil, err

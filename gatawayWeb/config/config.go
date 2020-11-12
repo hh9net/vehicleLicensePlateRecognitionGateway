@@ -17,7 +17,10 @@ type Config struct { //配置文件要通过tag来指定配置文件中的名称
 	Mdatabasename string `ini:"mysql_databasename"`
 	MKeepalive    int    `ini:"mysql_keepalive"`
 	MTimeout      int    `ini:"mysql_timeout"`
-
+	//redis
+	RedisAddr         string `ini:"redis_addr"`
+	RedisPass         string `ini:"redis_pass"`
+	Redisdatabasename int    `ini:"redis_databasename"`
 	//日志
 	LogPath         string `ini:"log_Path"`
 	LogMaxAge       int64  `ini:"log_maxAge"`
@@ -30,11 +33,13 @@ type Config struct { //配置文件要通过tag来指定配置文件中的名称
 	//外网id
 	IpAddress string `ini:"ip_address"`
 
-	//前置机抓拍信息上传接口
 	GwCaptureInformationUploadIpAddress string `ini:"gwCaptureInformationUpload_ip_address"`
 	Gettoken                            string `ini:"get_token"`
 	GetCameraList                       string `ini:"get_camera_list"`
-	//网关设备id
+
+	UserName string `ini:"user_name"`
+	Password string `ini:"password"`
+
 	Deviceid string `ini:"device_id"`
 
 	//

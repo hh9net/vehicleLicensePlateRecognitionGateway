@@ -51,7 +51,3 @@ func TestGetCameraList(t *testing.T) {
 	logrus.Println("查询结果：", resp)
 
 }
-
-func TestRunmain(t *testing.T) {
-	//Runmain()
-}
