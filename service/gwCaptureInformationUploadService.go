@@ -71,11 +71,11 @@ func GetToken(deviceid string) (*dto.GetTokenRespXML, error) {
 }
 
 //3.根据token获取camera列表
-func GetCameraList(token string) (*dto.GetTokenRespXML, error) {
+func GetCameraList(token string) (*dto.GetCameraList, error) {
 
 	resp, err := http.Get(GetCameraListip + token)
 	if err != nil {
-		log.Println("GetToken http error!", err)
+		log.Println("GetCameraList http error!", err)
 		return nil, err
 	}
 
@@ -85,13 +85,13 @@ func GetCameraList(token string) (*dto.GetTokenRespXML, error) {
 
 	body, _ := ioutil.ReadAll(resp.Body)
 
-	Resp := new(dto.GetTokenRespXML)
+	Resp := new(dto.GetCameraList)
 	unmerr := json.Unmarshal(body, &Resp)
 	if unmerr != nil {
 		log.Println("json.Unmarshal error", unmerr)
 		return nil, unmerr
 	}
 
-	log.Println("Post request with json result:", Resp.Code, Resp.Msg)
+	log.Println("Post request GetCameraList  with json result:", len(Resp.Data), Resp.Data[0].Name)
 	return Resp, nil
 }

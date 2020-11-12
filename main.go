@@ -24,15 +24,17 @@ func ConfigInit() {
 }
 
 func main() {
+
+	//初始化配置文件
 	ConfigInit()
-	if err := service.Runmain(); err != nil {
-		err = service.Runmain()
-		log.Println("重启")
-	}
+
+	//进程管理
+	service.ProcessManagementService()
+
 	tiker := time.NewTicker(time.Second * 10) //每15秒执行一下
 	for {
 		<-tiker.C
-		log.Println(" 测试进程管理")
+		log.Println(" 测试进程管理 ")
 	}
 
 }
