@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"net/http"
-	"vehicleLicensePlateRecognitionGateway/controller"
-
 	"strings"
+	"vehicleLicensePlateRecognitionGateway/gatawayWeb/controller"
 
 	"github.com/gin-gonic/gin"
 	//swaggerFiles "github.com/swaggo/files"

@@ -58,8 +58,8 @@ func ProcessManagementService() {
 
 	}
 
-A:
 	//1、进程启动
+A:
 	if err := Runmain(); err != nil {
 		log.Println("重启")
 
@@ -69,10 +69,11 @@ A:
 		a = a + 1
 		if Rerr != nil {
 			log.Println("重启 error!", Rerr)
-
 			goto A
 		}
 	}
+
+	//2、生成进程配置文件
 
 }
 

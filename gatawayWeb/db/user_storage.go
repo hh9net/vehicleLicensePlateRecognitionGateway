@@ -2,7 +2,7 @@ package db
 
 import (
 	"github.com/sirupsen/logrus"
-	"vehicleLicensePlateRecognitionGateway/types"
+	"vehicleLicensePlateRecognitionGateway/gatawayWeb/types"
 	"vehicleLicensePlateRecognitionGateway/utils"
 )
 

@@ -3,9 +3,9 @@ package main
 import (
 	log "github.com/sirupsen/logrus"
 	"time"
-	"vehicleLicensePlateRecognitionGateway/config"
-	"vehicleLicensePlateRecognitionGateway/router"
-	"vehicleLicensePlateRecognitionGateway/service"
+	"vehicleLicensePlateRecognitionGateway/gatawayWeb/config"
+	"vehicleLicensePlateRecognitionGateway/gatawayWeb/router"
+	"vehicleLicensePlateRecognitionGateway/gatawayWeb/service"
 	"vehicleLicensePlateRecognitionGateway/utils"
 )
 
@@ -15,11 +15,9 @@ func main() {
 	log.Println("配置文件信息：", *conf)
 	utils.InitLogrus(conf.LogPath, conf.LogFileName, time.Duration(24*conf.LogMaxAge)*time.Hour, conf.LogRotationSize, time.Duration(conf.LogRotationTime)*time.Hour, conf.RotationCount)
 	IpAddress := conf.IpAddress
-	service.GwCaptureInformationUploadIpAddress = conf.GwCaptureInformationUploadIpAddress
 
 	service.UserName = conf.UserName
 	service.Password = conf.Password
-	service.Deviceid = conf.Deviceid
 
 	router.RouteInit(IpAddress)
 

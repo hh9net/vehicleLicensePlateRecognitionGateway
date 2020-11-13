@@ -5,9 +5,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"net/http"
-	"vehicleLicensePlateRecognitionGateway/dto"
-	"vehicleLicensePlateRecognitionGateway/service"
-	"vehicleLicensePlateRecognitionGateway/types"
+	"vehicleLicensePlateRecognitionGateway/gatawayWeb/dto"
+	"vehicleLicensePlateRecognitionGateway/gatawayWeb/service"
+	"vehicleLicensePlateRecognitionGateway/gatawayWeb/types"
 )
 
 //@Summary 登录api

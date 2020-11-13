@@ -20,7 +20,7 @@ func ConfigInit() {
 
 //模拟程序，用于检测进程管理
 func main() {
-	//ConfigInit()
+
 	//tiker := time.NewTicker(time.Second * 10) //每15秒执行一下
 	//for {
 	//	log.Println("执行定时任务,模拟程序，用于检测进程管理")

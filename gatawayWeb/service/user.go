@@ -2,8 +2,8 @@ package service
 
 import (
 	"github.com/sirupsen/logrus"
-	"vehicleLicensePlateRecognitionGateway/dto"
-	"vehicleLicensePlateRecognitionGateway/types"
+	"vehicleLicensePlateRecognitionGateway/gatawayWeb/dto"
+	"vehicleLicensePlateRecognitionGateway/gatawayWeb/types"
 )
 
 var (
