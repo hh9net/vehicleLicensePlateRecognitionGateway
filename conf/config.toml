@@ -1,4 +1,5 @@
 
+;token =         bb9bd44eb659e74cefc2c5624c58fab009aba4f8
 ; [mysql本地]
 mysql_hostname     =127.0.0.1
 mysql_port         = 3306
