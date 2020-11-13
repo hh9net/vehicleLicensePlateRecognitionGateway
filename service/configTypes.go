@@ -59,6 +59,7 @@ type OneToOneConfigChannel struct {
 }
 
 /*
+
 <config>
   <devCompId>HIK</devCompId>
   <devlist>
