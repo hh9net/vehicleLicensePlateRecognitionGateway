@@ -44,6 +44,7 @@ func ProcessManagementService() {
 	if getTokenerr != nil {
 		log.Println("获取网关设备的token 失败")
 	}
+
 	Token = token
 	//2、根据token获取camera列表
 	CameraList, listerr := GetGatawayCameraList()
