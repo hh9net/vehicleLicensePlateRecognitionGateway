@@ -46,6 +46,7 @@ func ProcessManagementService() {
 	}
 
 	Token = token
+
 	//2、根据token获取camera列表
 	CameraList, listerr := GetGatawayCameraList()
 	if listerr != nil {
