@@ -8,11 +8,6 @@ import (
 	"os"
 )
 
-//private String zone = "sh1a";
-//private String bucketName = "gdkjetcpark";
-//private String accessKey="QGYIKYOMPKJLFWVURGBG",
-//private String accessSecret="QLPAaRF1legVvjbA8nfz2bN2EiuKRvD9f8HKZISX");
-
 //http://gdkjetcpark.sh1a.qingstor.com/
 
 //可以在不同区域创建 存储空间(Bucket)

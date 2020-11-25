@@ -35,7 +35,7 @@ type Config struct { //配置文件要通过tag来指定配置文件中的名称
 	Gettoken                            string `ini:"get_token"`
 	GetCameraList                       string `ini:"get_camera_list"`
 	//网关设备id
-	Deviceid string `ini:"device_id"`
+	Deviceid string `ini:"deviceid"`
 
 	//
 

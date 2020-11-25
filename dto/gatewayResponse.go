@@ -20,11 +20,12 @@ type ResultRespXML struct {
 type GetTokenRespXML struct {
 	XMLName xml.Name `xml:"data"`
 	Token   string
-	Expire  string
+	Expire  string //过期时间 假的
 	Code    int
 	Msg     string
 	Oss     Oss
 }
+
 type Oss struct {
 	XMLName      xml.Name `xml:"oss"`
 	BacketName   string   `xml:"backetName"`
@@ -34,16 +35,19 @@ type Oss struct {
 /*
 第一版
 <?xml version="1.0" encoding="utf-8"?>
-
 <data>
-  <Token>fddac3a1fe31ef3c1eeb</Token>
+  <Token>a2caedfcb22b21bedafe</Token>
   <Expire>2h</Expire>
   <Code>0</Code>
-  <Msg>成功</Msg>
-  <oss>aqwreqwf</oss>
+  <Msg>请求成功</Msg>
+  <oss>
+    <backetName>ydcpsbxt</backetName>
+    <objectPrefix>cloud_lpr/jiangsu/suhuaiyangs</objectPrefix>
+  </oss>
 </data>
 */
 
+//获取的相机列表
 type GetCameraList struct {
 	XMLName xml.Name `xml:"ListData"`
 	Data    []CameraListData
@@ -63,3 +67,68 @@ type CameraListData struct {
 	Channel     string   `xml:"channel"` //新增
 	LaneNo      string   `xml:"laneNo"`  //新增
 }
+
+/*
+<ListData>
+ <Data>
+   <id>sxjgl_shygs_321300_G2513_K101_415_3_1_0</id>
+   <name>南区入口(卡口)</name>
+   <stationId>9c667aef8bb64a1e99ba328e76cb1a65</stationId>
+   <laneType>0</laneType>
+   <devCompId>UNIVIEW</devCompId>
+   <description>2</description>
+   <devIp>10.113.1.37</devIp>
+   <port>80</port>
+   <userName>admin</userName>
+   <password>123456</password>
+   <channel>0</channel>
+   <laneNo></laneNo>
+   <gantryId>157c8013-bcd3-4fde-a548-b8f6473862b2</gantryId>
+ </Data>
+ <Data>
+   <id>sxjgl_shygs_321300_G2513_K101_415_3_1_1</id>
+   <name>南区出口(卡口)</name>
+   <stationId>9c667aef8bb64a1e99ba328e76cb1a65</stationId>
+   <laneType>1</laneType>
+   <devCompId>UNIVIEW</devCompId>
+   <description>2</description>
+   <devIp>10.113.1.36</devIp>
+   <port>80</port>
+   <userName>admin</userName>
+   <password>123456</password>
+   <channel>0</channel>
+   <laneNo></laneNo>
+   <gantryId>157c8013-bcd3-4fde-a548-b8f6473862b2</gantryId>
+ </Data>
+ <Data>
+   <id>sxjgl_shygs_321300_G2513_K101_415_3_2_0</id>
+   <name>北区入口(卡口)</name>
+   <stationId>20ebf41475174ff7a8ed46fc902aa3a4</stationId>
+   <laneType>0</laneType>
+   <devCompId>UNIVIEW</devCompId>
+   <description>2</description>
+   <devIp>10.113.1.16</devIp>
+   <port>80</port>
+   <userName>admin</userName>
+   <password>123456</password>
+   <channel>0</channel>
+   <laneNo></laneNo>
+   <gantryId>157c8013-bcd3-4fde-a548-b8f6473862b2</gantryId>
+ </Data>
+ <Data>
+   <id>sxjgl_shygs_321300_G2513_K101_415_3_2_1</id>
+   <name>北区出口(卡口)</name>
+   <stationId>20ebf41475174ff7a8ed46fc902aa3a4</stationId>
+   <laneType>1</laneType>
+   <devCompId>UNIVIEW</devCompId>
+   <description>2</description>
+   <devIp>10.113.1.17</devIp>
+   <port>80</port>
+   <userName>admin</userName>
+   <password>123456</password>
+   <channel>0</channel>
+   <laneNo></laneNo>
+   <gantryId>157c8013-bcd3-4fde-a548-b8f6473862b2</gantryId>
+ </Data>
+</ListData>
+*/

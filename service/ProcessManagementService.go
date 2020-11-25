@@ -17,6 +17,7 @@ func Runmain() error {
 	// 打印当前进程号
 	fmt.Println("当前进程id：", syscall.Getpid())
 	//cmd := exec.Command("../grpcSimulator/grpc_main", "test_file")
+	//命令行参数是配置文件的绝对路径 +文件名【全局唯一】
 	cmd := exec.Command("./grpcSimulator/grpc_main", "-addr", ":8099")
 
 	buf, err := cmd.Output()
@@ -56,26 +57,44 @@ func ProcessManagementService() {
 	log.Println(" 相机列表数据 ：", CameraList)
 
 	for _, cmera := range CameraList.Data {
+		//传一个配置文件的绝对路径 全局唯一
 		cmera.Description = ""
 
-	}
+		//1、生成进程配置文件
 
-	//1、进程启动
-A:
-	if err := Runmain(); err != nil {
-		log.Println("重启")
+		switch "expr" {
+		case "one2ont":
 
-		var a int
-		//2、进程重启
-		Rerr := Runmain()
-		a = a + 1
-		if Rerr != nil {
-			log.Println("重启 error!", Rerr)
-			goto A
+			generateConfig()
+
+		case "one2many":
+
+			generateConfig()
+
+		case "many2many":
+
+			generateConfig()
+
 		}
-	}
 
-	//2、生成进程配置文件
+		//2、进程启动
+	A:
+		if err := Runmain(); err != nil {
+			log.Println("重启")
+
+			var a int
+			//2、进程重启
+			Rerr := Runmain()
+			a = a + 1
+			if Rerr != nil {
+				log.Println("重启 error!", Rerr)
+				goto A
+			}
+		}
+
+		continue
+
+	}
 
 }
 
@@ -101,4 +120,12 @@ func GetGatawayCameraList() (*dto.GetCameraList, error) {
 	}
 	log.Println(Resp.Data[0].Description, err)
 	return Resp, nil
+}
+
+//上传文件  开线程读取xml文件 上传图片到oss  上传抓拍结果到车牌识别云端服务器
+func UploadFile() {
+	//读取xml文件
+
+	//上传图片到oss
+	//上传抓拍结果到车牌识别云端服务器
 }
