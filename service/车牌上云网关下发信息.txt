@@ -12,7 +12,7 @@ http://172.31.49.252/processor-control/collect/token/fe0442b5-2d40-486f-9682-d10
   </oss>
 </data>
 
-http://172.31.49.252/processor-control/collect/cameras/feceff212dafefb213bd
+2、http://172.31.49.252/processor-control/collect/cameras/feceff212dafefb213bd
 请求方式	GET
 <ListData>
   <Data>

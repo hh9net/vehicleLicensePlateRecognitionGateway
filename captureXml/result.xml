@@ -1,0 +1,23 @@
+
+<PlateInfo>
+    <passId>sxjgl_yzjtd_320200_G2_K1071_2_0_004_20201124_000031</passId>
+    <camId>sxjgl_yzjtd_320200_G2_K1071_2_0_004</camId>
+    <passTime>2020-11-24 14:35:17</passTime>
+    <vehicleImgPath>C:\Users\Administrator\Desktop\HSJDEBUG\images\20201124\sxjgl_yzjtd_320200_G2_K1071_2_0_004_20201124143417_000031.jpg</vehicleImgPath>
+    <vehicleImgPath1></vehicleImgPath1>
+    <vehicleImgPath2></vehicleImgPath2>
+    <channel>0</channel>
+    <plateColor>蓝</plateColor>
+    <plateNo>苏CA0E37</plateNo>
+    <AppedInfo>
+        <AxleDist></AxleDist>
+        <AxleNum></AxleNum>
+        <AxleType></AxleType>
+        <CarLengthMeter></CarLengthMeter>
+        <CarType></CarType>
+        <VideoScaleSpeed></VideoScaleSpeed>
+        <WheelNumber></WheelNumber>
+        <WXPCharIndex></WXPCharIndex>
+        <ZXType></ZXType>
+    </AppedInfo>
+</PlateInfo>

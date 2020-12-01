@@ -27,13 +27,12 @@ ip_address          =192.168.200.204:6066
 gwCaptureInformationUpload_ip_address = http://172.31.49.252/data-collect/report/frontend
 
 ;2.获取token
-get_token=http://172.31.49.252/processor-control/collect/token/
+get_token           =http://192.168.200.204:9898/gw/api/v1/getToken/
+;get_token            =http://172.31.49.252/processor-control/collect/token/
 
 ;3.根据token获取camera列表
-get_camera_list=http://172.31.49.252/processor-control/collect/cameras/
-
-;oss存储配置
-oss=""
+;get_camera_list     =http://172.31.49.252/processor-control/collect/cameras/
+get_camera_list      =http://192.168.200.204:9898/gw/api/v1/getList/
 
 ;//网关设备id 据此获取网关token
 deviceid        = f9555afb-56c0-4bf8-a067-63b8ca4be538

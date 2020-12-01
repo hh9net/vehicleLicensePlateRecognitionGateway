@@ -29,8 +29,12 @@ type PlateInfo struct {
 
 //一对一启动相机进程的配置xml
 type OneToOneConfig struct {
-	XMLName     xml.Name                  `xml:"config"`
-	DevCompId   string                    `xml:"devCompId"`
+	XMLName       xml.Name `xml:"config"`
+	DevCompId     string   `xml:"devCompId"`
+	Uuid          string   `xml:"uuid"`
+	Udplistenport int      `xml:"udplistenport"`
+	Udptxport     int      `xml:"udptxport"`
+
 	Devlist     OneToOneConfigDevlist     `xml:"devlist"`
 	Channellist OneToOneConfigChannellist `xml:"channellist"`
 }

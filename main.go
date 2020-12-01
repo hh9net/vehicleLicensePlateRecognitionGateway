@@ -32,7 +32,7 @@ func main() {
 	service.ProcessManagementService()
 
 	//开线程读取xml文件 上传图片到oss  上传抓拍结果到车牌识别云端服务器
-	service.UploadFile()
+	//service.UploadFile()
 
 	tiker := time.NewTicker(time.Second * 10) //每15秒执行一下
 	for {

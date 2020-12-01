@@ -16,13 +16,13 @@ func TestByteToMB(t *testing.T) {
 }
 
 func TestQingStorGetFile(t *testing.T) {
-	QingStorGetFile("222.zip")
+	QingStorGetFile("/jiangsu/suhuaiyangs/sxjgl_yzjtd_320200_G2_K1071_2_0_004_20201124143417_000031.jpg", "20201124", "sxjgl_yzjtd_320200_G2_K1071_2_0_004_20201124143417_000031.jpg")
 }
 
 func TestQingStorUpload(t *testing.T) {
-	QingStorUpload("222.zip")
+	//	QingStorUpload("222.zip")
 }
 
 func TestQingStorDeleteFile(t *testing.T) {
-	QingStorDeleteFile("222.zip")
+	QingStorDeleteFile("sxjgl_yzjtd_320200_G2_K1071_2_0_004_20201124143417_000031.jpg")
 }

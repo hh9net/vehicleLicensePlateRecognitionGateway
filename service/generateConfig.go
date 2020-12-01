@@ -4,19 +4,23 @@ import (
 	"encoding/xml"
 	log "github.com/sirupsen/logrus"
 	"os"
+	"time"
 )
 
-func generateConfig() {
-	configdata := ""
+func generateConfigToone(configdata *OneToOneConfig) {
+
 	//使用MarshalIndent函数，生成的XML格式有缩进
-	outputxml, err := xml.MarshalIndent(configdata, "  ", " ")
+	outputxml, err := xml.MarshalIndent(*configdata, "  ", "     ")
 	if err != nil {
 
 		log.Printf("执行线程1 打包原始记录消息包 xml.MarshalIndent error: %v\n", err)
 		return
 	}
-	xmlname := ""
-	createxml(xmlname, outputxml)
+	xmlname := time.Now().Format("2006-01-02T15:04:05") + "+" + configdata.Uuid
+	fname := createxml(xmlname, outputxml)
+	if fname != "" {
+		log.Println("启动进程配置文件生成OK，可以启动进程")
+	}
 }
 
 //创建xml文件
@@ -42,6 +46,5 @@ func createxml(xmlname string, outputxml []byte) string {
 		_ = fw.Close()
 	}()
 
-	return "/cameraConfig/" + xmlname + ".xml"
-
+	return "cameraConfig/" + xmlname + ".xml"
 }

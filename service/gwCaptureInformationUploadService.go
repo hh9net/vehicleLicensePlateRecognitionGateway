@@ -2,7 +2,6 @@ package service
 
 import (
 	"bytes"
-	"encoding/json"
 	"encoding/xml"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -17,18 +16,12 @@ var GetCameraListip string
 //捕捉信息上传接口 gwCaptureInformationUploadService
 
 //1.前置机抓拍信息上传接口 http://172.31.49.252/data-collect/report/frontend   POST
-func GwCaptureInformationUploadPostWithXML(data *dto.DateXML) (*dto.ResultRespXML, error) {
+func GwCaptureInformationUploadPostWithXML(data *[]byte) (*dto.ResultRespXML, error) {
 	//post请求提交xml数据
 
-	//data := dto.DateXML{}
-	//MarshalIndent 有缩进 xml.Marshal ：无缩进
-	ba, _ := xml.MarshalIndent(data, "  ", "  ")
-	log.Println("+++++++++", string(ba))
-
-	log.Println("Address:", GwCaptureInformationUploadIpAddress, data)
 	//POST
 	//text/xml 传输数据为Xml数据
-	resp, err := http.Post(GwCaptureInformationUploadIpAddress, "text/xml", bytes.NewBuffer(ba))
+	resp, err := http.Post(GwCaptureInformationUploadIpAddress, "text/xml", bytes.NewBuffer(*data))
 	if err != nil {
 		log.Println("post请求指标信息查询接口失败:", err)
 		return nil, err
@@ -36,22 +29,25 @@ func GwCaptureInformationUploadPostWithXML(data *dto.DateXML) (*dto.ResultRespXM
 	body, _ := ioutil.ReadAll(resp.Body)
 	Resp := new(dto.ResultRespXML)
 	//
-	unmerr := json.Unmarshal(body, &Resp)
+	unmerr := xml.Unmarshal(body, &Resp)
 	if unmerr != nil {
-		log.Println("json.Unmarshal error", unmerr)
+		log.Println(" xml.Unmarshal error", unmerr)
+		return nil, unmerr
 	}
-	log.Println("Post request with json result:", Resp.Code, Resp.Msg)
+	log.Println("Post request with  xml result:", Resp.Code, Resp.Msg)
 	return Resp, nil
 }
 
 //2.获取token
 func GetToken(deviceid string) (*dto.GetTokenRespXML, error) {
 
+	//http://172.31.49.252/processor-control/collect/token/fe0442b5-2d40-486f-9682-d1043ceca4e5
 	resp, err := http.Get(Gettoken + deviceid)
 	if err != nil {
 		log.Println("GetToken http error!", err)
 		return nil, err
 	}
+	log.Println("GetToken http ok!")
 
 	defer func() {
 		_ = resp.Body.Close()
@@ -60,13 +56,13 @@ func GetToken(deviceid string) (*dto.GetTokenRespXML, error) {
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	Resp := new(dto.GetTokenRespXML)
-	unmerr := json.Unmarshal(body, &Resp)
+	unmerr := xml.Unmarshal(body, Resp)
 	if unmerr != nil {
-		log.Println("json.Unmarshal error", unmerr)
+		log.Println("xml.Unmarshal error", unmerr)
 		return nil, unmerr
 	}
 
-	log.Println("Post request with json result:", Resp.Code, Resp.Msg)
+	log.Println("Post request with  xml result:", Resp.Code, Resp.Msg)
 	return Resp, nil
 }
 
@@ -86,12 +82,12 @@ func GetCameraList(token string) (*dto.GetCameraList, error) {
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	Resp := new(dto.GetCameraList)
-	unmerr := json.Unmarshal(body, &Resp)
+	unmerr := xml.Unmarshal(body, &Resp)
 	if unmerr != nil {
-		log.Println("json.Unmarshal error", unmerr)
+		log.Println(" xml.Unmarshal error", unmerr)
 		return nil, unmerr
 	}
 
-	log.Println("Post request GetCameraList  with json result:", len(Resp.Data), Resp.Data[0].Name)
+	log.Println("Post request GetCameraList  with  xml result:", len(Resp.Data), Resp.Data[0].Name)
 	return Resp, nil
 }

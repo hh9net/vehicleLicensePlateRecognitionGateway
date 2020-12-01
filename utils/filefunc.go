@@ -22,7 +22,9 @@ func DelFile(src string) {
 	del := os.Remove(src)
 	if del != nil {
 		log.Println("删除失败", del)
+		return
 	}
+	log.Println("删除ok")
 }
 
 //删除指定path下的所有文件

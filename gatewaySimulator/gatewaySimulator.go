@@ -96,7 +96,7 @@ func GetToken(c *gin.Context) {
 		data.Code = 0
 		data.Msg = "请求成功"
 		data.Oss.BacketName = "ydcpsbxt"
-		data.Oss.ObjectPrefix = "cloud_lpr/jiangsu/suhuaiyangs"
+		data.Oss.ObjectPrefix = "jiangsu/suhuaiyangs"
 		c.XML(200, data)
 	}
 }
@@ -116,7 +116,7 @@ func GetList(c *gin.Context) {
    <name>南区入口(卡口)</name>
    <stationId>9c667aef8bb64a1e99ba328e76cb1a65</stationId>
    <laneType>0</laneType>
-   <devCompId>UNIVIEW</devCompId>
+   <devCompId>HIK</devCompId>
    <description>2</description>
    <devIp>10.113.1.37</devIp>
    <port>80</port>
@@ -131,7 +131,7 @@ func GetList(c *gin.Context) {
    <name>南区出口(卡口)</name>
    <stationId>9c667aef8bb64a1e99ba328e76cb1a65</stationId>
    <laneType>1</laneType>
-   <devCompId>UNIVIEW</devCompId>
+   <devCompId>HIK</devCompId>
    <description>2</description>
    <devIp>10.113.1.36</devIp>
    <port>80</port>
@@ -146,7 +146,7 @@ func GetList(c *gin.Context) {
    <name>北区入口(卡口)</name>
    <stationId>20ebf41475174ff7a8ed46fc902aa3a4</stationId>
    <laneType>0</laneType>
-   <devCompId>UNIVIEW</devCompId>
+   <devCompId>HIK</devCompId>
    <description>2</description>
    <devIp>10.113.1.16</devIp>
    <port>80</port>
@@ -161,7 +161,7 @@ func GetList(c *gin.Context) {
    <name>北区出口(卡口)</name>
    <stationId>20ebf41475174ff7a8ed46fc902aa3a4</stationId>
    <laneType>1</laneType>
-   <devCompId>UNIVIEW</devCompId>
+   <devCompId>DEYA</devCompId>
    <description>2</description>
    <devIp>10.113.1.17</devIp>
    <port>80</port>
@@ -173,6 +173,70 @@ func GetList(c *gin.Context) {
  </Data>
 </ListData>
 `
+		//		d1 := `
+		//<ListData>
+		// <Data>
+		//   <id>sxjgl_shygs_321300_G2513_K101_415_3_1_0</id>
+		//   <name>南区入口(卡口)</name>
+		//   <stationId>9c667aef8bb64a1e99ba328e76cb1a65</stationId>
+		//   <laneType>0</laneType>
+		//   <devCompId>UNIVIEW</devCompId>
+		//   <description>2</description>
+		//   <devIp>10.113.1.37</devIp>
+		//   <port>80</port>
+		//   <userName>admin</userName>
+		//   <password>123456</password>
+		//   <channel>0</channel>
+		//   <laneNo></laneNo>
+		//   <gantryId>157c8013-bcd3-4fde-a548-b8f6473862b2</gantryId>
+		// </Data>
+		// <Data>
+		//   <id>sxjgl_shygs_321300_G2513_K101_415_3_1_1</id>
+		//   <name>南区出口(卡口)</name>
+		//   <stationId>9c667aef8bb64a1e99ba328e76cb1a65</stationId>
+		//   <laneType>1</laneType>
+		//   <devCompId>UNIVIEW</devCompId>
+		//   <description>2</description>
+		//   <devIp>10.113.1.36</devIp>
+		//   <port>80</port>
+		//   <userName>admin</userName>
+		//   <password>123456</password>
+		//   <channel>0</channel>
+		//   <laneNo></laneNo>
+		//   <gantryId>157c8013-bcd3-4fde-a548-b8f6473862b2</gantryId>
+		// </Data>
+		// <Data>
+		//   <id>sxjgl_shygs_321300_G2513_K101_415_3_2_0</id>
+		//   <name>北区入口(卡口)</name>
+		//   <stationId>20ebf41475174ff7a8ed46fc902aa3a4</stationId>
+		//   <laneType>0</laneType>
+		//   <devCompId>UNIVIEW</devCompId>
+		//   <description>2</description>
+		//   <devIp>10.113.1.16</devIp>
+		//   <port>80</port>
+		//   <userName>admin</userName>
+		//   <password>123456</password>
+		//   <channel>0</channel>
+		//   <laneNo></laneNo>
+		//   <gantryId>157c8013-bcd3-4fde-a548-b8f6473862b2</gantryId>
+		// </Data>
+		// <Data>
+		//   <id>sxjgl_shygs_321300_G2513_K101_415_3_2_1</id>
+		//   <name>北区出口(卡口)</name>
+		//   <stationId>20ebf41475174ff7a8ed46fc902aa3a4</stationId>
+		//   <laneType>1</laneType>
+		//   <devCompId>UNIVIEW</devCompId>
+		//   <description>2</description>
+		//   <devIp>10.113.1.17</devIp>
+		//   <port>80</port>
+		//   <userName>admin</userName>
+		//   <password>123456</password>
+		//   <channel>0</channel>
+		//   <laneNo></laneNo>
+		//   <gantryId>157c8013-bcd3-4fde-a548-b8f6473862b2</gantryId>
+		// </Data>
+		//</ListData>
+		//`
 
 		uerr := xml.Unmarshal([]byte(d), datas)
 		if uerr != nil {
@@ -216,7 +280,7 @@ func Upload(c *gin.Context) {
 //创建xml文件
 func createxml(xmlname string, outputxml []byte) string {
 
-	fw, f_werr := os.Create("./gatewaySimulator/captureResult/" + xmlname + ".xml") //go run main.go
+	fw, f_werr := os.Create("./gatewaySimulator/captureResultReceive/" + xmlname + ".xml") //go run main.go
 	if f_werr != nil {
 		log.Println("Read:", f_werr)
 		return ""
@@ -236,6 +300,6 @@ func createxml(xmlname string, outputxml []byte) string {
 		_ = fw.Close()
 	}()
 
-	return "/captureResult/" + xmlname + ".xml"
+	return "/captureResultReceive/" + xmlname + ".xml"
 
 }
