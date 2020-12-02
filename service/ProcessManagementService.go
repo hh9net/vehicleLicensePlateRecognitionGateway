@@ -2,24 +2,28 @@ package service
 
 import (
 	"encoding/xml"
-	"fmt"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
+	"net"
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 	"vehicleLicensePlateRecognitionGateway/dto"
 	"vehicleLicensePlateRecognitionGateway/utils"
 )
 
 var Deviceid string //网关设备id Token
+var IpAddress string
 
 var Token string
 
 var BacketName string
 var ObjectPrefix string
+
+const SERVER_PORT = "5000"
+const SERVER_RECV_LEN = 10
 
 const (
 	Signalway    string = "Signalway"    // 信路威
@@ -36,45 +40,31 @@ const (
 	GDPort       int    = 5000           //固定 进程向我拨号的的端口
 )
 
-//1、启动进程
-func Runmain(ConfigPath string) error {
-	// 打印当前进程号
-	fmt.Println("当前进程id：", syscall.Getpid())
-	//cmd := exec.Command("../grpcSimulator/grpc_main", "test_file")
-	//命令行参数是配置文件的绝对路径 +文件名【全局唯一】
-	//cmd := exec.Command("./grpcSimulator/grpc_main",  "-configpath",  ConfigPath)//模拟器方式一
-	cmd := exec.Command("./grpcSimulator/grpc_main", ConfigPath) //进程程序方式 模拟器方式二
-	buf, err := cmd.Output()
-	fmt.Printf("output: %s\n", string(buf))
-	if err != nil {
-		fmt.Printf("err: %v\n", err)
-	}
-
-	//if runtime.GOOS == "windows" {
-	// cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
-	//}
-
-	//执行Cmd中包含的命令，阻塞直到命令执行完成
-	Runerr := cmd.Run()
-	if Runerr != nil {
-		log.Println("++++++ Execute Command failed. ++", "+++++++ Runerr:", Runerr.Error())
-		return Runerr
-	}
-
-	log.Println("Execute Command finished.")
-	return nil
-}
-
 // 进程管理
 func ProcessManagementService() {
-	PorT := 6000
+	PorT := 6000 //固定端口
 	//1、获取网关设备的token
+CQ:
 	resp, getTokenerr := GetGatawayToken()
 	if getTokenerr != nil {
-		log.Println("获取网关设备的token 失败")
-		return
-	}
+		log.Println("获取网关设备的token 失败") //getTokenerr 已打印
 
+		time.Sleep(time.Minute * 1)
+		goto CQ
+		//cqresp, cqgetTokenerr := 	GetGatawayToken()
+		//if cqgetTokenerr!=nil{
+		//	log.Println("获取网关设备的token 重启失败")
+		//	return
+		//}
+		//
+		//if cqresp != nil {
+		//	Token = resp.Token
+		//	BacketName = resp.Oss.BacketName
+		//	ObjectPrefix = resp.Oss.ObjectPrefix
+		//}
+
+	}
+	//全局 Token  BacketName 	ObjectPrefix 赋值
 	if resp != nil {
 		Token = resp.Token
 		BacketName = resp.Oss.BacketName
@@ -89,27 +79,28 @@ func ProcessManagementService() {
 	}
 	log.Println(" 相机列表数据 ：", CameraList)
 
-	for _, cmera := range CameraList.Data {
-		//传 一个配置文件的绝对路径 全局唯一
+	for i, cmera := range CameraList.Data {
+
 		conflx := ""
 		if cmera.DevCompId == UNIVIEW || cmera.DevCompId == HIKITS {
 			conflx = "one2many"
+
 		} else {
 			conflx = "one2ont"
 		}
-
+		ConfigPath := ""
 		//1、生成进程配置文件
 		//ConfigPath:="abc"
 		switch conflx {
 		case "one2ont":
-			PorT = PorT + 1
+			PorT = PorT + 2
 			confdata := new(OneToOneConfig)
 
 			confdata.DevCompId = cmera.DevCompId //品牌名称
 			strporrt := strconv.Itoa(PorT)
 			confdata.Uuid = cmera.Id + "+" + strporrt //方便确定是哪一个进程发出的数据 我取相机id+进程端口号
 			confdata.Udplistenport = PorT             //我向进程拨号的端口号
-			confdata.Udptxport = GDPort               //固定 进程向我拨号的的端口
+			confdata.Udptxport = PorT - 1             //固定 进程向我拨号的的端口
 			confdata.Devlist.Dev.DevIp = cmera.DevIp  //相机IP
 			confdata.Devlist.Dev.Port = cmera.Port    //相机端口号
 			confdata.Devlist.Dev.UserName = cmera.UserName
@@ -118,8 +109,11 @@ func ProcessManagementService() {
 
 			confdata.Channellist.Channel.Id = cmera.Id         //相机id
 			confdata.Channellist.Channel.Index = cmera.Channel //通道号
-
-			generateConfigToone(confdata)
+			//一对一生成配置文件
+			fname := generateConfigToOne(confdata)
+			if fname != "" {
+				ConfigPath = fname
+			}
 
 		case "one2many":
 			log.Println("one2many,相机品牌是：", cmera.DevCompId)
@@ -133,25 +127,79 @@ func ProcessManagementService() {
 			//	generateConfig()
 
 		}
-		ConfigPath := ""
+
 		//2、进程启动
-	A:
+		//A:
+		//传 一个配置文件的绝对路径 全局唯一
 		if err := Runmain(ConfigPath); err != nil {
 			log.Println("重启")
 
-			var a int
-			//2、进程重启
-			Rerr := Runmain(ConfigPath)
-			a = a + 1
-			if Rerr != nil {
-				log.Println("重启 error!", Rerr)
-				goto A
-			}
+			//var a int
+			////2、进程重启
+			//Rerr := Runmain(ConfigPath)
+			//a = a + 1
+			//log.Println("重启数a：", a)
+			//
+			//if Rerr != nil {
+			//	log.Println("重启 error!", Rerr)
+			//	goto A
+			//}
 		}
-		continue
 
+		log.Println("进程已启动", i+1)
+		continue
 	}
 
+}
+
+//1、启动进程
+func Runmain(ConfigPath string) error {
+
+	//cmd := exec.Command("../grpcSimulator/grpc_main", "test_file")
+	//命令行参数是配置文件的绝对路径 +文件名【全局唯一】
+	//cmd := exec.Command("./grpcSimulator/grpc_main",  "-configpath",  ConfigPath)//模拟器方式一
+	//cmd := exec.Command("./grpcSimulator/grpc_main","" ,ConfigPath) //进程程序方式 模拟器方式二
+	//buf, err := cmd.Output()
+	//fmt.Printf("output: %s\n", string(buf))
+	//if err != nil {
+	//	fmt.Printf("err: %v\n", err)
+	//}
+
+	//与抓拍进程交互心跳 [cameraConfig/2020-12-02T11:35:03+sxjgl_shygs_321300_G2513_K101_415_3_2_1+6004.xml]
+	port := strings.Split(ConfigPath, "+")
+	xtpt := strings.Split(port[2], ".")
+
+	//cmd := exec.Command("capture.exe绝对路径")
+	cmd := exec.Command("./grpcSimulator/grpc_main")
+
+	path := make([]string, 0)
+	path = append(path, ConfigPath)
+
+	cmd.Args = path
+	log.Println("cmd.Args:", cmd.Args)
+
+	//if runtime.GOOS == "windows" {
+	//	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
+	//}
+
+	var err = cmd.Start()
+	if err != nil {
+		log.Println("++++++ Execute Command failed. ++", err)
+		return err
+	}
+
+	//心跳port
+	go Heartbeat(xtpt[0])
+
+	//执行Cmd中包含的命令，阻塞直到命令执行完成
+	//Runerr := cmd.Run()
+	//if Runerr != nil {
+	//	log.Println("++++++ Execute Command failed. ++", "+++++++ Runerr:", Runerr.Error())
+	//	return Runerr
+	//}
+	//log.Println("Execute Command finished.")
+
+	return nil
 }
 
 //1、获取网关设备的token
@@ -278,4 +326,119 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML) {
 		return
 	}
 
+}
+
+//与抓拍进程交互心跳，得知抓拍进程程序死活
+func Heartbeat(port string) {
+
+	//SERVER_IP = "127.0.0.1" IpAddress
+	time.Sleep(time.Second * 10)
+	//dport, _ := strconv.Atoi(port)
+
+	//主动给抓拍进程心跳  10秒
+	//	go HeartbeatClient(strconv.Itoa(dport - 1))
+
+	//监控抓拍进程的心跳
+XT:
+	ip := strings.Split(IpAddress, ":")
+	address := ip[0] + ":" + port //SERVER_PORT
+	addr, err := net.ResolveUDPAddr("udp", address)
+	if err != nil {
+		log.Println("监控抓拍进程心跳 net.ResolveUDPAddr 时 err:", err)
+	}
+
+	conn, err := net.ListenUDP("udp", addr)
+	if err != nil {
+		log.Println("监控抓拍进程的心跳 net.ListenUDP err:", err)
+		time.Sleep(time.Second * 30)
+		goto XT
+	}
+	log.Println("管理平台 UDP监听 address:", address)
+
+	defer func() {
+		_ = conn.Close()
+	}()
+
+	for {
+		//获取数据
+		// Here must use make and give the lenth of buffer
+		data := make([]byte, 512)
+
+		//返回一个UDPAddr        ReadFromUDP从c读取一个UDP数据包，将有效负载拷贝到b，返回拷贝字节数和数据包来源地址。
+		//ReadFromUDP方法会在超过一个固定的时间点之后超时，并返回一个错误。
+		_, rAddr, err := conn.ReadFromUDP(data)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+
+		strData := string(data)
+		log.Println("Received:", strData)
+		//转大写
+		//	upper := strings.ToUpper(strData)
+		strData = "管理平台收到抓拍进程的信息 ｜" + strData
+		_, err = conn.WriteToUDP([]byte(strData), rAddr)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+
+		log.Println("管理平台 Send:", strData)
+	}
+}
+
+func HeartbeatClient(port string) {
+	tiker := time.NewTicker(time.Second * 10) //每15秒执行一下
+	for {
+		log.Println(utils.DateTimeFormat(<-tiker.C), "管理平台要发送心跳给抓拍进程++++++++++++")
+
+		Heartbeatclient(port)
+
+	}
+}
+
+func Heartbeatclient(port string) {
+
+	serverAddr := "192.168.26.248" + ":" + port
+	conn, err := net.Dial("udp", serverAddr)
+	if err != nil {
+		log.Println(serverAddr, "管理平台 主动给抓拍进程心跳,net.Dial执行时", "err:", err)
+		time.Sleep(time.Second * 10)
+		return
+	}
+	log.Println("管理平台 主动给抓拍进程心跳 UDP net.Dial serverAddr:", serverAddr)
+
+	defer func() {
+		_ = conn.Close()
+	}()
+
+	var n int
+	var toWrite string
+	toWrite = serverAddr + "管理平台细心问候：你启动了么，是否活着呀!"
+
+	n, err = conn.Write([]byte(toWrite))
+	if err != nil {
+		log.Println("err", err)
+		return
+	}
+
+	log.Println("Write:", toWrite, "n:", n)
+
+	msg := make([]byte, 512)
+	n, err = conn.Read(msg)
+	if err != nil {
+		log.Println("err:", err)
+		return
+	}
+
+	log.Println("抓拍进程给的响应，Response:", string(msg), "n:", n)
+
+}
+
+func checkError(err error) {
+	if err != nil {
+		log.Println(err)
+		//return
+		os.Exit(1)
+	}
 }

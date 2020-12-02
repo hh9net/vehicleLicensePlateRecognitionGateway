@@ -50,7 +50,7 @@ type LprFrameEntity struct {
 	PlateBottom int      `xml:"plateBottom"` //plateBottom>     车牌下坐标
 }
 
-//特别的一个品牌相机抓拍信息
+//特别的一个品牌相机抓拍信息 需要上传策面信息
 type TBXJDateXML struct {
 	XMLName     xml.Name        `xml:"data"`
 	Token       string          `xml:"token"` // token

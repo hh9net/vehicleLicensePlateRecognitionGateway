@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 	"vehicleLicensePlateRecognitionGateway/config"
-	"vehicleLicensePlateRecognitionGateway/dto"
 	"vehicleLicensePlateRecognitionGateway/utils"
 )
 
@@ -18,17 +17,18 @@ func TestGwCaptureInformationUploadPostWithXML(t *testing.T) {
 	utils.InitLogrus(conf.LogPath, conf.LogFileName, time.Duration(24*conf.LogMaxAge)*time.Hour, conf.LogRotationSize, time.Duration(conf.LogRotationTime)*time.Hour, conf.RotationCount)
 	GwCaptureInformationUploadIpAddress = conf.GwCaptureInformationUploadIpAddress
 
-	data := new(dto.DateXML)
-	data.Token = "asgdgsajhdfgsajkg"
-	data.LprInfo.PassId = "sdknasasf"
-	data.LpaResult.PassId = "dfasfasasd"
-	data.VehicleInfo.AxleDist = "dfasfadafsd"
-
-	err, resp := GwCaptureInformationUploadPostWithXML(data)
-	if err != nil {
-		logrus.Print("查询，失败:", err)
-	}
-	logrus.Println("查询结果：", resp)
+	//data := new(dto.TBXJDateXML)
+	//data.Token = "asgdgsajhdfgsajkg"
+	//data.LprInfo.PassId = "sdknasasf"
+	//data.LpaResult.PassId = "dfasfasasd"
+	//data.VehicleInfo.AxleDist = "dfasfadafsd"
+	//
+	//
+	//err, resp := GwCaptureInformationUploadPostWithXML(data)
+	//if err != nil {
+	//	logrus.Print("查询，失败:", err)
+	//}
+	//logrus.Println("查询结果：", resp)
 
 }
 
@@ -49,9 +49,10 @@ func TestGetCameraList(t *testing.T) {
 		logrus.Print("查询，失败:", err)
 	}
 	logrus.Println("查询结果：", resp)
-
 }
 
-func TestRunmain(t *testing.T) {
+func TestHeartbeat(t *testing.T) {
 	//Runmain()
+	Heartbeat("5000")
+
 }
