@@ -15,7 +15,8 @@ import (
 //模拟云端网关与本地网关的交互
 
 func main() {
-	IpAddress := "192.168.26.248:9898"
+	//192.168.26.248
+	IpAddress := "192.168.150.164:9898"
 	logrus.Print("服务端 IpAddress：", IpAddress)
 	router := gin.New()
 	router.Use(Cors()) //跨域资源共享
@@ -111,6 +112,81 @@ func GetList(c *gin.Context) {
 
 		d := `
 <ListData>
+ <Data>
+   <id>sxjgl_shygs_321300_G2513_K101_415_3_1_0</id>
+   <name>南区入口(卡口)</name>
+   <stationId>9c667aef8bb64a1e99ba328e76cb1a65</stationId>
+   <laneType>0</laneType>
+   <devCompId>UNIVIEW</devCompId>
+   <description>2</description>
+   <devIp>10.113.1.37</devIp>
+   <port>80</port>
+   <userName>admin</userName>
+   <password>123456</password>
+   <channel>0</channel>
+   <laneNo></laneNo>
+   <gantryId>157c8013-bcd3-4fde-a548-b8f6473862b2</gantryId>
+ </Data>
+ <Data>
+   <id>sxjgl_shygs_321300_G2513_K101_415_3_1_0</id>
+   <name>南区入口(卡口)</name>
+   <stationId>9c667aef8bb64a1e99ba328e76cb1a65</stationId>
+   <laneType>0</laneType>
+   <devCompId>UNIVIEW</devCompId>
+   <description>2</description>
+   <devIp>10.113.1.37</devIp>
+   <port>80</port>
+   <userName>admin</userName>
+   <password>123456</password>
+   <channel>0</channel>
+   <laneNo></laneNo>
+   <gantryId>157c8013-bcd3-4fde-a548-b8f6473862b2</gantryId>
+ </Data>
+ <Data>
+   <id>sxjgl_shygs_321300_G2513_K101_415_3_1_0</id>
+   <name>南区入口(卡口)</name>
+   <stationId>9c667aef8bb64a1e99ba328e76cb1a65</stationId>
+   <laneType>0</laneType>
+   <devCompId>HIKITS</devCompId>
+   <description>2</description>
+   <devIp>10.113.1.37</devIp>
+   <port>80</port>
+   <userName>admin</userName>
+   <password>123456</password>
+   <channel>1</channel>
+   <laneNo></laneNo>
+   <gantryId>157c8013-bcd3-4fde-a548-b8f6473862b2</gantryId>
+ </Data>
+ <Data>
+   <id>sxjgl_shygs_321300_G2513_K101_415_3_1_1</id>
+   <name>南区入口(卡口)</name>
+   <stationId>9c667aef8bb64a1e99ba328e76cb1a65</stationId>
+   <laneType>0</laneType>
+   <devCompId>HIKITS</devCompId>
+   <description>2</description>
+   <devIp>10.113.1.37</devIp>
+   <port>80</port>
+   <userName>admin</userName>
+   <password>123456</password>
+   <channel>2</channel>
+   <laneNo></laneNo>
+   <gantryId>157c8013-bcd3-4fde-a548-b8f6473862b2</gantryId>
+ </Data>
+ <Data>
+   <id>sxjgl_shygs_321300_G2513_K101_415_3_1_2</id>
+   <name>南区入口(卡口)</name>
+   <stationId>9c667aef8bb64a1e99ba328e76cb1a65</stationId>
+   <laneType>0</laneType>
+   <devCompId>HIKITS</devCompId>
+   <description>2</description>
+   <devIp>10.113.1.36</devIp>
+   <port>80</port>
+   <userName>admin</userName>
+   <password>123456</password>
+   <channel>2</channel>
+   <laneNo></laneNo>
+   <gantryId>157c8013-bcd3-4fde-a548-b8f6473862b2</gantryId>
+ </Data>
  <Data>
    <id>sxjgl_shygs_321300_G2513_K101_415_3_1_0</id>
    <name>南区入口(卡口)</name>

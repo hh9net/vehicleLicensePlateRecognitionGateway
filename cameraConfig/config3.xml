@@ -1,5 +1,8 @@
 <config> 
   <devCompId>YS</devCompId>
+  <uuid>HIKUUID</uuid>
+  <udplistenport>6000</udplistenport>
+  <udptxport>5000</udptxport>
   <devlist> 
     <dev> 
       <devIp>10.25.51.21</devIp>  

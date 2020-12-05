@@ -43,6 +43,7 @@ type OneToOneConfigDevlist struct {
 	XMLName xml.Name          `xml:"devlist"`
 	Dev     OneToOneConfigDev `xml:"dev"`
 }
+
 type OneToOneConfigDev struct {
 	XMLName  xml.Name `xml:"dev"`
 	DevIp    string   `xml:"devIp"`
@@ -56,6 +57,7 @@ type OneToOneConfigChannellist struct {
 	XMLName xml.Name              `xml:"channellist"`
 	Channel OneToOneConfigChannel `xml:"channel"`
 }
+
 type OneToOneConfigChannel struct {
 	XMLName xml.Name `xml:"channel"`
 	Id      string   `xml:"id"`
@@ -84,18 +86,22 @@ type OneToOneConfigChannel struct {
 </config>
 */
 
-//一对多启动相机进程的配置xml  海康    一个海康存储设备 挂多个相机   一个进程  一个文件   多个"通道"   相机id+通道号 可以关联车道号
+//一对多启动相机进程的配置xml  海康ITS    一个海康存储设备 挂多个相机   一个进程  一个文件   多个"通道"   相机id+通道号 可以关联车道号
 type OneToMoreConfig struct {
-	XMLName     xml.Name                   `xml:"config"`
-	DevCompId   string                     `xml:"devCompId"`
-	Devlist     OneToMoreConfigDevlist     `xml:"devlist"`
-	Channellist OneToMoreConfigChannellist `xml:"channellist"`
+	XMLName       xml.Name                   `xml:"config"`
+	DevCompId     string                     `xml:"devCompId"`
+	Uuid          string                     `xml:"uuid"`
+	Udplistenport int                        `xml:"udplistenport"`
+	Udptxport     int                        `xml:"udptxport"`
+	Devlist       OneToMoreConfigDevlist     `xml:"devlist"`
+	Channellist   OneToMoreConfigChannellist `xml:"channellist"`
 }
 
 type OneToMoreConfigDevlist struct {
 	XMLName xml.Name           `xml:"devlist"`
 	Dev     OneToMoreConfigDev `xml:"dev"`
 }
+
 type OneToMoreConfigDev struct {
 	XMLName  xml.Name `xml:"dev"`
 	DevIp    string   `xml:"devIp"`
@@ -109,6 +115,7 @@ type OneToMoreConfigChannellist struct {
 	XMLName xml.Name                 `xml:"channellist"`
 	Channel []OneToMoreConfigChannel `xml:"channel"`
 }
+
 type OneToMoreConfigChannel struct {
 	XMLName xml.Name `xml:"channel"`
 	Id      string   `xml:"id"`
@@ -117,16 +124,20 @@ type OneToMoreConfigChannel struct {
 
 //多对多启动相机进程的配置xml
 type MoreToMoreConfig struct {
-	XMLName     xml.Name                    `xml:"config"`
-	DevCompId   string                      `xml:"devCompId"`
-	Devlist     MoreToMoreConfigDevlist     `xml:"devlist"`
-	Channellist MoreToMoreConfigChannellist `xml:"channellist"`
+	XMLName       xml.Name                    `xml:"config"`
+	DevCompId     string                      `xml:"devCompId"`
+	Uuid          string                      `xml:"uuid"`
+	Udplistenport int                         `xml:"udplistenport"`
+	Udptxport     int                         `xml:"udptxport"`
+	Devlist       MoreToMoreConfigDevlist     `xml:"devlist"`
+	Channellist   MoreToMoreConfigChannellist `xml:"channellist"`
 }
 
 type MoreToMoreConfigDevlist struct {
 	XMLName xml.Name              `xml:"devlist"`
 	Dev     []MoreToMoreConfigDev `xml:"dev"`
 }
+
 type MoreToMoreConfigDev struct {
 	XMLName  xml.Name `xml:"dev"`
 	DevIp    string   `xml:"devIp"`
@@ -140,6 +151,7 @@ type MoreToMoreConfigChannellist struct {
 	XMLName xml.Name                  `xml:"channellist"`
 	Channel []MoreToMoreConfigChannel `xml:"channel"`
 }
+
 type MoreToMoreConfigChannel struct {
 	XMLName xml.Name `xml:"channel"`
 	Id      string   `xml:"id"`

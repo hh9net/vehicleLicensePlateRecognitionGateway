@@ -43,6 +43,8 @@ const (
 // 进程管理
 func ProcessManagementService() {
 	PorT := 6000 //固定端口
+	var P int
+	P = PorT
 	//1、获取网关设备的token
 CQ:
 	resp, getTokenerr := GetGatawayToken()
@@ -79,28 +81,35 @@ CQ:
 	}
 	log.Println(" 相机列表数据 ：", CameraList)
 
-	for i, cmera := range CameraList.Data {
+	uniview := make([]dto.CameraListData, 0) // 宇视的列表
 
+	hikITS := make([]dto.CameraListData, 0) //ITS列表
+
+	for i, cmera := range CameraList.Data {
+		//	进程类型
 		conflx := ""
 		if cmera.DevCompId == UNIVIEW || cmera.DevCompId == HIKITS {
 			conflx = "one2many"
-
 		} else {
 			conflx = "one2ont"
 		}
+
 		ConfigPath := ""
 		//1、生成进程配置文件
 		//ConfigPath:="abc"
 		switch conflx {
 		case "one2ont":
+			log.Println("one2ont,相机品牌是：", cmera.DevCompId)
+
 			PorT = PorT + 2
+			P = P + 2
 			confdata := new(OneToOneConfig)
 
 			confdata.DevCompId = cmera.DevCompId //品牌名称
 			strporrt := strconv.Itoa(PorT)
 			confdata.Uuid = cmera.Id + "+" + strporrt //方便确定是哪一个进程发出的数据 我取相机id+进程端口号
 			confdata.Udplistenport = PorT             //我向进程拨号的端口号
-			confdata.Udptxport = PorT - 1             //固定 进程向我拨号的的端口
+			confdata.Udptxport = PorT - 1             // 进程向我拨号的的端口
 			confdata.Devlist.Dev.DevIp = cmera.DevIp  //相机IP
 			confdata.Devlist.Dev.Port = cmera.Port    //相机端口号
 			confdata.Devlist.Dev.UserName = cmera.UserName
@@ -115,24 +124,158 @@ CQ:
 				ConfigPath = fname
 			}
 
+			//2、进程启动
+			//A:
+			//传 一个配置文件的绝对路径 全局唯一
+			if err := Runmain(ConfigPath); err != nil {
+				log.Println("需要重启")
+
+				//var a int
+				////2、进程重启
+				//Rerr := Runmain(ConfigPath)
+				//a = a + 1
+				//log.Println("重启数a：", a)
+				//
+				//if Rerr != nil {
+				//	log.Println("重启 error!", Rerr)
+				//	goto A
+				//}
+			}
+			log.Println("一对一的进程已启动ok", i+1)
 		case "one2many":
 			log.Println("one2many,相机品牌是：", cmera.DevCompId)
 			//HIKITS
 			//UNIVIEW
 
-			//	generateConfig()
+			if cmera.DevCompId == UNIVIEW {
+				uniview = append(uniview, cmera)
+			}
 
-			//case "many2many":
-			//
-			//	generateConfig()
+			if cmera.DevCompId == HIKITS {
+				hikITS = append(hikITS, cmera)
+			}
+		}
+		continue
+	}
+
+	if len(hikITS) == 0 && len(uniview) == 0 {
+		log.Println("++++++++++++++++++++++++++++++该网关设备没有海康ITS相机和宇视相机")
+		return
+	}
+
+	YSconfdata := new(MoreToMoreConfig)
+	//多对多启动
+	P = P + 2
+	YSconfdata.Uuid = UNIVIEW + "+" + strconv.Itoa(P) //方便确定是哪一个进程发出的数据 我取品牌名称+进程端口号
+	YSconfdata.Udplistenport = P                      //我向进程拨号的端口号
+	YSconfdata.Udptxport = P - 1                      // 进程向我拨号的的端口
+
+	for _, ys := range uniview {
+		YSconfdata.DevCompId = ys.DevCompId //品牌名称
+		devdata := new(MoreToMoreConfigDev)
+
+		devdata.Id = ys.Id
+		devdata.DevIp = ys.DevIp
+		devdata.Port = ys.Port
+		devdata.UserName = ys.UserName
+		devdata.Password = ys.Password
+
+		YSconfdata.Devlist.Dev = append(YSconfdata.Devlist.Dev, *devdata)
+		Chan := new(MoreToMoreConfigChannel)
+		Chan.Id = ys.Id
+		Chan.Index = ys.Channel
+		YSconfdata.Channellist.Channel = append(YSconfdata.Channellist.Channel, *Chan)
+	}
+	YSConfigPath := ""
+	//宇视生成xml配置文件
+	ysfname := generateYSConfig(YSconfdata)
+	if ysfname != "" {
+		YSConfigPath = ysfname
+	}
+	time.Sleep(time.Minute * 1)
+	//启动宇视的程序
+	if err := Runmain(YSConfigPath); err != nil {
+		log.Println("宇视需要重启")
+
+		//var a int
+		////2、进程重启
+		//Rerr := Runmain(ConfigPath)
+		//a = a + 1
+		//log.Println("重启数a：", a)
+		//
+		//if Rerr != nil {
+		//	log.Println("重启 error!", Rerr)
+		//	goto A
+		//}
+	}
+	log.Println("启动宇视的程序ok")
+
+	if len(hikITS) == 0 {
+		log.Println("++++++++++++++++++++++++++++++该网关设备没有海康ITS相机")
+		return
+	}
+
+	//根据海康ITS的ip生成配置文件   赋值
+	itsmap := make(map[string][]OneToMoreConfigChannel, len(hikITS))
+
+	for _, its := range hikITS {
+		//its 根据ip 端口号生成 配置文件
+		Chan := new(OneToMoreConfigChannel)
+		Chan.Id = its.Id
+		Chan.Index = its.Channel
+
+		log.Println("its.DevCompId++its.DevIp++its.Port++its.UserName++its.Password:", its.DevCompId+"|"+its.DevIp+"|"+its.Port+"|"+its.UserName+"|"+its.Password)
+
+		if val, ok := itsmap[its.DevCompId+"+"+its.DevIp+"+"+its.Port+"+"+its.UserName+"+"+its.Password]; ok == true {
+			log.Println("海康iTS的列表值已经存在", val, "｜海康iTS的map列表值已经存在", itsmap)
+
+			val = append(val, *Chan)
+			itsmap[its.DevCompId+"+"+its.DevIp+"+"+its.Port+"+"+its.UserName+"+"+its.Password] = val
+
+			log.Println("海康iTS的列表新存在值：", *Chan, "｜海康iTS的新map列表存在值 ：", itsmap)
+
+		} else {
+			log.Println("海康iTS的列表值空值:", val, "+海康iTS的map列表值空值:", itsmap[its.DevCompId+"+"+its.DevIp+"+"+its.Port+"+"+its.UserName+"+"+its.Password])
+
+			//新的ITS进程的配置文件
+			itschan := make([]OneToMoreConfigChannel, 0)
+			itschan = append(itschan, *Chan)
+
+			itsmap[its.DevCompId+"+"+its.DevIp+"+"+its.Port+"+"+its.UserName+"+"+its.Password] = itschan
+
+			log.Println("海康iTS的列表空值:", val, "+海康iTS的map列表第一个值:", itsmap[its.DevCompId+"+"+its.DevIp+"+"+its.Port+"+"+its.UserName+"+"+its.Password])
 
 		}
+	}
+	log.Println("海康iTS的列表值:", itsmap)
 
-		//2、进程启动
-		//A:
-		//传 一个配置文件的绝对路径 全局唯一
-		if err := Runmain(ConfigPath); err != nil {
-			log.Println("重启")
+	for key, itsone := range itsmap {
+		log.Println(key, itsone)
+		P = P + 2
+		//生成配置文件
+		//ITS 多对多启动   OneToMoreConfig
+		ITSconfdata := new(OneToMoreConfig)
+		k := strings.Split(key, "+") //its.DevCompId+"+"+its.DevIp+"+"+its.Port+"+"+its.UserName+"+"+its.Password
+		ITSconfdata.DevCompId = k[0]
+		ITSconfdata.Uuid = HIKITS + k[1] + k[2] + "+" + strconv.Itoa(P) //方便确定是哪一个进程发出的数据 我取品牌名称+进程端口号
+		ITSconfdata.Udplistenport = P
+		ITSconfdata.Udptxport = P - 1
+		ITSconfdata.Devlist.Dev.UserName = k[3]
+		ITSconfdata.Devlist.Dev.Password = k[4]
+		ITSconfdata.Devlist.Dev.DevIp = k[1]
+		ITSconfdata.Devlist.Dev.Port = k[2]
+		//ITSconfdata.Devlist.Dev.Id   =
+		ITSconfdata.Channellist.Channel = itsone
+
+		//生成启动进程的配置文件
+		ITSConfigPath := ""
+		itsfname := generateITSConfig(ITSconfdata)
+		if itsfname != "" {
+			ITSConfigPath = itsfname
+		}
+		//启动海康的程序
+		if err := Runmain(ITSConfigPath); err != nil {
+			log.Println("海康ITS需要重启")
 
 			//var a int
 			////2、进程重启
@@ -145,9 +288,8 @@ CQ:
 			//	goto A
 			//}
 		}
+		log.Println("启动海康的程序ok")
 
-		log.Println("进程已启动", i+1)
-		continue
 	}
 
 }
@@ -165,14 +307,15 @@ func Runmain(ConfigPath string) error {
 	//	fmt.Printf("err: %v\n", err)
 	//}
 
-	//与抓拍进程交互心跳 [cameraConfig/2020-12-02T11:35:03+sxjgl_shygs_321300_G2513_K101_415_3_2_1+6004.xml]
+	//与抓拍进程交互心跳 [ ]
 	port := strings.Split(ConfigPath, "+")
 	xtpt := strings.Split(port[2], ".")
 
 	//cmd := exec.Command("capture.exe绝对路径")
-	cmd := exec.Command("./grpcSimulator/grpc_main")
+	cmd := exec.Command("./grpcSimulator/udpmain")
 
 	path := make([]string, 0)
+	path = append(path, "ConfigPath:")
 	path = append(path, ConfigPath)
 
 	cmd.Args = path
@@ -184,7 +327,7 @@ func Runmain(ConfigPath string) error {
 
 	var err = cmd.Start()
 	if err != nil {
-		log.Println("++++++ Execute Command failed. ++", err)
+		log.Println("++++++ Execute Command failed. ++++++++++++++", err)
 		return err
 	}
 
@@ -362,7 +505,7 @@ XT:
 	for {
 		//获取数据
 		// Here must use make and give the lenth of buffer
-		data := make([]byte, 512)
+		data := make([]byte, 32)
 
 		//返回一个UDPAddr        ReadFromUDP从c读取一个UDP数据包，将有效负载拷贝到b，返回拷贝字节数和数据包来源地址。
 		//ReadFromUDP方法会在超过一个固定的时间点之后超时，并返回一个错误。
@@ -424,7 +567,7 @@ func Heartbeatclient(port string) {
 
 	log.Println("Write:", toWrite, "n:", n)
 
-	msg := make([]byte, 512)
+	msg := make([]byte, 32)
 	n, err = conn.Read(msg)
 	if err != nil {
 		log.Println("err:", err)

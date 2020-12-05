@@ -15,11 +15,47 @@ func generateConfigToOne(configdata *OneToOneConfig) string {
 		log.Printf("执行线程1 打包原始记录消息包 xml.MarshalIndent error: %v\n", err)
 		return ""
 	}
-	xmlname := time.Now().Format("2006-01-02T15:04:05") + "+" + configdata.Uuid
+	xmlname := time.Now().Format("20060102T150405") + "+" + configdata.Uuid
 	fname := createxml(xmlname, outputxml)
 	if fname != "" {
-		log.Println("启动进程配置文件生成OK，可以启动进程")
+		log.Println("启动一对一进程配置文件生成OK，可以启动进程", fname)
 	}
+	return fname
+}
+
+//宇视生成配置文件
+func generateYSConfig(configdata *MoreToMoreConfig) string {
+	//使用MarshalIndent函数，生成的XML格式有缩进
+	outputxml, err := xml.MarshalIndent(*configdata, "     ", "     ")
+	if err != nil {
+		log.Printf("执行线程1 打包原始记录消息包 xml.MarshalIndent error: %v\n", err)
+		return ""
+	}
+
+	xmlname := time.Now().Format("20060102T150405") + "+" + configdata.Uuid
+	fname := createxml(xmlname, outputxml)
+	if fname != "" {
+		log.Println("启动宇视进程配置文件生成OK，可以启动进程", fname)
+	}
+
+	return fname
+}
+
+//海康ITS生成配置文件
+func generateITSConfig(configdata *OneToMoreConfig) string {
+	//使用MarshalIndent函数，生成的XML格式有缩进
+	outputxml, err := xml.MarshalIndent(*configdata, "     ", "     ")
+	if err != nil {
+		log.Printf("执行线程1 打包原始记录消息包 xml.MarshalIndent error: %v\n", err)
+		return ""
+	}
+
+	xmlname := time.Now().Format("20060102T150405") + "+" + configdata.Uuid
+	fname := createxml(xmlname, outputxml)
+	if fname != "" {
+		log.Println("启动海康ITS进程配置文件生成OK，可以启动进程", fname)
+	}
+
 	return fname
 }
 
@@ -31,6 +67,7 @@ func createxml(xmlname string, outputxml []byte) string {
 		log.Println("Read:", f_werr)
 		return ""
 	}
+
 	//加入XML头
 	headerBytes := []byte(xml.Header)
 	//拼接XML头和实际XML内容
@@ -46,5 +83,5 @@ func createxml(xmlname string, outputxml []byte) string {
 		_ = fw.Close()
 	}()
 
-	return "cameraConfig/" + xmlname + ".xml"
+	return "" + xmlname + ".xml"
 }

@@ -1,5 +1,8 @@
 <config> 
-  <devCompId>HIK</devCompId>  
+  <devCompId>HIK</devCompId>
+  <uuid>HIKUUID</uuid>
+  <udplistenport>6000</udplistenport>
+  <udptxport>5000</udptxport>
   <devlist> 
     <dev> 
       <devIp>10.25.51.21</devIp>  
@@ -30,6 +33,6 @@
       <id>sxjgl_yzjtd_320200_G2_K1071_2_0_005</id>  
       <index>5</index> 
     </channel> 
-  </channellist> 
+  </channellist>
 </config>
      一个海康存储设备 挂多个相机   一个进程  一个文件     多个"通道"        相机id+通道号 可以关联车道号

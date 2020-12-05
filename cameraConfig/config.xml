@@ -1,0 +1,24 @@
+<config> 
+	<devCompId>HIK</devCompId>
+	<uuid>HIKUUID</uuid>  
+	<udplistenport>6000</udplistenport>    
+	<udptxport>5000</udptxport>   
+  <devlist> 
+   
+
+	<dev> 
+	<devIp>10.113.1.37</devIp>  
+	<port>80</port>  
+	<userName>admin</userName>  
+	<password>123456</password>  
+	<id>sxjgl_yzjtd_320200_G2_K1071_2_0_001</id> 
+	</dev>
+
+  </devlist>  
+  <channellist> 
+    <channel> 
+      <id>sxjgl_yzjtd_320200_G2_K1071_2_0_001</id>  
+      <index>1</index> 
+    </channel>
+  </channellist> 
+</config>

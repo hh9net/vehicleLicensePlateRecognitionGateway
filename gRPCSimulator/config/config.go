@@ -5,8 +5,8 @@ import (
 	"gopkg.in/ini.v1"
 )
 
-var conffilepath = "./conf/config.toml" // go run main.go
-//var conffilepath = "../conf/config.toml"
+//var conffilepath = "./grpcSimulator/conf/config.toml" // go run main.go
+var conffilepath = "../grpcSimulator/conf/config.toml"
 
 type Config struct { //配置文件要通过tag来指定配置文件中的名称
 	//mysql 配置
@@ -64,6 +64,16 @@ func ConfigInit() *Config {
 	config, err := ReadConfig(conffilepath) //也可以通过os.arg或flag从命令行指定配置文件路径
 	if err != nil {
 		log.Println(err)
+	}
+	//log.Println(config)
+	return &config
+}
+
+func UdpConfigInit() *Config {
+	//读配置文件
+	config, err := ReadConfig(conffilepath) //也可以通过os.arg或flag从命令行指定配置文件路径
+	if err != nil {
+			log.Println(err)
 	}
 	//log.Println(config)
 	return &config

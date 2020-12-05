@@ -64,6 +64,7 @@ type GetCameraList struct {
 	XMLName xml.Name `xml:"ListData"`
 	Data    []CameraListData
 }
+
 type CameraListData struct {
 	XMLName     xml.Name `xml:"Data"`
 	Id          string   `xml:"id"`          //相机id    sxjgl_yzjtd_320200_G2_K1071_2_0_004
