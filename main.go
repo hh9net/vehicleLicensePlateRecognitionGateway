@@ -28,12 +28,12 @@ func main() {
 
 	//初始化配置文件
 	ConfigInit()
-	ch := make(chan int, 1)
+	//ch := make(chan int, 1)
 	//进程管理
-	go service.ProcessManagementService(ch)
+	service.ProcessManagementService()
 	//	goroutine1
 	//	开线程读取xml文件 上传图片到oss  上传抓拍结果到车牌识别云端服务器
-	go service.UploadFile(ch)
+	go service.UploadFile()
 	//goroutine2
 	go service.HandleDayTasks()
 	//

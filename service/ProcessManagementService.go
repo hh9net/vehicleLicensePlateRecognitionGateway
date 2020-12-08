@@ -42,7 +42,7 @@ const (
 )
 
 // 进程管理
-func ProcessManagementService(ch chan int) {
+func ProcessManagementService( /*ch chan int*/ ) {
 
 	PorT := 6000 //固定端口
 	var P int
@@ -263,7 +263,7 @@ CQ:
 
 	}
 
-	ch <- 1
+	//	ch <- 1
 
 }
 
@@ -340,9 +340,8 @@ func GetGatawayCameraList() (*dto.GetCameraList, error) {
 }
 
 //上传文件  开线程读取xml文件 上传图片到oss  上传抓拍结果到车牌识别云端服务器
-func UploadFile(ch chan int) {
+func UploadFile() {
 	//协调goroutine执行顺序
-	<-ch
 
 	tiker := time.NewTicker(time.Second * 10) //每5秒执行一下
 	for {
@@ -560,6 +559,7 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ string) 
 	log.Println("前置机抓拍信息上传接口 Address:", GwCaptureInformationUploadIpAddress)
 	result, err := GwCaptureInformationUploadPostWithXML(&ba)
 	if err != nil {
+
 		return err
 	}
 
@@ -577,8 +577,7 @@ func Heartbeat(port string) {
 
 	//监控抓拍进程的心跳
 XT:
-	ip := strings.Split("127.0.0.1", ":")
-	address := ip[0] + ":" + port //SERVER_PORT
+	address := "127.0.0.1" + ":" + port //SERVER_PORT
 	addr, err := net.ResolveUDPAddr("udp", address)
 	if err != nil {
 		log.Println("监控抓拍进程心跳 net.ResolveUDPAddr 时 err:", err)
