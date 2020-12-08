@@ -347,7 +347,9 @@ func UploadFile() {
 	for {
 		//上传图片以及抓拍结果到车牌识别云端服务器
 		HandleFile()
+
 		HandleFileAgainUpload()
+
 		log.Println(<-tiker.C, "执行 上传图片以及抓拍结果到车牌识别云端服务器  ")
 	}
 
@@ -471,10 +473,10 @@ func HandleFileAgainUpload() {
 	dir, _ := os.Getwd()
 	log.Println("+++++++++++++++++++++++++当前路径：", dir)
 
-	var snapimagespathDir = filepath.Join(dir, "snap", "xml", "error", "upload")
-	log.Println("/snap/xml/error/upload/绝对路径:", snapimagespathDir) //可以不需要加"/"
+	var snapxmlpathDir = filepath.Join(dir, "snap", "xml", "error", "upload")
+	log.Println("/snap/xml/error/upload/绝对路径:", snapxmlpathDir) //可以不需要加"/"
 
-	fileList, err := ioutil.ReadDir(snapimagespathDir) //不需要加"/"
+	fileList, err := ioutil.ReadDir(snapxmlpathDir) //不需要加"/"
 	if err != nil {
 		log.Println("扫描 captureXml 文件夹 读取文件信息 error:", err)
 		return
@@ -495,7 +497,7 @@ func HandleFileAgainUpload() {
 		if strings.HasSuffix(fileList[i].Name(), ".xml") {
 			log.Println("执行 扫描 该captureXml文件夹下需要解析的xml文件名字为:", fileList[i].Name())
 
-			content, err := ioutil.ReadFile(snapimagespathDir + "/" + fileList[i].Name())
+			content, err := ioutil.ReadFile(snapxmlpathDir + "/" + fileList[i].Name())
 			if err != nil {
 				log.Println("执行  读文件位置错误信息：", err)
 				continue
@@ -503,8 +505,13 @@ func HandleFileAgainUpload() {
 
 			result, err := GwCaptureInformationUploadPostWithXML(&content)
 			if err != nil {
-				log.Println("需要再次上传的抓拍结果xml文件pathname:", snapimagespathDir+"/"+fileList[i].Name())
+				log.Println("需要再次上传的抓拍结果xml文件pathname:", snapxmlpathDir+"/"+fileList[i].Name())
 				continue
+			} else {
+				//删除抓拍xml文件
+				//xml/error/upload/
+				source := snapxmlpathDir + "/" + fileList[i].Name()
+				utils.DelFile(source)
 			}
 
 			if (*result).Code == 0 {
@@ -617,7 +624,7 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, errorpa
 	//
 	result, err := GwCaptureInformationUploadPostWithXML(&ba)
 	if err != nil {
-
+		//需要再次上传的抓拍结果
 		uploadagainxml := createXml(errorpathname, ba)
 		log.Println("需要再次上传的抓拍结果xml文件pathname:", uploadagainxml)
 		return err
@@ -662,9 +669,10 @@ func createXml(xmlname string, outputxml []byte) string {
 //与抓拍进程交互心跳，得知抓拍进程程序死活
 func Heartbeat(port string) {
 
+	p, _ := strconv.Atoi(port)
 	//监控抓拍进程的心跳
 XT:
-	address := "127.0.0.1" + ":" + port //SERVER_PORT
+	address := "127.0.0.1" + ":" + strconv.Itoa(p-1) //SERVER_PORT
 	addr, err := net.ResolveUDPAddr("udp", address)
 	if err != nil {
 		log.Println("监控抓拍进程心跳 net.ResolveUDPAddr 时 err:", err)
@@ -689,12 +697,13 @@ XT:
 
 		//返回一个UDPAddr        ReadFromUDP从c读取一个UDP数据包，将有效负载拷贝到b，返回拷贝字节数和数据包来源地址。
 		//ReadFromUDP方法会在超过一个固定的时间点之后超时，并返回一个错误。
+		log.Println("conn.ReadFromUDP:")
 		_, rAddr, err := conn.ReadFromUDP(data)
 		if err != nil {
-			log.Println(err)
+			log.Println("conn.ReadFromUDP error:", err)
 			continue
 		}
-
+		log.Println("conn.ReadFromUDP:")
 		//反序列化udp数据
 		h := new(dto.Heartbeatbasic)
 		herr := xml.Unmarshal(data, h)
