@@ -347,6 +347,7 @@ func UploadFile() {
 	for {
 		//上传图片以及抓拍结果到车牌识别云端服务器
 		HandleFile()
+		HandleFileAgainUpload()
 		log.Println(<-tiker.C, "执行 上传图片以及抓拍结果到车牌识别云端服务器  ")
 	}
 
@@ -429,10 +430,10 @@ func HandleFile() {
 				utils.DelFile(result.VehicleImgPath)
 
 				//生产xml返回给云平台 [暂时上传到模拟云平台]
-				uploaderr := GwCaptureInforUpload(&result, scsj, ossDZ)
+				uploaderr := GwCaptureInforUpload(&result, scsj, ossDZ, snapimagespathDir+"/error/upload/"+fileList[i].Name())
 				if uploaderr != nil {
 					//删除抓拍xml文件
-					//xml/parsed
+					//xml/error
 					source := snapimagespathDir + "/" + fileList[i].Name()
 					d := snapimagespathDir + "/error/" + fileList[i].Name()
 					mverr := utils.MoveFile(source, d)
@@ -462,7 +463,63 @@ func HandleFile() {
 	}
 }
 
-func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ string) error {
+func HandleFileAgainUpload() {
+	//定期检查抓拍文件夹文件夹 captureXml
+	log.Println("执行处理xml数据包解析以及oss上传以及抓拍结果上传")
+	//2、处理文件
+	//扫描 captureXml 文件夹 读取文件信息
+	dir, _ := os.Getwd()
+	log.Println("+++++++++++++++++++++++++当前路径：", dir)
+
+	var snapimagespathDir = filepath.Join(dir, "snap", "xml", "error", "upload")
+	log.Println("/snap/xml/error/upload/绝对路径:", snapimagespathDir) //可以不需要加"/"
+
+	fileList, err := ioutil.ReadDir(snapimagespathDir) //不需要加"/"
+	if err != nil {
+		log.Println("扫描 captureXml 文件夹 读取文件信息 error:", err)
+		return
+	}
+	log.Println("执行 扫描 该captureXml文件夹下有文件的数量 ：", len(fileList))
+	if len(fileList) == 1 {
+		log.Println("执行 扫描 该captureXml 文件夹下可能没有需要解析的xml文件") //有隐藏文件
+
+	} else {
+		if len(fileList) == 0 {
+			log.Println("执行 扫描 该captureXml 文件夹下没有需要解析的xml文件")
+			return
+		}
+	}
+
+	for i := range fileList {
+		//判断文件的结尾名
+		if strings.HasSuffix(fileList[i].Name(), ".xml") {
+			log.Println("执行 扫描 该captureXml文件夹下需要解析的xml文件名字为:", fileList[i].Name())
+
+			content, err := ioutil.ReadFile(snapimagespathDir + "/" + fileList[i].Name())
+			if err != nil {
+				log.Println("执行  读文件位置错误信息：", err)
+				continue
+			}
+
+			result, err := GwCaptureInformationUploadPostWithXML(&content)
+			if err != nil {
+				log.Println("需要再次上传的抓拍结果xml文件pathname:", snapimagespathDir+"/"+fileList[i].Name())
+				continue
+			}
+
+			if (*result).Code == 0 {
+				log.Println("上传抓拍结果成功")
+				continue
+			} else {
+				log.Println("上传抓拍结果失败")
+				continue
+			}
+
+		}
+	}
+}
+
+func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, errorpathname string) error {
 	//判断哪一种品牌相机
 	//Result.
 	var ba []byte
@@ -557,9 +614,12 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ string) 
 	}
 
 	log.Println("前置机抓拍信息上传接口 Address:", GwCaptureInformationUploadIpAddress)
+	//
 	result, err := GwCaptureInformationUploadPostWithXML(&ba)
 	if err != nil {
 
+		uploadagainxml := createXml(errorpathname, ba)
+		log.Println("需要再次上传的抓拍结果xml文件pathname:", uploadagainxml)
 		return err
 	}
 
@@ -570,6 +630,33 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ string) 
 		log.Println("上传抓拍结果失败")
 		return err
 	}
+}
+
+//创建xml文件
+func createXml(xmlname string, outputxml []byte) string {
+
+	fw, f_werr := os.Create(xmlname) //go run main.go
+	if f_werr != nil {
+		log.Println("Read:", f_werr)
+		return ""
+	}
+	//加入XML头
+	headerBytes := []byte(xml.Header)
+	//拼接XML头和实际XML内容
+	xmlOutPutData := append(headerBytes, outputxml...)
+
+	_, ferr := fw.Write((xmlOutPutData))
+	if ferr != nil {
+		log.Printf("  Write xml file error: %v\n", ferr)
+		return ""
+	}
+
+	defer func() {
+		_ = fw.Close()
+	}()
+
+	return xmlname
+
 }
 
 //与抓拍进程交互心跳，得知抓拍进程程序死活
