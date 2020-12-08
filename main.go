@@ -31,15 +31,12 @@ func main() {
 	ch := make(chan int, 1)
 	//进程管理
 	go service.ProcessManagementService(ch)
-
-	//协调goroutine执行顺序
-	func() {
-		num := <-ch
-		log.Println("进程管理抓拍程序已经完成", num)
-		//开线程读取xml文件 上传图片到oss  上传抓拍结果到车牌识别云端服务器
-		go service.UploadFile()
-	}()
-
+	//	goroutine1
+	//	开线程读取xml文件 上传图片到oss  上传抓拍结果到车牌识别云端服务器
+	go service.UploadFile(ch)
+	//goroutine2
+	go service.HandleDayTasks()
+	//
 	tiker := time.NewTicker(time.Second * 30) //每15秒执行一下
 	for {
 		<-tiker.C

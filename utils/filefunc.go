@@ -24,7 +24,7 @@ func DelFile(src string) {
 		log.Println("删除失败", del)
 		return
 	}
-	log.Println("删除ok")
+	log.Println("删除图片ok", src)
 }
 
 //删除指定path下的所有文件

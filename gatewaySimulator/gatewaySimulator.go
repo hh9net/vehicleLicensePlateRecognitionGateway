@@ -16,7 +16,7 @@ import (
 
 func main() {
 	//192.168.26.248
-	IpAddress := "192.168.150.164:9898"
+	IpAddress := "192.168.26.248:9898"
 	logrus.Print("服务端 IpAddress：", IpAddress)
 	router := gin.New()
 	router.Use(Cors()) //跨域资源共享

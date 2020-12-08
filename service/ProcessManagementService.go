@@ -82,7 +82,7 @@ CQ:
 
 	hikITS := make([]dto.CameraListData, 0) //ITS列表
 
-	for i, cmera := range CameraList.Data {
+	for _, cmera := range CameraList.Data {
 		//	进程类型
 		conflx := ""
 		if cmera.DevCompId == UNIVIEW || cmera.DevCompId == HIKITS {
@@ -124,11 +124,12 @@ CQ:
 
 			//2、进程启动
 			//传 一个配置文件的绝对路径 全局唯一
-			if err := Runmain(Configfname); err != nil {
-				log.Println("需要重启")
-			} else {
-				log.Println("一对一的进程已启动ok", i+1)
-			}
+			go Runmain(Configfname)
+			//if err := Runmain(Configfname); err != nil {
+			//	log.Println("需要重启")
+			//} else {
+			//	log.Println("一对一的进程已启动ok", i+1)
+			//}
 
 		case "one2many":
 			log.Println("one2many,相机品牌是：", cmera.DevCompId)
@@ -181,11 +182,12 @@ CQ:
 	time.Sleep(time.Minute * 1)
 
 	//启动宇视的程序
-	if err := Runmain(YSConfigfname); err != nil {
-		log.Println("宇视需要重启")
-	} else {
-		log.Println("启动宇视的程序ok")
-	}
+	go Runmain(YSConfigfname)
+	//if err := Runmain(YSConfigfname); err != nil {
+	//	log.Println("宇视需要重启")
+	//} else {
+	//	log.Println("启动宇视的程序ok")
+	//}
 
 	if len(hikITS) == 0 {
 		log.Println("++++++++++++++++++++++++++++++该网关设备没有海康ITS相机")
@@ -251,19 +253,22 @@ CQ:
 			ITSConfigfname = itsfname
 		}
 		//启动海康的程序
-		if err := Runmain(ITSConfigfname); err != nil {
-			log.Println("海康ITS需要重启")
-
-		} else {
-			log.Println("启动海康的程序ok")
-		}
+		go Runmain(ITSConfigfname)
+		//if err := Runmain(ITSConfigfname); err != nil {
+		//	log.Println("海康ITS需要重启")
+		//
+		//} else {
+		//	log.Println("启动海康的程序ok")
+		//}
 
 	}
+
 	ch <- 1
+
 }
 
 //1、启动进程
-func Runmain(Configfname string) error {
+func Runmain(Configfname string) {
 
 	log.Println("Configfname:", Configfname)
 	//与抓拍进程交互心跳 [ ]
@@ -278,6 +283,7 @@ func Runmain(Configfname string) error {
 	additionalBilldataDir, _ = filepath.Abs(filepath.Dir(os.Args[0]))
 
 	var billoutputDir = filepath.Join(additionalBilldataDir, "snap", "udpmain.exe")
+
 	log.Println("capture.exe绝对路径:", billoutputDir)
 
 	cmd := exec.Command(billoutputDir)
@@ -298,7 +304,7 @@ func Runmain(Configfname string) error {
 	var err = cmd.Start()
 	if err != nil {
 		log.Println("++++++ Execute Command failed. ++++++++++++++", err)
-		return err
+		//return err
 	} else {
 		log.Println("启动进程 ok！！！ you see see you")
 	}
@@ -306,7 +312,7 @@ func Runmain(Configfname string) error {
 	//心跳port
 	go Heartbeat(xtpt[0])
 
-	return nil
+	//return nil
 }
 
 //1、获取网关设备的token
@@ -334,73 +340,12 @@ func GetGatawayCameraList() (*dto.GetCameraList, error) {
 }
 
 //上传文件  开线程读取xml文件 上传图片到oss  上传抓拍结果到车牌识别云端服务器
-func UploadFile() {
+func UploadFile(ch chan int) {
+	//协调goroutine执行顺序
+	<-ch
 
-	tiker := time.NewTicker(time.Second * 5) //每5秒执行一下
-
-DirListP:
-
+	tiker := time.NewTicker(time.Second * 10) //每5秒执行一下
 	for {
-		//删除前几天日期文件夹中为空的文件夹
-		log.Println("执行删除前几天日期文件夹中为空的文件夹")
-		//2、处理文件
-		//扫描 captureXml 文件夹 读取文件信息
-
-		pwd := "./snap/images/"
-		DirList, err := ioutil.ReadDir(pwd)
-		if err != nil {
-			log.Println("扫描 /snap/images/文件夹 读取文件信息 error:", err)
-			time.Sleep(time.Second * 5)
-			break DirListP
-		}
-
-		log.Println("执行 扫描 该/snap/images/文件夹下有文件的数量 ：", len(DirList))
-
-		if len(DirList) == 1 {
-			log.Println("执行 扫描 该/snap/images/ 文件夹下可能没有文件夹") //有隐藏文件
-
-		} else {
-			if len(DirList) == 0 {
-				log.Println("执行 扫描 该/snap/images/ 文件夹下没有文件夹")
-				break
-			}
-		}
-
-		for i := range DirList {
-			//判断文件的结尾名
-			if IsDir("./snap/images/" + DirList[i].Name()) {
-
-				fileList, err := ioutil.ReadDir("./snap/images/" + DirList[i].Name())
-				if err != nil {
-					log.Println("扫描 /snap/images/下文件夹 读取文件信息 error:", err, DirList[i].Name())
-					break
-				}
-
-				if len(fileList) == 0 {
-					log.Println("执行 扫描 该/snap/images/ 下文件夹的文件夹下没有需要解析的xml文件", DirList[i].Name())
-
-					oldday := utils.OldData(7)
-					for _, day := range oldday {
-						if DirList[i].Name() == day {
-							//删除空文件夹
-							rmverr := os.RemoveAll("./snap/images/" + DirList[i].Name() + "/")
-							if rmverr != nil {
-								log.Println("删除空文件夹失败:", rmverr)
-							} else {
-								log.Println("删除空文件夹", DirList[i].Name(), "ok")
-							}
-
-						}
-
-					}
-
-				}
-
-			}
-
-		}
-		log.Println("处理可能有要删除的空文件夹OK")
-
 		//上传图片以及抓拍结果到车牌识别云端服务器
 		HandleFile()
 		log.Println(<-tiker.C, "执行 上传图片以及抓拍结果到车牌识别云端服务器  ")
@@ -419,14 +364,17 @@ func IsDir(path string) bool {
 
 func HandleFile() {
 	//定期检查抓拍文件夹文件夹 captureXml
-	//tiker := time.NewTicker(time.Minute * 1)
-	//tiker := time.NewTicker(time.Second * 30)
-	//for {
+
 	log.Println("执行处理xml数据包解析以及oss上传以及抓拍结果上传")
 	//2、处理文件
 	//扫描 captureXml 文件夹 读取文件信息
-	pwd := "./snap/xml/"
-	fileList, err := ioutil.ReadDir(pwd)
+	dir, _ := os.Getwd()
+	log.Println("+++++++++++++++++++++++++当前路径：", dir)
+
+	var snapimagespathDir = filepath.Join(dir, "snap", "xml")
+	log.Println("/snap/xml/绝对路径:", snapimagespathDir) //可以不需要加"/"
+	//pwd := "./snap/xml/"
+	fileList, err := ioutil.ReadDir(snapimagespathDir) //不需要加"/"
 	if err != nil {
 		log.Println("扫描 captureXml 文件夹 读取文件信息 error:", err)
 		return
@@ -446,7 +394,8 @@ func HandleFile() {
 		//判断文件的结尾名
 		if strings.HasSuffix(fileList[i].Name(), ".xml") {
 			log.Println("执行 扫描 该captureXml文件夹下需要解析的xml文件名字为:", fileList[i].Name())
-			content, err := ioutil.ReadFile("./snap/xml/" + fileList[i].Name())
+
+			content, err := ioutil.ReadFile(snapimagespathDir + "/" + fileList[i].Name())
 			if err != nil {
 				log.Println("执行  读文件位置错误信息：", err)
 				continue
@@ -483,11 +432,21 @@ func HandleFile() {
 				//生产xml返回给云平台 [暂时上传到模拟云平台]
 				uploaderr := GwCaptureInforUpload(&result, scsj, ossDZ)
 				if uploaderr != nil {
+					//删除抓拍xml文件
+					//xml/parsed
+					source := snapimagespathDir + "/" + fileList[i].Name()
+					d := snapimagespathDir + "/error/" + fileList[i].Name()
+					mverr := utils.MoveFile(source, d)
+					if mverr != nil {
+						log.Println(mverr)
+						continue
+					}
 					continue
 				} else {
 					//删除抓拍xml文件
-					source := "./snap/xml/" + fileList[i].Name()
-					d := "./snap/xml/parsed/" + fileList[i].Name()
+					//xml/parsed
+					source := snapimagespathDir + "/" + fileList[i].Name()
+					d := snapimagespathDir + "/parsed/" + fileList[i].Name()
 					mverr := utils.MoveFile(source, d)
 					if mverr != nil {
 						log.Println(mverr)
@@ -500,12 +459,8 @@ func HandleFile() {
 				//上传oss失败
 				continue
 			}
-
 		}
-
 	}
-	//log.Println("执行处理xml数据包", (<-tiker.C).Format("2006-01-02 15:04:05"))
-	//}
 }
 
 func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ string) error {
@@ -598,8 +553,8 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ string) 
 		data.LpaResult.LprFrameEntity.PlateBottom = 0 // int      `xml:"plateBottom"` //plateBottom>     车牌下坐标
 		//MarshalIndent 有缩进 xml.Marshal ：无缩进
 
-		ba, _ = xml.MarshalIndent(data, "  ", "  ")
-		log.Println("+++++++++", string(ba))
+		ba, _ = xml.Marshal(data)
+		log.Println("前置机抓拍信息上传数据 +++++++++", string(ba))
 	}
 
 	log.Println("前置机抓拍信息上传接口 Address:", GwCaptureInformationUploadIpAddress)
@@ -801,5 +756,89 @@ func checkError(err error) {
 		log.Println(err)
 		//return
 		os.Exit(1)
+	}
+}
+
+func HandleDayTasks() {
+	for {
+		now := time.Now()               //获取当前时间，放到now里面，要给next用
+		next := now.Add(time.Hour * 24) //通过now偏移24小时
+
+		next = time.Date(next.Year(), next.Month(), next.Day(), 3, 0, 0, 0, next.Location()) //获取下一个20点的日期
+
+		t := time.NewTimer(next.Sub(now)) //计算当前时间到凌晨的时间间隔，设置一个定时器
+		<-t.C
+		log.Println("执行线程，处理一天一次删除的定时任务11111111111111111111111111111111111111111111111111111111111111111")
+
+		//删除前几天日期文件夹中为空的文件夹
+		log.Println("执行删除前几天日期文件夹中为空的文件夹")
+		//2、处理文件
+		//扫描 captureXml 文件夹 读取文件信息
+		dir, _ := os.Getwd()
+		log.Println("+++++++++++++++++++++++++当前路径：", dir)
+
+		//var snapimagespath string
+		//snapimagespath, _ = filepath.Abs(filepath.Dir(os.Args[0]))
+
+		var snapimagespathDir = filepath.Join(dir, "snap", "images")
+		log.Println("/snap/images/绝对路径:", snapimagespathDir+"/") //+"/"
+		//pwd := snapimagespathDir
+		DirList, err := ioutil.ReadDir(snapimagespathDir + "/") //也可以不加
+		if err != nil {
+			log.Println("扫描 /snap/images/文件夹 读取文件信息 error:", err)
+			time.Sleep(time.Second * 3)
+			continue //DirListP
+		}
+
+		if len(DirList) == 1 {
+			log.Println("执行 扫描 该/snap/images/ 文件夹下可能没有文件夹") //有隐藏文件
+
+		} else {
+			if len(DirList) == 0 {
+				log.Println("执行 扫描 该/snap/images/ 文件夹下没有文件夹")
+				continue
+			}
+		}
+
+		log.Println("执行 扫描 该/snap/images/文件夹下有文件的数量 ：", len(DirList))
+		for i := range DirList {
+			//判断文件的结尾名
+			log.Println("DirList[i].Name():", DirList[i].Name())
+			if DirList[i].IsDir() {
+
+				log.Println("日期文件夹的绝对目录:", snapimagespathDir+"/"+DirList[i].Name())
+				fileList, err := ioutil.ReadDir(snapimagespathDir + "/" + DirList[i].Name()) //可已不加"/"
+				if err != nil {
+					log.Println("扫描 /snap/images/下文件夹 读取文件信息 error:", err, DirList[i].Name())
+					continue
+				}
+
+				if len(fileList) == 0 {
+					log.Println("执行 扫描 该/snap/images/ 下文件夹的文件夹下没有需要解析的xml文件,是空文件夹，", DirList[i].Name())
+
+					oldday := utils.OldData(14)
+					for _, day := range oldday {
+						if DirList[i].Name() == day {
+							//删除空文件夹
+							log.Println("删除空文件夹path:", snapimagespathDir+"/"+DirList[i].Name())
+
+							rmverr := os.RemoveAll(snapimagespathDir + "/" + DirList[i].Name())
+							if rmverr != nil {
+								log.Println("删除空文件夹失败:", rmverr)
+
+							} else {
+								log.Println("删除空文件夹:", DirList[i].Name(), "ok!")
+							}
+
+						}
+					}
+				} else {
+					log.Println("文件夹", DirList[i].Name(), "存在文件，文件名称：", fileList[0].Name())
+					continue
+				}
+			}
+		}
+		log.Println("处理可能有要删除的空文件夹OK")
+		log.Println("执行线程，处理一天一次的定时任务【完成】11111111111111111111111111111111111111111111111111111111111111111")
 	}
 }
