@@ -6,6 +6,7 @@ import (
 	qs "github.com/yunify/qingstor-sdk-go/service"
 	"io"
 	"os"
+	"time"
 )
 
 //http://gdkjetcpark.sh1a.qingstor.com/
@@ -32,7 +33,10 @@ const (
 	UPloadOK         = 201
 )
 
-func QingStorUpload(day, fname, prefix string) int {
+var BacketName string
+
+func QingStorUpload(path, fname, prefix string) (int, int64, string) {
+
 	//发起请求前首先建立需要初始化服务:
 	//1、初始化了一个 QingStor Service
 	//configuration, _ := config.New("ACCESS_KEY_ID", "SECRET_ACCESS_KEY")
@@ -40,14 +44,15 @@ func QingStorUpload(day, fname, prefix string) int {
 	qsService, _ := qs.Init(configuration)
 
 	//2、初始化并创建 Bucket, 需要指定 Bucket[桶] 名称和所在 Zone:
-	bucket, _ := qsService.Bucket(CHEPBucketName, CHEPZone)
+	log.Println("qsService.Bucket (BacketName , CHEPZone)", BacketName, CHEPZone)
+	bucket, _ := qsService.Bucket(BacketName, CHEPZone)
 
 	//2、创建一个 Object 例如上传一张屏幕截图:
 	// Open file
-	f, err := os.Open("./images/" + day + "/" + fname)
+	f, err := os.Open(path)
 	if err != nil {
 		log.Print("上传oss 创建一个 Object error：", err)
-		return 0
+		return 0, 0, ""
 	}
 
 	defer func() {
@@ -56,8 +61,8 @@ func QingStorUpload(day, fname, prefix string) int {
 
 	// Put object          &service: 包名称
 	//Output, err := bucket.PutObject(fname, &service.PutObjectInput{Body: f})
-	log.Println("PutObject:", prefix+fname) //prefix:/jiangsu/suhuaiyangs/
-	Output, err := bucket.PutObject(prefix+fname, &qs.PutObjectInput{Body: f})
+	log.Println("PutObject:prefix+/+fname:", prefix+"/"+fname) //prefix:/jiangsu/suhuaiyangs/
+	Output, err := bucket.PutObject(prefix+"/"+fname, &qs.PutObjectInput{Body: f})
 	if err != nil {
 		// 所有 >= 400 的 HTTP 返回码都被视作错误 Example: QingStor Error: StatusCode 403, Code "permission_denied"...
 		log.Println("上传结果有错误:", err)
@@ -66,7 +71,7 @@ func QingStorUpload(day, fname, prefix string) int {
 		log.Println("上传结果:", qs.IntValue(Output.StatusCode))
 	}
 
-	return qs.IntValue(Output.StatusCode)
+	return qs.IntValue(Output.StatusCode), time.Now().Unix(), prefix + "/" + fname
 }
 
 func QingStorGetFile(fname, day, fm string) {

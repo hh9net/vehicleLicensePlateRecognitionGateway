@@ -25,7 +25,10 @@ func GwCaptureInformationUploadPostWithXML(data *[]byte) (*dto.ResultRespXML, er
 	if err != nil {
 		log.Println("post请求指标信息查询接口失败:", err)
 		return nil, err
+	} else {
+		log.Println("前置机抓拍信息上传接口调用OK")
 	}
+
 	body, _ := ioutil.ReadAll(resp.Body)
 	Resp := new(dto.ResultRespXML)
 	//
@@ -34,7 +37,7 @@ func GwCaptureInformationUploadPostWithXML(data *[]byte) (*dto.ResultRespXML, er
 		log.Println(" xml.Unmarshal error", unmerr)
 		return nil, unmerr
 	}
-	log.Println("Post request with  xml result:", Resp.Code, Resp.Msg)
+	log.Println("前置机抓拍信息上传接口 Post request with  xml result:", Resp.Code, Resp.Msg)
 	return Resp, nil
 }
 

@@ -12,13 +12,15 @@ func generateConfigToOne(configdata *OneToOneConfig) string {
 	//使用MarshalIndent函数，生成的XML格式有缩进
 	outputxml, err := xml.MarshalIndent(*configdata, "  ", "     ")
 	if err != nil {
-		log.Printf("执行线程1 打包原始记录消息包 xml.MarshalIndent error: %v\n", err)
+		log.Printf("执行启动一对一进程配置文件 xml.MarshalIndent error: %v\n", err)
 		return ""
 	}
 	xmlname := time.Now().Format("20060102T150405") + "+" + configdata.Uuid
+
+	//20060102T150405+configdata.Uuid[HIKITS+6002].xml
 	fname := createxml(xmlname, outputxml)
 	if fname != "" {
-		log.Println("启动一对一进程配置文件生成OK，可以启动进程", fname)
+		log.Println("启动一对一进程配置文件生成OK，可以启动进程，fname=", fname)
 	}
 	return fname
 }
@@ -28,11 +30,13 @@ func generateYSConfig(configdata *MoreToMoreConfig) string {
 	//使用MarshalIndent函数，生成的XML格式有缩进
 	outputxml, err := xml.MarshalIndent(*configdata, "     ", "     ")
 	if err != nil {
-		log.Printf("执行线程1 打包原始记录消息包 xml.MarshalIndent error: %v\n", err)
+		log.Printf("执行宇视生成配置文件xml.MarshalIndent error: %v\n", err)
 		return ""
 	}
 
 	xmlname := time.Now().Format("20060102T150405") + "+" + configdata.Uuid
+
+	//20060102T150405+configdata.Uuid[HIKITS+6002].xml
 	fname := createxml(xmlname, outputxml)
 	if fname != "" {
 		log.Println("启动宇视进程配置文件生成OK，可以启动进程", fname)
@@ -46,11 +50,13 @@ func generateITSConfig(configdata *OneToMoreConfig) string {
 	//使用MarshalIndent函数，生成的XML格式有缩进
 	outputxml, err := xml.MarshalIndent(*configdata, "     ", "     ")
 	if err != nil {
-		log.Printf("执行线程1 打包原始记录消息包 xml.MarshalIndent error: %v\n", err)
+		log.Printf("执行海康ITS生成配置文件 xml.MarshalIndent error: %v\n", err)
 		return ""
 	}
 
 	xmlname := time.Now().Format("20060102T150405") + "+" + configdata.Uuid
+
+	//20060102T150405+configdata.Uuid[HIKITS+6002].xml
 	fname := createxml(xmlname, outputxml)
 	if fname != "" {
 		log.Println("启动海康ITS进程配置文件生成OK，可以启动进程", fname)
@@ -82,6 +88,6 @@ func createxml(xmlname string, outputxml []byte) string {
 	defer func() {
 		_ = fw.Close()
 	}()
-
-	return "" + xmlname + ".xml"
+	//20060102T150405+configdata.Uuid[HIKITS+6002].xml
+	return xmlname + ".xml"
 }

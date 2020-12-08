@@ -114,7 +114,7 @@ func OldData(num int) []string {
 	daystrs := make([]string, 0)
 	for i := 0; i < num; i++ {
 		yesTime := nTime.AddDate(0, 0, -days)
-		daystrs = append(daystrs, yesTime.Format("2006-01-02"))
+		daystrs = append(daystrs, yesTime.Format("20060102"))
 		days--
 	}
 	//log.Println("daystrs:", daystrs)
