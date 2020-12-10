@@ -16,7 +16,8 @@ func TestByteToMB(t *testing.T) {
 }
 
 func TestQingStorGetFile(t *testing.T) {
-	QingStorGetFile("/jiangsu/suhuaiyangs/sxjgl_yzjtd_320200_G2_K1071_2_0_004_20201124143417_000031.jpg", "20201124", "sxjgl_yzjtd_320200_G2_K1071_2_0_004_20201124143417_000031.jpg")
+	//http://ydcpsbxt.sh1a.qingstor.com/cloud_lpr/jiangsu/ggzx/sxjgl_ggzx_320600_G40_K212_2_1_1102_20201209113306_000412.jpg
+	QingStorGetFile("sxjgl_ggzx_320600_G40_K212_2_1_1102_20201209113306_000412.jpg", "cloud_lpr/jiangsu/ggzx/sxjgl_ggzx_320600_G40_K212_2_1_1102_20201209113306_000412.jpg")
 }
 
 func TestQingStorUpload(t *testing.T) {

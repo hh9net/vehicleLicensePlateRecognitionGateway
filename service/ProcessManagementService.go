@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/xml"
+	"fmt"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net"
@@ -17,6 +18,8 @@ import (
 
 var Deviceid string //网关设备id Token
 //var IpAddress string
+var StationId map[string]string
+var DeviceId map[string]string
 
 var Token string
 
@@ -39,6 +42,7 @@ const (
 	HWTC         string = "HWTC200"      // 汉王TC200
 	SignalwayNew string = "SignalwayNew" // 信路威车型 有侧面图片
 	GDPort       int    = 5000           //固定 进程向我拨号的的端口
+	EngineType   string = "sjk-camera-lpa"
 )
 
 // 进程管理
@@ -65,7 +69,7 @@ CQ:
 		log.Println("Token:", Token)
 		log.Println("BacketName:", BacketName)
 
-		log.Println("ObjectPrefix:", ObjectPrefix)
+		log.Printf("ObjectPrefix:%s", ObjectPrefix)
 
 	}
 
@@ -75,6 +79,9 @@ CQ:
 		log.Println("获取相机列表错误", listerr)
 		return
 	}
+	idmap := make(map[string]string, len(CameraList.Data))
+	DeviceId = idmap
+	StationId = idmap
 
 	log.Println(" 相机列表数据的len（） ：", len(CameraList.Data))
 
@@ -83,6 +90,11 @@ CQ:
 	hikITS := make([]dto.CameraListData, 0) //ITS列表
 
 	for _, cmera := range CameraList.Data {
+		//StationId
+		//deviceid应该用gantryID
+		StationId[cmera.Id] = cmera.StationId
+		DeviceId[cmera.Id] = cmera.Gantryid //deviceid应该用gantryID
+
 		//	进程类型
 		conflx := ""
 		if cmera.DevCompId == UNIVIEW || cmera.DevCompId == HIKITS {
@@ -145,6 +157,7 @@ CQ:
 		continue
 	}
 
+	log.Println("DeviceId:", DeviceId, "StationId:", StationId)
 	if len(hikITS) == 0 && len(uniview) == 0 {
 		log.Println("++++++++++++++++++++++++++++++该网关设备没有海康ITS相机和宇视相机")
 		return
@@ -350,7 +363,8 @@ func UploadFile() {
 
 		HandleFileAgainUpload()
 
-		log.Println(<-tiker.C, "执行 上传图片以及抓拍结果到车牌识别云端服务器  ")
+		log.Println("执行 UploadFile() 上传图片以及抓拍结果到车牌识别云端服务器完成")
+		<-tiker.C
 	}
 
 }
@@ -365,18 +379,18 @@ func IsDir(path string) bool {
 }
 
 func HandleFile() {
-	//定期检查抓拍文件夹文件夹 captureXml
+	//定期检查抓拍文件夹文件夹/snap/xml/
 
-	log.Println("执行处理xml数据包解析以及oss上传以及抓拍结果上传")
+	log.Println(" 执行 HandleFile() 处理xml数据包解析以及oss上传以及抓拍结果上传")
 	//2、处理文件
 	//扫描 captureXml 文件夹 读取文件信息
 	dir, _ := os.Getwd()
 	log.Println("+++++++++++++++++++++++++当前路径：", dir)
 
-	var snapimagespathDir = filepath.Join(dir, "snap", "xml")
-	log.Println("/snap/xml/绝对路径:", snapimagespathDir) //可以不需要加"/"
+	var snapxmlPathDir = filepath.Join(dir, "snap", "xml")
+	log.Println("/snap/xml/绝对路径:", snapxmlPathDir) //可以不需要加"/"
 	//pwd := "./snap/xml/"
-	fileList, err := ioutil.ReadDir(snapimagespathDir) //不需要加"/"
+	fileList, err := ioutil.ReadDir(snapxmlPathDir) //不需要加"/"
 	if err != nil {
 		log.Println("扫描 captureXml 文件夹 读取文件信息 error:", err)
 		return
@@ -397,7 +411,7 @@ func HandleFile() {
 		if strings.HasSuffix(fileList[i].Name(), ".xml") {
 			log.Println("执行 扫描 该captureXml文件夹下需要解析的xml文件名字为:", fileList[i].Name())
 
-			content, err := ioutil.ReadFile(snapimagespathDir + "/" + fileList[i].Name())
+			content, err := ioutil.ReadFile(snapxmlPathDir + "/" + fileList[i].Name())
 			if err != nil {
 				log.Println("执行  读文件位置错误信息：", err)
 				continue
@@ -414,6 +428,7 @@ func HandleFile() {
 			log.Println("获取抓拍结果，result:", result.VehicleImgPath)
 
 			//把图片上传到oss上
+			//D:\\PlateUpload\\vehicleLicensePlateRecognitionGateway\\vehicleLicensePlateRecognitionGateway\\snap\\images\\20201209\\sxjgl_ggzx_320600_G40_K212_2_0_1001_20201209120558_001153.jpg"
 			//result.VehicleImgPath C:\Users\Administrator\Desktop\HSJDEBUG\images\20201124\sxjgl_yzjtd_320200_G2_K1071_2_0_004_20201124143417_000031.jpg 图片路径
 			//c := strings.Split(result.VehicleImgPath, ":")
 			//str2 := strings.Replace(c[1], "\\", "/", -1) //linux
@@ -422,7 +437,9 @@ func HandleFile() {
 			//strfname := strings.Split(str2, "/")
 			strfname := strings.Split(result.VehicleImgPath, "\\") //windows
 			//上传到oss                    日期文件夹     图片名称               前缀"/jiangsu/suhuaiyangs"
+			//
 			log.Println("上传到oss     图片地址     图片名称   前缀", result.VehicleImgPath, strfname[7], ObjectPrefix)
+
 			code, scsj, ossDZ := utils.QingStorUpload(result.VehicleImgPath, strfname[7], ObjectPrefix)
 
 			if code == utils.UPloadOK {
@@ -430,30 +447,33 @@ func HandleFile() {
 				//删除本地图片result.VehicleImgPath
 				//utils.DelFile("./images/" + strfname[6] + "/" + strfname[7])
 				utils.DelFile(result.VehicleImgPath)
-
+				//D:\\PlateUpload\\vehicleLicensePlateRecognitionGateway\\vehicleLicensePlateRecognitionGateway\\snap\\images\\20201209\\sxjgl_ggzx_320600_G40_K212_2_0_1001_20201209120558_001153.jpg"
 				//生产xml返回给云平台 [暂时上传到模拟云平台]
-				uploaderr := GwCaptureInforUpload(&result, scsj, ossDZ, snapimagespathDir+"/error/upload/"+fileList[i].Name())
+				uploaderr := GwCaptureInforUpload(&result, scsj, ossDZ, snapxmlPathDir+"/error/upload/"+fileList[i].Name())
 				if uploaderr != nil {
 					//删除抓拍xml文件
 					//xml/error
-					source := snapimagespathDir + "/" + fileList[i].Name()
-					d := snapimagespathDir + "/error/" + fileList[i].Name()
+					source := snapxmlPathDir + "/" + fileList[i].Name()
+					d := snapxmlPathDir + "/error/" + fileList[i].Name()
 					mverr := utils.MoveFile(source, d)
 					if mverr != nil {
 						log.Println(mverr)
 						continue
 					}
+					log.Println("第一次上传抓拍结果xml文件到云平台失败，进程抓拍结果的xml文件移动到error文件夹成功")
 					continue
 				} else {
 					//删除抓拍xml文件
 					//xml/parsed
-					source := snapimagespathDir + "/" + fileList[i].Name()
-					d := snapimagespathDir + "/parsed/" + fileList[i].Name()
+					source := snapxmlPathDir + "/" + fileList[i].Name()
+					d := snapxmlPathDir + "/parsed/" + fileList[i].Name()
 					mverr := utils.MoveFile(source, d)
 					if mverr != nil {
 						log.Println(mverr)
 						continue
 					}
+					log.Println("第一次上传抓拍结果xml文件到云平台成功，进程抓拍结果xml移动到parsed 成功")
+
 				}
 
 			} else {
@@ -467,7 +487,7 @@ func HandleFile() {
 
 func HandleFileAgainUpload() {
 	//定期检查抓拍文件夹文件夹 captureXml
-	log.Println("执行处理xml数据包解析以及oss上传以及抓拍结果上传")
+	log.Println(" HandleFileAgainUpload 执行处理xml数据包解析以及抓拍结果再次上传")
 	//2、处理文件
 	//扫描 captureXml 文件夹 读取文件信息
 	dir, _ := os.Getwd()
@@ -478,16 +498,16 @@ func HandleFileAgainUpload() {
 
 	fileList, err := ioutil.ReadDir(snapxmlpathDir) //不需要加"/"
 	if err != nil {
-		log.Println("扫描 captureXml 文件夹 读取文件信息 error:", err)
+		log.Println("扫描/snap/xml/error/upload/ 文件夹 读取文件信息 error:", err)
 		return
 	}
-	log.Println("执行 扫描 该captureXml文件夹下有文件的数量 ：", len(fileList))
+	log.Println("执行 扫描 该/snap/xml/error/upload/文件夹下有文件的数量 ：", len(fileList))
 	if len(fileList) == 1 {
-		log.Println("执行 扫描 该captureXml 文件夹下可能没有需要解析的xml文件") //有隐藏文件
+		log.Println("执行 扫描 该 /snap/xml/error/upload/ 文件夹下可能没有需要解析的xml文件") //有隐藏文件
 
 	} else {
 		if len(fileList) == 0 {
-			log.Println("执行 扫描 该captureXml 文件夹下没有需要解析的xml文件")
+			log.Println("执行 扫描 该 /snap/xml/error/upload/ 文件夹下没有需要解析的xml文件")
 			return
 		}
 	}
@@ -495,30 +515,33 @@ func HandleFileAgainUpload() {
 	for i := range fileList {
 		//判断文件的结尾名
 		if strings.HasSuffix(fileList[i].Name(), ".xml") {
-			log.Println("执行 扫描 该captureXml文件夹下需要解析的xml文件名字为:", fileList[i].Name())
-
+			log.Println("执行 扫描 该/snap/xml/error/upload/ 文件夹下需要解析的xml文件名字为:", fileList[i].Name())
+			//error/upload/fname
 			content, err := ioutil.ReadFile(snapxmlpathDir + "/" + fileList[i].Name())
 			if err != nil {
 				log.Println("执行  读文件位置错误信息：", err)
 				continue
 			}
 
-			result, err := GwCaptureInformationUploadPostWithXML(&content)
-			if err != nil {
+			result, UploadPostWithXMLerr := GwCaptureInformationUploadPostWithXML(&content)
+			if UploadPostWithXMLerr != nil {
 				log.Println("需要再次上传的抓拍结果xml文件pathname:", snapxmlpathDir+"/"+fileList[i].Name())
+				log.Println("需要再次上传的抓拍结果xml文件失败：", UploadPostWithXMLerr)
 				continue
 			} else {
 				//删除抓拍xml文件
 				//xml/error/upload/
 				source := snapxmlpathDir + "/" + fileList[i].Name()
 				utils.DelFile(source)
+				log.Println("再次上传的抓拍结果成功,已经删除/snap/xml/error/upload/中 再次上传的抓拍结果的xml成功")
+
 			}
 
 			if (*result).Code == 0 {
-				log.Println("上传抓拍结果成功")
+				log.Println("再次上传的抓拍结果成功")
 				continue
 			} else {
-				log.Println("上传抓拍结果失败")
+				log.Println("再次上传的抓拍结果失败")
 				continue
 			}
 
@@ -526,6 +549,7 @@ func HandleFileAgainUpload() {
 	}
 }
 
+//errorpathname：snapxmlPathDir+"/error/upload/"+fileList[i].Name()
 func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, errorpathname string) error {
 	//判断哪一种品牌相机
 	//Result.
@@ -536,28 +560,42 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, errorpa
 		//抓拍结果的赋值
 		data.Token = Token //抓拍结果上传
 
-		data.LprInfo.PassId = Result.PassId     //    string   `xml:"passId"`         // 过车编号
-		data.LprInfo.CamId = Result.CamId       //    string   `xml:"camId"`          //camId>    摄像机编号
-		data.LprInfo.DeviceId = Deviceid        //    string   `xml:"deviceId"`       //deviceId>前置机编号
+		if val, ok := StationId[Result.CamId]; ok == true {
+			data.LprInfo.Stationid = val //   string   `xml:"stationid"`//	stationid站点编号
+		} else {
+			data.LprInfo.Stationid = ""
+		}
+
+		if val, ok := DeviceId[Result.CamId]; ok == true {
+			data.LprInfo.DeviceId = val //    string   `xml:"deviceId"`//deviceId>前置机编号  deviceid应该用gantryID
+		} else {
+			data.LprInfo.DeviceId = ""
+		}
+
+		data.LprInfo.PassId = Result.PassId //    string   `xml:"passId"`         // 过车编号
+		data.LprInfo.CamId = Result.CamId   //    string   `xml:"camId"`          //camId>    摄像机编号
+
 		data.LprInfo.PassTime = Result.PassTime //    string   `xml:"passTime"`       //passTime>     过车时间
 		data.LprInfo.VehicleImgPath = ossDZ     //    string   `xml:"vehicleImgPath"` //vehicleImgPath>  "oss地址"   过车图片地址
 		data.LprInfo.PlateImgPath = ""          //无 string   `xml:"plateImgPath"`   //<plateImgPath/>     车牌图片地址【无】
 		data.LprInfo.BucketId = BacketName      //   string   `xml:"bucketId"`       //bucketId>   bucket编号
 		data.LprInfo.ImageType = 0              //   int      `xml:"imageType"`      //	imageType> 图片类型
 		data.LprInfo.UploadStamp = scsj         //   int64    `xml:"uploadStamp"`    //	uploadStamp> 上传时间
-		data.LprInfo.Stationid = ""             //   string   `xml:"stationid"`      //	stationid>站点编号
-		data.LprInfo.LaneType = 0               //   int      `xml:"laneType"`       //	laneType> 出入口类型 0:入口；1：出口
 
-		data.LpaResult.PassId = Result.PassId         //passId>过车编号
-		data.LpaResult.EngineType = ""                //`xml:"engineType"`      //engineType>   引擎类型
-		data.LpaResult.EngineId = ""                  //`xml:"engineId"`        //engineId>     引擎编号
-		data.LpaResult.PlateNo = Result.PlateNo       //`xml:"plateNo"`         //plateNo>     车牌编号
-		data.LpaResult.PlateColor = Result.PlateColor // `xml:"plateColor"`      //plateColor>     车牌颜色
-		data.LpaResult.ComputeInterval = 0            //int64 `xml:"computeInterval"` //computeInterval>  计算时间
-		data.LpaResult.VehicleColor = ""              //`xml:"vehicleColor"`    //vehicleColor>       车辆颜色
-		data.LpaResult.VehicleType = ""               //`xml:"vehicleType"`     //vehicleType>       车辆类型
-		data.LpaResult.VehicleBrand = ""              //`xml:"vehicleBrand"`    //vehicleBrand>       车辆品牌
-		data.LpaResult.VehicleYear = 0                //int`xml:"vehicleYear"`     //vehicleYear>     车辆年份
+		data.LprInfo.LaneType = 0 //   int      `xml:"laneType"`       //	laneType> 出入口类型 0:入口；1：出口
+
+		data.LpaResult.PassId = Result.PassId   //passId>过车编号
+		data.LpaResult.EngineType = EngineType  //`xml:"engineType"`      //engineType>   引擎类型
+		data.LpaResult.EngineId = ""            //`xml:"engineId"`        //engineId>     引擎编号
+		data.LpaResult.PlateNo = Result.PlateNo //`xml:"plateNo"`         //plateNo>     车牌编号
+
+		data.LpaResult.PlateColor = ChepZH(Result.PlateColor) // `xml:"plateColor"`      //plateColor>     车牌颜色
+		data.LpaResult.ComputeInterval = 0                    //int64 `xml:"computeInterval"` //computeInterval>  计算时间
+
+		data.LpaResult.VehicleColor = "" //`xml:"vehicleColor"`    //vehicleColor>       车辆颜色
+		data.LpaResult.VehicleType = ""  //`xml:"vehicleType"`     //vehicleType>       车辆类型
+		data.LpaResult.VehicleBrand = "" //`xml:"vehicleBrand"`    //vehicleBrand>       车辆品牌
+		data.LpaResult.VehicleYear = 0   //int`xml:"vehicleYear"`     //vehicleYear>     车辆年份
 
 		data.LpaResult.LprFrameEntity.PlateLeft = 0   // int      `xml:"plateLeft"`   //plateLeft>        车牌左坐标
 		data.LpaResult.LprFrameEntity.PlateTop = 0    //  int      `xml:"plateTop"`    //plateTop>        车牌上坐标
@@ -586,29 +624,39 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, errorpa
 		data := new(dto.DateXML)
 		//抓拍结果的赋值
 		data.Token = Token //抓拍结果上传
+		if val, ok := StationId[Result.CamId]; ok == true {
+			data.LprInfo.Stationid = val //   string   `xml:"stationid"`//	stationid站点编号
+		} else {
+			data.LprInfo.Stationid = ""
+		}
 
-		data.LprInfo.PassId = Result.PassId     //    string   `xml:"passId"`         // 过车编号
-		data.LprInfo.CamId = Result.CamId       //      string   `xml:"camId"`          //camId>    摄像机编号
-		data.LprInfo.DeviceId = Deviceid        //      string   `xml:"deviceId"`       //deviceId>前置机编号
+		if val, ok := DeviceId[Result.CamId]; ok == true {
+			data.LprInfo.DeviceId = val //    string   `xml:"deviceId"`//deviceId>前置机编号  deviceid应该用gantryID
+		} else {
+			data.LprInfo.DeviceId = ""
+		}
+		data.LprInfo.PassId = Result.PassId //    string   `xml:"passId"`         // 过车编号
+		data.LprInfo.CamId = Result.CamId   //    string   `xml:"camId"`          //camId>    摄像机编号
+
 		data.LprInfo.PassTime = Result.PassTime //    string   `xml:"passTime"`       //passTime>     过车时间
 		data.LprInfo.VehicleImgPath = ossDZ     //   string   `xml:"vehicleImgPath"` //vehicleImgPath>  "oss地址"   过车图片地址
 		data.LprInfo.PlateImgPath = ""          //     string   `xml:"plateImgPath"`   //<plateImgPath/>     车牌图片地址【无】
 		data.LprInfo.BucketId = BacketName      //     string   `xml:"bucketId"`       //bucketId>   bucket编号
 		data.LprInfo.ImageType = 0              //     int      `xml:"imageType"`      //	imageType> 图片类型
 		data.LprInfo.UploadStamp = scsj         //     int64    `xml:"uploadStamp"`    //	uploadStamp> 上传时间
-		data.LprInfo.Stationid = ""             //     string   `xml:"stationid"`      //	stationid>站点编号
-		data.LprInfo.LaneType = 0               //     int      `xml:"laneType"`       //	laneType> 出入口类型 0:入口；1：出口
 
-		data.LpaResult.PassId = Result.PassId         //passId>     过车编号
-		data.LpaResult.EngineType = ""                //`xml:"engineType"`      //engineType>   引擎类型
-		data.LpaResult.EngineId = ""                  //`xml:"engineId"`        //engineId>     引擎编号
-		data.LpaResult.PlateNo = Result.PlateNo       //`xml:"plateNo"`         //plateNo>     车牌编号
-		data.LpaResult.PlateColor = Result.PlateColor // `xml:"plateColor"`      //plateColor>     车牌颜色
-		data.LpaResult.ComputeInterval = 0            //int64 `xml:"computeInterval"` //computeInterval>  计算时间
-		data.LpaResult.VehicleColor = ""              //`xml:"vehicleColor"`    //vehicleColor>       车辆颜色
-		data.LpaResult.VehicleType = ""               //`xml:"vehicleType"`     //vehicleType>       车辆类型
-		data.LpaResult.VehicleBrand = ""              //`xml:"vehicleBrand"`    //vehicleBrand>       车辆品牌
-		data.LpaResult.VehicleYear = 0                //int`xml:"vehicleYear"`     //vehicleYear>     车辆年份
+		data.LprInfo.LaneType = 0 //     int      `xml:"laneType"`       //	laneType> 出入口类型 0:入口；1：出口
+
+		data.LpaResult.PassId = Result.PassId                 //passId>     过车编号
+		data.LpaResult.EngineType = EngineType                //`xml:"engineType"`      //engineType>   引擎类型
+		data.LpaResult.EngineId = ""                          //`xml:"engineId"`        //engineId>     引擎编号
+		data.LpaResult.PlateNo = Result.PlateNo               //`xml:"plateNo"`         //plateNo>     车牌编号
+		data.LpaResult.PlateColor = ChepZH(Result.PlateColor) // `xml:"plateColor"`      //plateColor>     车牌颜色
+		data.LpaResult.ComputeInterval = 0                    //int64 `xml:"computeInterval"` //computeInterval>  计算时间
+		data.LpaResult.VehicleColor = ""                      //`xml:"vehicleColor"`    //vehicleColor>       车辆颜色
+		data.LpaResult.VehicleType = ""                       //`xml:"vehicleType"`     //vehicleType>       车辆类型
+		data.LpaResult.VehicleBrand = ""                      //`xml:"vehicleBrand"`    //vehicleBrand>       车辆品牌
+		data.LpaResult.VehicleYear = 0                        //int`xml:"vehicleYear"`     //vehicleYear>     车辆年份
 
 		data.LpaResult.LprFrameEntity.PlateLeft = 0   // int      `xml:"plateLeft"`   //plateLeft>        车牌左坐标
 		data.LpaResult.LprFrameEntity.PlateTop = 0    //  int      `xml:"plateTop"`    //plateTop>        车牌上坐标
@@ -627,14 +675,15 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, errorpa
 		//需要再次上传的抓拍结果
 		uploadagainxml := createXml(errorpathname, ba)
 		log.Println("需要再次上传的抓拍结果xml文件pathname:", uploadagainxml)
+		log.Println("需要再次上传的抓拍结果xml文件生成成功")
 		return err
 	}
 
 	if (*result).Code == 0 {
-		log.Println("上传抓拍结果成功")
+		log.Println("第一次上传抓拍结果成功")
 		return nil
 	} else {
-		log.Println("上传抓拍结果失败")
+		log.Println("第一次上传抓拍结果失败")
 		return err
 	}
 }
@@ -697,20 +746,20 @@ XT:
 
 		//返回一个UDPAddr        ReadFromUDP从c读取一个UDP数据包，将有效负载拷贝到b，返回拷贝字节数和数据包来源地址。
 		//ReadFromUDP方法会在超过一个固定的时间点之后超时，并返回一个错误。
-		log.Println("conn.ReadFromUDP:")
+		log.Println("执行 conn.ReadFromUDP")
 		_, rAddr, err := conn.ReadFromUDP(data)
 		if err != nil {
 			log.Println("conn.ReadFromUDP error:", err)
 			continue
 		}
-		log.Println("conn.ReadFromUDP:")
+		log.Println("执行 conn.ReadFromUDP ok！rAddr：", rAddr)
 		//反序列化udp数据
 		h := new(dto.Heartbeatbasic)
 		herr := xml.Unmarshal(data, h)
 		if herr != nil {
 			log.Println(herr)
 		} else {
-			log.Println("h.Type:", h.Type)
+			log.Println("h.Type   1、心跳   2、新数据通知  3、 日志  4、采集进程被动关闭命令:", h.Type)
 		}
 
 		heartbeatresp := new(dto.Heartbeat)
@@ -793,28 +842,17 @@ XT:
 			continue
 		}
 		log.Println("管理平台 Send:", heartbeatresp)
+
+		Heartbeatclient(port, resp)
 	}
 }
 
-//【不做了】
-func HeartbeatClient(port string) {
-	tiker := time.NewTicker(time.Second * 10) //每15秒执行一下
-	for {
-		log.Println(utils.DateTimeFormat(<-tiker.C), "管理平台要发送心跳给抓拍进程++++++++++++")
-
-		Heartbeatclient(port)
-
-	}
-}
-
-//【不做了】
-func Heartbeatclient(port string) {
+func Heartbeatclient(port string, toWrite []byte) {
 
 	serverAddr := "127.0.0.1" + ":" + port
 	conn, err := net.Dial("udp", serverAddr)
 	if err != nil {
-		log.Println(serverAddr, "管理平台 主动给抓拍进程心跳,net.Dial执行时", "err:", err)
-		time.Sleep(time.Second * 10)
+		log.Println(serverAddr, "管理平台 主动给抓拍进程返回数据,net.Dial执行时", "err:", err)
 		return
 	}
 	log.Println("管理平台 主动给抓拍进程心跳 UDP net.Dial serverAddr:", serverAddr)
@@ -824,8 +862,6 @@ func Heartbeatclient(port string) {
 	}()
 
 	var n int
-	var toWrite string
-	toWrite = serverAddr + "管理平台细心问候：你启动了么，是否活着呀!"
 
 	n, err = conn.Write([]byte(toWrite))
 	if err != nil {
@@ -936,4 +972,33 @@ func HandleDayTasks() {
 		log.Println("处理可能有要删除的空文件夹OK")
 		log.Println("执行线程，处理一天一次的定时任务【完成】11111111111111111111111111111111111111111111111111111111111111111")
 	}
+}
+
+func ChepZH(ys string) string {
+	switch ys {
+
+	case "黑":
+		return "1"
+
+	case "白":
+		return "2"
+
+	case "蓝":
+		return "3"
+
+	case "黄":
+		return "4"
+
+	case "绿":
+		return "5"
+
+	case "黄绿":
+		return "6"
+
+	default:
+		fmt.Println("ys", ys)
+		return "0"
+
+	}
+
 }

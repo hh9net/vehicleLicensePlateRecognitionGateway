@@ -20,7 +20,6 @@ func ConfigInit() {
 	service.GetCameraListip = conf.GetCameraList //http://172.31.49.252/processor-control/collect/cameras/
 
 	service.Deviceid = conf.Deviceid //fe0442b5-2d40-486f-9682-d1043ceca4e5
-	//service.IpAddress = conf.IpAddress
 
 }
 

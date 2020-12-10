@@ -44,7 +44,7 @@ func QingStorUpload(path, fname, prefix string) (int, int64, string) {
 	qsService, _ := qs.Init(configuration)
 
 	//2、初始化并创建 Bucket, 需要指定 Bucket[桶] 名称和所在 Zone:
-	log.Println("qsService.Bucket (BacketName , CHEPZone)", BacketName, CHEPZone)
+	log.Println("qsService.Bucket (BacketName , CHEPZone)", BacketName, CHEPZone) //此处打印
 	bucket, _ := qsService.Bucket(BacketName, CHEPZone)
 
 	//2、创建一个 Object 例如上传一张屏幕截图:
@@ -54,6 +54,7 @@ func QingStorUpload(path, fname, prefix string) (int, int64, string) {
 		log.Print("上传oss 创建一个 Object error：", err)
 		return 0, 0, ""
 	}
+	log.Println("os.Open fname:", f.Name()) //prefix:/jiangsu/suhuaiyangs/
 
 	defer func() {
 		_ = f.Close()
@@ -61,20 +62,21 @@ func QingStorUpload(path, fname, prefix string) (int, int64, string) {
 
 	// Put object          &service: 包名称
 	//Output, err := bucket.PutObject(fname, &service.PutObjectInput{Body: f})
-	log.Println("PutObject:prefix+/+fname:", prefix+"/"+fname) //prefix:/jiangsu/suhuaiyangs/
-	Output, err := bucket.PutObject(prefix+"/"+fname, &qs.PutObjectInput{Body: f})
-	if err != nil {
+	log.Printf("PutObject:prefix+/+fname:%s", prefix+"/"+fname)
+	Output, PutObjecterr := bucket.PutObject(prefix+"/"+fname, &qs.PutObjectInput{Body: f})
+	if PutObjecterr != nil {
 		// 所有 >= 400 的 HTTP 返回码都被视作错误 Example: QingStor Error: StatusCode 403, Code "permission_denied"...
-		log.Println("上传结果有错误:", err)
+		log.Println("上传结果有错误:", PutObjecterr)
 	} else {
 		// Print the HTTP status code. Example: 201
+		log.Println("http://" + BacketName + "." + CHEPZone + ".qingstor.com/" + prefix + "/" + fname)
 		log.Println("上传结果:", qs.IntValue(Output.StatusCode))
 	}
 
 	return qs.IntValue(Output.StatusCode), time.Now().Unix(), prefix + "/" + fname
 }
 
-func QingStorGetFile(fname, day, fm string) {
+func QingStorGetFile(fname, fm string) {
 	//发起请求前首先建立需要初始化服务:
 	//1、初始化了一个 QingStor Service
 	//configuration, _ := config.New("ACCESS_KEY_ID", "SECRET_ACCESS_KEY")
@@ -102,7 +104,7 @@ func QingStorGetFile(fname, day, fm string) {
 			_ = getOutput.Close() // 一定记得关闭GetObjectOutput, 否则容易造成链接泄漏
 		}()
 		log.Println("fm:", fm)
-		f, err := os.OpenFile("../images/"+day+"/"+fm, os.O_CREATE|os.O_WRONLY, 0600)
+		f, err := os.OpenFile(fm, os.O_CREATE|os.O_WRONLY, 0600)
 		if err != nil {
 			log.Println(err)
 		}
