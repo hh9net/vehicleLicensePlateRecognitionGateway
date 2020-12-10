@@ -20,6 +20,8 @@ var Deviceid string //网关设备id Token
 //var IpAddress string
 var StationId map[string]string
 var DeviceId map[string]string
+var LaneType map[string]string
+var ImageType map[string]string
 
 var Token string
 
@@ -79,21 +81,30 @@ CQ:
 		log.Println("获取相机列表错误", listerr)
 		return
 	}
-	idmap := make(map[string]string, len(CameraList.Data))
-	DeviceId = idmap
-	StationId = idmap
+
+	DeviceId = make(map[string]string, len(CameraList.Data))
+	StationId = make(map[string]string, len(CameraList.Data))
+	LaneType = make(map[string]string, len(CameraList.Data))
+	ImageType = make(map[string]string, len(CameraList.Data))
 
 	log.Println(" 相机列表数据的len（） ：", len(CameraList.Data))
-
+	log.Println(" 相机列表数据 ：", CameraList.Data)
 	uniview := make([]dto.CameraListData, 0) // 宇视的列表
 
 	hikITS := make([]dto.CameraListData, 0) //ITS列表
 
-	for _, cmera := range CameraList.Data {
+	for i, cmera := range CameraList.Data {
 		//StationId
 		//deviceid应该用gantryID
 		StationId[cmera.Id] = cmera.StationId
 		DeviceId[cmera.Id] = cmera.Gantryid //deviceid应该用gantryID
+		LaneType[cmera.Id] = cmera.LaneType
+		ImageType[cmera.Id] = cmera.Description
+
+		log.Println(i, "StationId:", StationId[cmera.Id], cmera.StationId)
+		log.Println(i, "DeviceId:", DeviceId[cmera.Id], cmera.Gantryid)
+		log.Println(i, "LaneType:", LaneType[cmera.Id], cmera.LaneType)
+		log.Println(i, "ImageType:", ImageType[cmera.Id], cmera.Description)
 
 		//	进程类型
 		conflx := ""
@@ -157,7 +168,11 @@ CQ:
 		continue
 	}
 
-	log.Println("DeviceId:", DeviceId, "StationId:", StationId)
+	log.Println("DeviceId:", DeviceId)
+	log.Println("StationId:", StationId)
+	log.Println("LaneType:", LaneType)
+	log.Println("ImageType:", ImageType)
+
 	if len(hikITS) == 0 && len(uniview) == 0 {
 		log.Println("++++++++++++++++++++++++++++++该网关设备没有海康ITS相机和宇视相机")
 		return
@@ -565,13 +580,13 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, errorpa
 		} else {
 			data.LprInfo.Stationid = ""
 		}
-
+		log.Println("data.LprInfo.Stationid:", data.LprInfo.Stationid)
 		if val, ok := DeviceId[Result.CamId]; ok == true {
 			data.LprInfo.DeviceId = val //    string   `xml:"deviceId"`//deviceId>前置机编号  deviceid应该用gantryID
 		} else {
 			data.LprInfo.DeviceId = ""
 		}
-
+		log.Println("data.LprInfo.DeviceId:", data.LprInfo.DeviceId)
 		data.LprInfo.PassId = Result.PassId //    string   `xml:"passId"`         // 过车编号
 		data.LprInfo.CamId = Result.CamId   //    string   `xml:"camId"`          //camId>    摄像机编号
 
@@ -579,10 +594,26 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, errorpa
 		data.LprInfo.VehicleImgPath = ossDZ     //    string   `xml:"vehicleImgPath"` //vehicleImgPath>  "oss地址"   过车图片地址
 		data.LprInfo.PlateImgPath = ""          //无 string   `xml:"plateImgPath"`   //<plateImgPath/>     车牌图片地址【无】
 		data.LprInfo.BucketId = BacketName      //   string   `xml:"bucketId"`       //bucketId>   bucket编号
-		data.LprInfo.ImageType = 0              //   int      `xml:"imageType"`      //	imageType> 图片类型
-		data.LprInfo.UploadStamp = scsj         //   int64    `xml:"uploadStamp"`    //	uploadStamp> 上传时间
+
+		if val, ok := ImageType[Result.CamId]; ok == true {
+			v, _ := strconv.Atoi(val)
+			data.LprInfo.ImageType = v //   int      `xml:"imageType"`      //	imageType> 图片类型
+		} else {
+			data.LprInfo.ImageType = 0
+		}
+
+		log.Println("data.LprInfo.ImageType:", data.LprInfo.ImageType)
+		data.LprInfo.UploadStamp = scsj //   int64    `xml:"uploadStamp"`    //	uploadStamp> 上传时间
 
 		data.LprInfo.LaneType = 0 //   int      `xml:"laneType"`       //	laneType> 出入口类型 0:入口；1：出口
+
+		if val, ok := LaneType[Result.CamId]; ok == true {
+			v, _ := strconv.Atoi(val)
+			data.LprInfo.LaneType = v //   int      `xml:"laneType"`       //	laneType> 出入口类型 0:入口；1：出口
+		} else {
+			data.LprInfo.LaneType = 0
+		}
+		log.Println("data.LprInfo.LaneType:", data.LprInfo.LaneType)
 
 		data.LpaResult.PassId = Result.PassId   //passId>过车编号
 		data.LpaResult.EngineType = EngineType  //`xml:"engineType"`      //engineType>   引擎类型
@@ -624,17 +655,19 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, errorpa
 		data := new(dto.DateXML)
 		//抓拍结果的赋值
 		data.Token = Token //抓拍结果上传
+
 		if val, ok := StationId[Result.CamId]; ok == true {
 			data.LprInfo.Stationid = val //   string   `xml:"stationid"`//	stationid站点编号
 		} else {
 			data.LprInfo.Stationid = ""
 		}
-
+		log.Println("data.LprInfo.Stationid:", data.LprInfo.Stationid)
 		if val, ok := DeviceId[Result.CamId]; ok == true {
 			data.LprInfo.DeviceId = val //    string   `xml:"deviceId"`//deviceId>前置机编号  deviceid应该用gantryID
 		} else {
 			data.LprInfo.DeviceId = ""
 		}
+		log.Println("data.LprInfo.DeviceId:", data.LprInfo.DeviceId)
 		data.LprInfo.PassId = Result.PassId //    string   `xml:"passId"`         // 过车编号
 		data.LprInfo.CamId = Result.CamId   //    string   `xml:"camId"`          //camId>    摄像机编号
 
@@ -642,11 +675,22 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, errorpa
 		data.LprInfo.VehicleImgPath = ossDZ     //   string   `xml:"vehicleImgPath"` //vehicleImgPath>  "oss地址"   过车图片地址
 		data.LprInfo.PlateImgPath = ""          //     string   `xml:"plateImgPath"`   //<plateImgPath/>     车牌图片地址【无】
 		data.LprInfo.BucketId = BacketName      //     string   `xml:"bucketId"`       //bucketId>   bucket编号
-		data.LprInfo.ImageType = 0              //     int      `xml:"imageType"`      //	imageType> 图片类型
-		data.LprInfo.UploadStamp = scsj         //     int64    `xml:"uploadStamp"`    //	uploadStamp> 上传时间
+		if val, ok := ImageType[Result.CamId]; ok == true {
+			v, _ := strconv.Atoi(val)
+			data.LprInfo.ImageType = v //   int      `xml:"imageType"`      //	imageType> 图片类型
+		} else {
+			data.LprInfo.ImageType = 0
+		}
+		log.Println("data.LprInfo.ImageType:", data.LprInfo.ImageType)
+		data.LprInfo.UploadStamp = scsj //     int64    `xml:"uploadStamp"`    //	uploadStamp> 上传时间
 
-		data.LprInfo.LaneType = 0 //     int      `xml:"laneType"`       //	laneType> 出入口类型 0:入口；1：出口
-
+		if val, ok := LaneType[Result.CamId]; ok == true {
+			v, _ := strconv.Atoi(val)
+			data.LprInfo.LaneType = v //   int      `xml:"laneType"`       //	laneType> 出入口类型 0:入口；1：出口
+		} else {
+			data.LprInfo.LaneType = 0
+		}
+		log.Println("data.LprInfo.LaneType:", data.LprInfo.LaneType)
 		data.LpaResult.PassId = Result.PassId                 //passId>     过车编号
 		data.LpaResult.EngineType = EngineType                //`xml:"engineType"`      //engineType>   引擎类型
 		data.LpaResult.EngineId = ""                          //`xml:"engineId"`        //engineId>     引擎编号

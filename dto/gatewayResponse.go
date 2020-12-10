@@ -72,14 +72,14 @@ type CameraListData struct {
 	StationId   string   `xml:"stationId"`   //站ID 3a6e449a18ed435e80bff3782709e6dd
 	LaneType    string   `xml:"laneType"`    //车道 0
 	DevCompId   string   `xml:"devCompId"`   //HIK 相机品牌
-	Description string   `xml:"description"` //描述 1
+	Description string   `xml:"description"` //描述 常用1
 	DevIp       string   `xml:"devIp"`       //devIp 相机IP 10.25.50.94
 	Port        string   `xml:"port"`        //8000 相机P
 	UserName    string   `xml:"userName"`    //admin
 	Password    string   `xml:"password"`    //12345
 	Channel     string   `xml:"channel"`     //新增0   通道 HIK 一对多用
 	LaneNo      string   `xml:"laneNo"`      //新增1   车道编号
-	Gantryid    string   `xml:"gantryid"`    //新增    门架id
+	Gantryid    string   `xml:"gantryId"`    //新增    门架id
 }
 
 /*
