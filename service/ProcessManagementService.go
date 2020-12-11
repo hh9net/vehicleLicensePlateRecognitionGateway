@@ -22,6 +22,7 @@ var StationId map[string]string
 var DeviceId map[string]string
 var LaneType map[string]string
 var ImageType map[string]string
+var EngineId map[string]string
 
 var Token string
 
@@ -86,6 +87,7 @@ CQ:
 	StationId = make(map[string]string, len(CameraList.Data))
 	LaneType = make(map[string]string, len(CameraList.Data))
 	ImageType = make(map[string]string, len(CameraList.Data))
+	EngineId = make(map[string]string, len(CameraList.Data))
 
 	log.Println(" 相机列表数据的len（） ：", len(CameraList.Data))
 	log.Println(" 相机列表数据 ：", CameraList.Data)
@@ -100,11 +102,13 @@ CQ:
 		DeviceId[cmera.Id] = cmera.Gantryid //deviceid应该用gantryID
 		LaneType[cmera.Id] = cmera.LaneType
 		ImageType[cmera.Id] = cmera.Description
+		EngineId[cmera.Id] = cmera.DevCompId //相机品牌
 
 		log.Println(i, "StationId:", StationId[cmera.Id], cmera.StationId)
 		log.Println(i, "DeviceId:", DeviceId[cmera.Id], cmera.Gantryid)
 		log.Println(i, "LaneType:", LaneType[cmera.Id], cmera.LaneType)
 		log.Println(i, "ImageType:", ImageType[cmera.Id], cmera.Description)
+		log.Println(i, "EngineId:", EngineId[cmera.Id], cmera.DevCompId)
 
 		//	进程类型
 		conflx := ""
@@ -494,6 +498,16 @@ func HandleFile() {
 			} else {
 				log.Println("上传oss失败")
 				//上传oss失败
+				//删除抓拍xml文件
+				//xml/error
+				source := snapxmlPathDir + "/" + fileList[i].Name()
+				d := snapxmlPathDir + "/error/noimages/" + fileList[i].Name()
+				mverr := utils.MoveFile(source, d)
+				if mverr != nil {
+					log.Println(mverr)
+					continue
+				}
+				log.Println("第一次上传抓拍结果xml文件到云平台失败，进程抓拍结果的xml文件移动到error文件夹成功")
 				continue
 			}
 		}
@@ -615,9 +629,20 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, errorpa
 		}
 		log.Println("data.LprInfo.LaneType:", data.LprInfo.LaneType)
 
-		data.LpaResult.PassId = Result.PassId   //passId>过车编号
-		data.LpaResult.EngineType = EngineType  //`xml:"engineType"`      //engineType>   引擎类型
-		data.LpaResult.EngineId = ""            //`xml:"engineId"`        //engineId>     引擎编号
+		data.LpaResult.PassId = Result.PassId  //passId>过车编号
+		data.LpaResult.EngineType = EngineType //`xml:"engineType"`      //engineType>   引擎类型  写死sjk-camera-lpa
+		log.Println("data.LpaResult.EngineType:", data.LpaResult.EngineType)
+
+		//EngineId
+		if val, ok := EngineId[Result.CamId]; ok == true {
+
+			data.LpaResult.EngineId = val //`xml:"engineId"`        //engineId> 引擎编号 相机品牌名称
+		} else {
+			data.LpaResult.EngineId = "0"
+
+		}
+		log.Println("data.LpaResult.EngineId:", data.LpaResult.EngineId)
+
 		data.LpaResult.PlateNo = Result.PlateNo //`xml:"plateNo"`         //plateNo>     车牌编号
 
 		data.LpaResult.PlateColor = ChepZH(Result.PlateColor) // `xml:"plateColor"`      //plateColor>     车牌颜色
@@ -691,9 +716,21 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, errorpa
 			data.LprInfo.LaneType = 0
 		}
 		log.Println("data.LprInfo.LaneType:", data.LprInfo.LaneType)
-		data.LpaResult.PassId = Result.PassId                 //passId>     过车编号
-		data.LpaResult.EngineType = EngineType                //`xml:"engineType"`      //engineType>   引擎类型
-		data.LpaResult.EngineId = ""                          //`xml:"engineId"`        //engineId>     引擎编号
+		data.LpaResult.PassId = Result.PassId  //passId>     过车编号
+		data.LpaResult.EngineType = EngineType //`xml:"engineType"`      //engineType>   引擎类型 写死 sjk-camera-lpa
+
+		log.Println("data.LpaResult.EngineType:", data.LpaResult.EngineType)
+
+		//EngineId
+		if val, ok := EngineId[Result.CamId]; ok == true {
+
+			data.LpaResult.EngineId = val //`xml:"engineId"`  //engineId> 引擎编号 相机品牌名称
+		} else {
+			data.LpaResult.EngineId = "0"
+
+		}
+		log.Println("data.LpaResult.EngineId:", data.LpaResult.EngineId)
+
 		data.LpaResult.PlateNo = Result.PlateNo               //`xml:"plateNo"`         //plateNo>     车牌编号
 		data.LpaResult.PlateColor = ChepZH(Result.PlateColor) // `xml:"plateColor"`      //plateColor>     车牌颜色
 		data.LpaResult.ComputeInterval = 0                    //int64 `xml:"computeInterval"` //computeInterval>  计算时间
@@ -913,7 +950,7 @@ func Heartbeatclient(port string, toWrite []byte) {
 		return
 	}
 
-	log.Println("Write:", toWrite, "n:", n)
+	log.Println("Write:", string(toWrite), "n:", n)
 
 	msg := make([]byte, 32)
 	n, err = conn.Read(msg)
