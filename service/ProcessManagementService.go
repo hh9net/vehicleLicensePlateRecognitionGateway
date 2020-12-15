@@ -457,9 +457,10 @@ func HandleFile() {
 			strfname := strings.Split(result.VehicleImgPath, "\\") //windows
 			//上传到oss                    日期文件夹     图片名称               前缀"/jiangsu/suhuaiyangs"
 			//
-			log.Println("上传到oss     图片地址     图片名称   前缀", result.VehicleImgPath, strfname[7], ObjectPrefix)
 
-			code, scsj, ossDZ := utils.QingStorUpload(result.VehicleImgPath, strfname[7], ObjectPrefix)
+			log.Println("上传到oss:图片地址     图片名称   前缀", result.VehicleImgPath, strfname[len(strfname)-1], ObjectPrefix)
+
+			code, scsj, ossDZ := utils.QingStorUpload(result.VehicleImgPath, strfname[len(strfname)-1], ObjectPrefix)
 
 			if code == utils.UPloadOK {
 				log.Println("上传到oss   成功，开始返回抓拍结果给云平台")
