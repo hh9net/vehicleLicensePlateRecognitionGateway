@@ -2,8 +2,10 @@ package service
 
 import (
 	"encoding/xml"
+	"fmt"
 	log "github.com/sirupsen/logrus"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -67,6 +69,37 @@ func generateITSConfig(configdata *OneToMoreConfig) string {
 
 //创建xml文件
 func createxml(xmlname string, outputxml []byte) string {
+
+	dir, _ := os.Getwd()
+	log.Println("+++++++++++++++++++++++++当前路径：", dir)
+	var cameraConfigpathDir = filepath.Join(dir, "cameraConfig")
+	log.Println("cameraConfig绝对路径:", cameraConfigpathDir)
+	file, err := os.Open(cameraConfigpathDir)
+	defer func() {
+		_ = file.Close()
+	}()
+	//os.IsNotExist
+	if err != nil && os.IsNotExist(err) {
+		file, _ = os.Create(cameraConfigpathDir)
+	}
+
+	// check
+	if _, err := os.Stat(cameraConfigpathDir); err == nil {
+		fmt.Println("path exists 1", cameraConfigpathDir)
+	} else {
+		fmt.Println("path not exists ", cameraConfigpathDir)
+		err := os.MkdirAll(cameraConfigpathDir, 0711)
+
+		if err != nil {
+			log.Println("Error creating directory")
+			log.Println(err)
+		}
+	}
+
+	// check again
+	if _, err := os.Stat(cameraConfigpathDir); err == nil {
+		fmt.Println("path exists 2", cameraConfigpathDir)
+	}
 
 	fw, f_werr := os.Create("./cameraConfig/" + xmlname + ".xml") //go run main.go
 	if f_werr != nil {

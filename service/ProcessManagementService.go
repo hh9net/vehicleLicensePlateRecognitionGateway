@@ -403,12 +403,40 @@ func HandleFile() {
 	log.Println(" 执行 HandleFile() 处理xml数据包解析以及oss上传以及抓拍结果上传")
 	//2、处理文件
 	//扫描 captureXml 文件夹 读取文件信息
+
 	dir, _ := os.Getwd()
 	log.Println("+++++++++++++++++++++++++当前路径：", dir)
-
 	var snapxmlPathDir = filepath.Join(dir, "snap", "xml")
 	log.Println("/snap/xml/绝对路径:", snapxmlPathDir) //可以不需要加"/"
 	//pwd := "./snap/xml/"
+
+	// check
+	if _, err := os.Stat(snapxmlPathDir); err == nil {
+		fmt.Println("path exists 1", snapxmlPathDir)
+	} else {
+		fmt.Println("path not exists ", snapxmlPathDir)
+		err := os.MkdirAll(snapxmlPathDir, 0711)
+
+		if err != nil {
+			log.Println("Error creating directory")
+			log.Println(err)
+		}
+	}
+
+	// check again
+	if _, err := os.Stat(snapxmlPathDir); err == nil {
+		fmt.Println("path exists 2", snapxmlPathDir)
+	}
+
+	file, err := os.Open(snapxmlPathDir)
+	defer func() {
+		_ = file.Close()
+	}()
+	//os.IsNotExist
+	if err != nil && os.IsNotExist(err) {
+		file, _ = os.Create(snapxmlPathDir)
+	}
+
 	fileList, err := ioutil.ReadDir(snapxmlPathDir) //不需要加"/"
 	if err != nil {
 		log.Println("扫描 captureXml 文件夹 读取文件信息 error:", err)
@@ -460,6 +488,36 @@ func HandleFile() {
 
 			log.Println("上传到oss:图片地址     图片名称   前缀", result.VehicleImgPath, strfname[len(strfname)-1], ObjectPrefix)
 
+			ImgPath := strings.Split(result.VehicleImgPath, strfname[len(strfname)-1])
+
+			// check
+			if _, err := os.Stat(ImgPath[0]); err == nil {
+				fmt.Println("path exists 1", ImgPath[0])
+			} else {
+				fmt.Println("path not exists ", ImgPath[0])
+				err := os.MkdirAll(ImgPath[0], 0711)
+
+				if err != nil {
+					log.Println("Error creating directory")
+					log.Println(err)
+				}
+			}
+
+			// check again
+			if _, err := os.Stat(ImgPath[0]); err == nil {
+				fmt.Println("path exists 2", ImgPath[0])
+			}
+
+			file, err := os.Open(ImgPath[0])
+			defer func() {
+				_ = file.Close()
+			}()
+			//os.IsNotExist
+			if err != nil && os.IsNotExist(err) {
+				file, _ = os.Create(ImgPath[0])
+			}
+
+			//上传oss图片
 			code, scsj, ossDZ := utils.QingStorUpload(result.VehicleImgPath, strfname[len(strfname)-1], ObjectPrefix)
 
 			if code == utils.UPloadOK {
@@ -469,6 +527,33 @@ func HandleFile() {
 				utils.DelFile(result.VehicleImgPath)
 				//D:\\PlateUpload\\vehicleLicensePlateRecognitionGateway\\vehicleLicensePlateRecognitionGateway\\snap\\images\\20201209\\sxjgl_ggzx_320600_G40_K212_2_0_1001_20201209120558_001153.jpg"
 				//生产xml返回给云平台 [暂时上传到模拟云平台]
+				// check
+				if _, err := os.Stat(snapxmlPathDir + "/error/upload/"); err == nil {
+					fmt.Println("path exists 1", snapxmlPathDir+"/error/upload/")
+				} else {
+					fmt.Println("path not exists ", snapxmlPathDir+"/error/upload/")
+					err := os.MkdirAll(snapxmlPathDir+"/error/upload/", 0711)
+
+					if err != nil {
+						log.Println("Error creating directory")
+						log.Println(err)
+					}
+				}
+
+				// check again
+				if _, err := os.Stat(snapxmlPathDir + "/error/upload/"); err == nil {
+					fmt.Println("path exists 2", snapxmlPathDir+"/error/upload/")
+				}
+
+				file, err := os.Open(snapxmlPathDir + "/error/upload/")
+				defer func() {
+					_ = file.Close()
+				}()
+				//os.IsNotExist
+				if err != nil && os.IsNotExist(err) {
+					file, _ = os.Create(snapxmlPathDir + "/error/upload/")
+				}
+
 				uploaderr := GwCaptureInforUpload(&result, scsj, ossDZ, snapxmlPathDir+"/error/upload/"+fileList[i].Name())
 				if uploaderr != nil {
 					//删除抓拍xml文件
@@ -485,6 +570,33 @@ func HandleFile() {
 				} else {
 					//删除抓拍xml文件
 					//xml/parsed
+					// check
+					if _, err := os.Stat(snapxmlPathDir + "/parsed/"); err == nil {
+						fmt.Println("path exists 1", snapxmlPathDir+"/parsed/")
+					} else {
+						fmt.Println("path not exists ", snapxmlPathDir+"/parsed/")
+						err := os.MkdirAll(snapxmlPathDir+"/parsed/", 0711)
+
+						if err != nil {
+							log.Println("Error creating directory")
+							log.Println(err)
+						}
+					}
+
+					// check again
+					if _, err := os.Stat(snapxmlPathDir + "/parsed/"); err == nil {
+						fmt.Println("path exists 2", snapxmlPathDir+"/parsed/")
+					}
+
+					file, err := os.Open(snapxmlPathDir + "/parsed/")
+					defer func() {
+						_ = file.Close()
+					}()
+					//os.IsNotExist
+					if err != nil && os.IsNotExist(err) {
+						file, _ = os.Create(snapxmlPathDir + "/parsed/")
+					}
+
 					source := snapxmlPathDir + "/" + fileList[i].Name()
 					d := snapxmlPathDir + "/parsed/" + fileList[i].Name()
 					mverr := utils.MoveFile(source, d)
@@ -501,6 +613,33 @@ func HandleFile() {
 				//上传oss失败
 				//删除抓拍xml文件
 				//xml/error
+				// check
+				if _, err := os.Stat(snapxmlPathDir + "/error/noimages/"); err == nil {
+					fmt.Println("path exists 1", snapxmlPathDir+"/error/noimages/")
+				} else {
+					fmt.Println("path not exists ", snapxmlPathDir+"/error/noimages/")
+					err := os.MkdirAll(snapxmlPathDir+"/error/noimages/", 0711)
+
+					if err != nil {
+						log.Println("Error creating directory")
+						log.Println(err)
+					}
+				}
+
+				// check again
+				if _, err := os.Stat(snapxmlPathDir + "/error/noimages/"); err == nil {
+					fmt.Println("path exists 2", snapxmlPathDir+"/error/noimages/")
+				}
+
+				file, err := os.Open(snapxmlPathDir + "/error/noimages/")
+				defer func() {
+					_ = file.Close()
+				}()
+				//os.IsNotExist
+				if err != nil && os.IsNotExist(err) {
+					file, _ = os.Create(snapxmlPathDir + "/error/noimages/")
+				}
+
 				source := snapxmlPathDir + "/" + fileList[i].Name()
 				d := snapxmlPathDir + "/error/noimages/" + fileList[i].Name()
 				mverr := utils.MoveFile(source, d)
@@ -525,6 +664,24 @@ func HandleFileAgainUpload() {
 
 	var snapxmlpathDir = filepath.Join(dir, "snap", "xml", "error", "upload")
 	log.Println("/snap/xml/error/upload/绝对路径:", snapxmlpathDir) //可以不需要加"/"
+
+	// check
+	if _, err := os.Stat(snapxmlpathDir); err == nil {
+		fmt.Println("path exists 1", snapxmlpathDir)
+	} else {
+		fmt.Println("path not exists ", snapxmlpathDir)
+		err := os.MkdirAll(snapxmlpathDir, 0711)
+
+		if err != nil {
+			log.Println("Error creating directory")
+			log.Println(err)
+		}
+	}
+
+	// check again
+	if _, err := os.Stat(snapxmlpathDir); err == nil {
+		fmt.Println("path exists 2", snapxmlpathDir)
+	}
 
 	fileList, err := ioutil.ReadDir(snapxmlpathDir) //不需要加"/"
 	if err != nil {
