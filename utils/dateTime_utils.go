@@ -2,6 +2,7 @@ package utils
 
 import (
 	"log"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -11,6 +12,16 @@ func DateTimeFormat(t time.Time) string {
 	return t.Format("2006-01-02 15:04:05") //后面的参数是固定的 否则将无输出
 }
 
+//处理时间字符串转时间
+func WindowsStrTimeTotime(strTime string) time.Time {
+	os.Setenv("ZONEINFO", "./data.zip")
+	const Layout = "2006-01-02 15:04:05" //时间常量
+	loc, _ := time.LoadLocation("Asia/Shanghai")
+	//log.Println(err)
+	t, _ := time.ParseInLocation(Layout, strTime /*需要转换的时间类型字符串*/, loc)
+	//log.Println(toerr)
+	return t
+}
 func DateFormatTimeToTime(data time.Time) time.Time {
 	datestr := data.Format("2006-01-02 00:00:00")
 	const Layout = "2006-01-02 15:04:05" //时间常量

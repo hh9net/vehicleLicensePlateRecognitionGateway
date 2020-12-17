@@ -71,7 +71,7 @@ func TestGetSomeTimestamp(t *testing.T) {
 
 func TestTimeDifference(t *testing.T) {
 	t1 := time.Now()
-	time.Sleep(time.Second * 5)
+	time.Sleep(time.Second * 15)
 	t2 := time.Now()
 	logrus.Println(TimeDifference(t1, t2))
 
