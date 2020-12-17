@@ -6,6 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
+	"time"
 	"vehicleLicensePlateRecognitionGateway/dto"
 )
 
@@ -18,8 +19,6 @@ var GetCameraListip string
 //1.前置机抓拍信息上传接口 http://172.31.49.252/data-collect/report/frontend   POST
 func GwCaptureInformationUploadPostWithXML(data *[]byte) (*dto.ResultRespXML, error) {
 	//post请求提交xml数据
-
-	//POST
 	//text/xml 传输数据为Xml数据
 	resp, err := http.Post(GwCaptureInformationUploadIpAddress, "application/xml", bytes.NewBuffer(*data))
 	if err != nil {
@@ -38,6 +37,9 @@ func GwCaptureInformationUploadPostWithXML(data *[]byte) (*dto.ResultRespXML, er
 		log.Println("前置机抓拍信息上传接口响应数据 xml.Unmarshal error：", unmerr)
 		return nil, unmerr
 	}
+
+	ResultCount = ResultCount + 1
+	log.Println("前置机抓拍信息上传接口ResultCount:", ResultCount, time.Now().Format("2006-01-02 15:04:05"))
 	log.Println("前置机抓拍信息上传接口 Post request with  xml result:", Resp.Code, Resp.Msg)
 	return Resp, nil
 }

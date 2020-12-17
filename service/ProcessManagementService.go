@@ -2,7 +2,7 @@ package service
 
 import (
 	"encoding/xml"
-	"fmt"
+
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net"
@@ -16,6 +16,8 @@ import (
 	"vehicleLicensePlateRecognitionGateway/utils"
 )
 
+var OSSCount int
+var ResultCount int
 var Deviceid string //网关设备id Token
 //var IpAddress string
 var StationId map[string]string
@@ -147,16 +149,17 @@ CQ:
 			fname := generateConfigToOne(confdata)
 			if fname != "" {
 				Configfname = fname
+				//2、进程启动
+				//传 一个配置文件的绝对路径 全局唯一
+				go Runmain(Configfname)
+				//if err := Runmain(Configfname); err != nil {
+				//	log.Println("需要重启")
+				//} else {
+				//	log.Println("一对一的进程已启动ok", i+1)
+				//}
+			} else {
+				log.Println("一对一生成配置文件 为空 Configfname", Configfname)
 			}
-
-			//2、进程启动
-			//传 一个配置文件的绝对路径 全局唯一
-			go Runmain(Configfname)
-			//if err := Runmain(Configfname); err != nil {
-			//	log.Println("需要重启")
-			//} else {
-			//	log.Println("一对一的进程已启动ok", i+1)
-			//}
 
 		case "one2many":
 			log.Println("one2many,相机品牌是：", cmera.DevCompId)
@@ -210,16 +213,17 @@ CQ:
 	ysfname := generateYSConfig(YSconfdata)
 	if ysfname != "" {
 		YSConfigfname = ysfname
+		//启动宇视的程序
+		go Runmain(YSConfigfname)
+		//if err := Runmain(YSConfigfname); err != nil {
+		//	log.Println("宇视需要重启")
+		//} else {
+		//	log.Println("启动宇视的程序ok")
+		//}
+	} else {
+		log.Println("宇视生成xml配置文件为空,YSConfigfname:", YSConfigfname)
 	}
-	time.Sleep(time.Minute * 1)
-
-	//启动宇视的程序
-	go Runmain(YSConfigfname)
-	//if err := Runmain(YSConfigfname); err != nil {
-	//	log.Println("宇视需要重启")
-	//} else {
-	//	log.Println("启动宇视的程序ok")
-	//}
+	//time.Sleep(time.Minute * 1)
 
 	if len(hikITS) == 0 {
 		log.Println("++++++++++++++++++++++++++++++该网关设备没有海康ITS相机")
@@ -283,15 +287,17 @@ CQ:
 		itsfname := generateITSConfig(ITSconfdata)
 		if itsfname != "" {
 			ITSConfigfname = itsfname
+			//启动海康的程序
+			go Runmain(ITSConfigfname)
+			//if err := Runmain(ITSConfigfname); err != nil {
+			//	log.Println("海康ITS需要重启")
+			//
+			//} else {
+			//	log.Println("启动海康的程序ok")
+			//}
+		} else {
+			log.Println("generateITSConfig生成启动进程的配置文件 文件名称为空，", itsfname)
 		}
-		//启动海康的程序
-		go Runmain(ITSConfigfname)
-		//if err := Runmain(ITSConfigfname); err != nil {
-		//	log.Println("海康ITS需要重启")
-		//
-		//} else {
-		//	log.Println("启动海康的程序ok")
-		//}
 
 	}
 
@@ -405,16 +411,16 @@ func HandleFile() {
 	//扫描 captureXml 文件夹 读取文件信息
 
 	dir, _ := os.Getwd()
-	log.Println("+++++++++++++++++++++++++当前路径：", dir)
+	log.Println("++++++++++++++当前路径：", dir)
 	var snapxmlPathDir = filepath.Join(dir, "snap", "xml")
 	log.Println("/snap/xml/绝对路径:", snapxmlPathDir) //可以不需要加"/"
 	//pwd := "./snap/xml/"
 
 	// check
 	if _, err := os.Stat(snapxmlPathDir); err == nil {
-		fmt.Println("path exists 1", snapxmlPathDir)
+		log.Println("path exists 1", snapxmlPathDir)
 	} else {
-		fmt.Println("path not exists ", snapxmlPathDir)
+		log.Println("path not exists ", snapxmlPathDir)
 		err := os.MkdirAll(snapxmlPathDir, 0711)
 
 		if err != nil {
@@ -425,16 +431,7 @@ func HandleFile() {
 
 	// check again
 	if _, err := os.Stat(snapxmlPathDir); err == nil {
-		fmt.Println("path exists 2", snapxmlPathDir)
-	}
-
-	file, err := os.Open(snapxmlPathDir)
-	defer func() {
-		_ = file.Close()
-	}()
-	//os.IsNotExist
-	if err != nil && os.IsNotExist(err) {
-		file, _ = os.Create(snapxmlPathDir)
+		log.Println("path exists 2", snapxmlPathDir)
 	}
 
 	fileList, err := ioutil.ReadDir(snapxmlPathDir) //不需要加"/"
@@ -492,9 +489,9 @@ func HandleFile() {
 
 			// check
 			if _, err := os.Stat(ImgPath[0]); err == nil {
-				fmt.Println("path exists 1", ImgPath[0])
+				log.Println("path exists 1", ImgPath[0])
 			} else {
-				fmt.Println("path not exists ", ImgPath[0])
+				log.Println("path not exists ", ImgPath[0])
 				err := os.MkdirAll(ImgPath[0], 0711)
 
 				if err != nil {
@@ -505,23 +502,16 @@ func HandleFile() {
 
 			// check again
 			if _, err := os.Stat(ImgPath[0]); err == nil {
-				fmt.Println("path exists 2", ImgPath[0])
-			}
-
-			file, err := os.Open(ImgPath[0])
-			defer func() {
-				_ = file.Close()
-			}()
-			//os.IsNotExist
-			if err != nil && os.IsNotExist(err) {
-				file, _ = os.Create(ImgPath[0])
+				log.Println("path exists 2", ImgPath[0])
 			}
 
 			//上传oss图片
 			code, scsj, ossDZ := utils.QingStorUpload(result.VehicleImgPath, strfname[len(strfname)-1], ObjectPrefix)
 
 			if code == utils.UPloadOK {
+				OSSCount = OSSCount + 1
 				log.Println("上传到oss   成功，开始返回抓拍结果给云平台")
+				log.Println("上传到oss   成功，OSSCount:", OSSCount, time.Now().Format("2006-01-02 15:04:05"))
 				//删除本地图片result.VehicleImgPath
 				//utils.DelFile("./images/" + strfname[6] + "/" + strfname[7])
 				utils.DelFile(result.VehicleImgPath)
@@ -529,9 +519,9 @@ func HandleFile() {
 				//生产xml返回给云平台 [暂时上传到模拟云平台]
 				// check
 				if _, err := os.Stat(snapxmlPathDir + "/error/upload/"); err == nil {
-					fmt.Println("path exists 1", snapxmlPathDir+"/error/upload/")
+					log.Println("path exists 1", snapxmlPathDir+"/error/upload/")
 				} else {
-					fmt.Println("path not exists ", snapxmlPathDir+"/error/upload/")
+					log.Println("path not exists ", snapxmlPathDir+"/error/upload/")
 					err := os.MkdirAll(snapxmlPathDir+"/error/upload/", 0711)
 
 					if err != nil {
@@ -542,16 +532,7 @@ func HandleFile() {
 
 				// check again
 				if _, err := os.Stat(snapxmlPathDir + "/error/upload/"); err == nil {
-					fmt.Println("path exists 2", snapxmlPathDir+"/error/upload/")
-				}
-
-				file, err := os.Open(snapxmlPathDir + "/error/upload/")
-				defer func() {
-					_ = file.Close()
-				}()
-				//os.IsNotExist
-				if err != nil && os.IsNotExist(err) {
-					file, _ = os.Create(snapxmlPathDir + "/error/upload/")
+					log.Println("path exists 2", snapxmlPathDir+"/error/upload/")
 				}
 
 				uploaderr := GwCaptureInforUpload(&result, scsj, ossDZ, snapxmlPathDir+"/error/upload/"+fileList[i].Name())
@@ -572,9 +553,9 @@ func HandleFile() {
 					//xml/parsed
 					// check
 					if _, err := os.Stat(snapxmlPathDir + "/parsed/"); err == nil {
-						fmt.Println("path exists 1", snapxmlPathDir+"/parsed/")
+						log.Println("path exists 1", snapxmlPathDir+"/parsed/")
 					} else {
-						fmt.Println("path not exists ", snapxmlPathDir+"/parsed/")
+						log.Println("path not exists ", snapxmlPathDir+"/parsed/")
 						err := os.MkdirAll(snapxmlPathDir+"/parsed/", 0711)
 
 						if err != nil {
@@ -585,16 +566,7 @@ func HandleFile() {
 
 					// check again
 					if _, err := os.Stat(snapxmlPathDir + "/parsed/"); err == nil {
-						fmt.Println("path exists 2", snapxmlPathDir+"/parsed/")
-					}
-
-					file, err := os.Open(snapxmlPathDir + "/parsed/")
-					defer func() {
-						_ = file.Close()
-					}()
-					//os.IsNotExist
-					if err != nil && os.IsNotExist(err) {
-						file, _ = os.Create(snapxmlPathDir + "/parsed/")
+						log.Println("path exists 2", snapxmlPathDir+"/parsed/")
 					}
 
 					source := snapxmlPathDir + "/" + fileList[i].Name()
@@ -615,9 +587,9 @@ func HandleFile() {
 				//xml/error
 				// check
 				if _, err := os.Stat(snapxmlPathDir + "/error/noimages/"); err == nil {
-					fmt.Println("path exists 1", snapxmlPathDir+"/error/noimages/")
+					log.Println("path exists 1", snapxmlPathDir+"/error/noimages/")
 				} else {
-					fmt.Println("path not exists ", snapxmlPathDir+"/error/noimages/")
+					log.Println("path not exists ", snapxmlPathDir+"/error/noimages/")
 					err := os.MkdirAll(snapxmlPathDir+"/error/noimages/", 0711)
 
 					if err != nil {
@@ -628,16 +600,7 @@ func HandleFile() {
 
 				// check again
 				if _, err := os.Stat(snapxmlPathDir + "/error/noimages/"); err == nil {
-					fmt.Println("path exists 2", snapxmlPathDir+"/error/noimages/")
-				}
-
-				file, err := os.Open(snapxmlPathDir + "/error/noimages/")
-				defer func() {
-					_ = file.Close()
-				}()
-				//os.IsNotExist
-				if err != nil && os.IsNotExist(err) {
-					file, _ = os.Create(snapxmlPathDir + "/error/noimages/")
+					log.Println("path exists 2", snapxmlPathDir+"/error/noimages/")
 				}
 
 				source := snapxmlPathDir + "/" + fileList[i].Name()
@@ -660,17 +623,17 @@ func HandleFileAgainUpload() {
 	//2、处理文件
 	//扫描 captureXml 文件夹 读取文件信息
 	dir, _ := os.Getwd()
-	log.Println("+++++++++++++++++++++++++当前路径：", dir)
+	log.Println("++当前路径：", dir)
 
-	var snapxmlpathDir = filepath.Join(dir, "snap", "xml", "error", "upload")
-	log.Println("/snap/xml/error/upload/绝对路径:", snapxmlpathDir) //可以不需要加"/"
+	var AgainUpsnapxmlpathDir = filepath.Join(dir, "snap", "xml", "error", "upload")
+	log.Println("/snap/xml/error/upload/绝对路径:", AgainUpsnapxmlpathDir) //可以不需要加"/"
 
 	// check
-	if _, err := os.Stat(snapxmlpathDir); err == nil {
-		fmt.Println("path exists 1", snapxmlpathDir)
+	if _, err := os.Stat(AgainUpsnapxmlpathDir); err == nil {
+		log.Println("path exists 1", AgainUpsnapxmlpathDir)
 	} else {
-		fmt.Println("path not exists ", snapxmlpathDir)
-		err := os.MkdirAll(snapxmlpathDir, 0711)
+		log.Println("path not exists ", AgainUpsnapxmlpathDir)
+		err := os.MkdirAll(AgainUpsnapxmlpathDir, 0711)
 
 		if err != nil {
 			log.Println("Error creating directory")
@@ -679,11 +642,11 @@ func HandleFileAgainUpload() {
 	}
 
 	// check again
-	if _, err := os.Stat(snapxmlpathDir); err == nil {
-		fmt.Println("path exists 2", snapxmlpathDir)
+	if _, err := os.Stat(AgainUpsnapxmlpathDir); err == nil {
+		log.Println("path exists 2", AgainUpsnapxmlpathDir)
 	}
 
-	fileList, err := ioutil.ReadDir(snapxmlpathDir) //不需要加"/"
+	fileList, err := ioutil.ReadDir(AgainUpsnapxmlpathDir) //不需要加"/"
 	if err != nil {
 		log.Println("扫描/snap/xml/error/upload/ 文件夹 读取文件信息 error:", err)
 		return
@@ -704,7 +667,7 @@ func HandleFileAgainUpload() {
 		if strings.HasSuffix(fileList[i].Name(), ".xml") {
 			log.Println("执行 扫描 该/snap/xml/error/upload/ 文件夹下需要解析的xml文件名字为:", fileList[i].Name())
 			//error/upload/fname
-			content, err := ioutil.ReadFile(snapxmlpathDir + "/" + fileList[i].Name())
+			content, err := ioutil.ReadFile(AgainUpsnapxmlpathDir + "/" + fileList[i].Name())
 			if err != nil {
 				log.Println("执行  读文件位置错误信息：", err)
 				continue
@@ -712,15 +675,16 @@ func HandleFileAgainUpload() {
 
 			result, UploadPostWithXMLerr := GwCaptureInformationUploadPostWithXML(&content)
 			if UploadPostWithXMLerr != nil {
-				log.Println("需要再次上传的抓拍结果xml文件pathname:", snapxmlpathDir+"/"+fileList[i].Name())
+				log.Println("需要再次上传的抓拍结果xml文件pathname:", AgainUpsnapxmlpathDir+"/"+fileList[i].Name())
 				log.Println("需要再次上传的抓拍结果xml文件失败：", UploadPostWithXMLerr)
 				continue
 			} else {
+
 				//删除抓拍xml文件
 				//xml/error/upload/
-				source := snapxmlpathDir + "/" + fileList[i].Name()
+				source := AgainUpsnapxmlpathDir + "/" + fileList[i].Name()
 				utils.DelFile(source)
-				log.Println("再次上传的抓拍结果成功,已经删除/snap/xml/error/upload/中 再次上传的抓拍结果的xml成功")
+				log.Println("再次上传的抓拍结果成功,已经删除/snap/xml/error/upload/中 再次上传的抓拍结果的xml成功 ")
 
 			}
 
@@ -919,7 +883,9 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, errorpa
 	}
 
 	if (*result).Code == 0 {
-		log.Println("第一次上传抓拍结果成功")
+
+		log.Println("第一次上传抓拍结果成功 ")
+
 		return nil
 	} else {
 		log.Println("第一次上传抓拍结果失败")
@@ -1134,12 +1100,13 @@ func HandleDayTasks() {
 		now := time.Now()               //获取当前时间，放到now里面，要给next用
 		next := now.Add(time.Hour * 24) //通过now偏移24小时
 
-		next = time.Date(next.Year(), next.Month(), next.Day(), 3, 0, 0, 0, next.Location()) //获取下一个20点的日期
+		next = time.Date(next.Year(), next.Month(), next.Day(), 1, 0, 0, 0, next.Location()) //获取下一个20点的日期
 
 		t := time.NewTimer(next.Sub(now)) //计算当前时间到凌晨的时间间隔，设置一个定时器
-		<-t.C
-		log.Println("执行线程，处理一天一次删除的定时任务11111111111111111111111111111111111111111111111111111111111111111")
 
+		OSSCount = 0
+		ResultCount = 0
+		log.Println("zhi")
 		//删除前几天日期文件夹中为空的文件夹
 		log.Println("执行删除前几天日期文件夹中为空的文件夹")
 		//2、处理文件
@@ -1150,10 +1117,10 @@ func HandleDayTasks() {
 		//var snapimagespath string
 		//snapimagespath, _ = filepath.Abs(filepath.Dir(os.Args[0]))
 
-		var snapimagespathDir = filepath.Join(dir, "snap", "images")
-		log.Println("/snap/images/绝对路径:", snapimagespathDir+"/") //+"/"
+		var DelsnapimagespathDir = filepath.Join(dir, "snap", "images")
+		log.Println("/snap/images/绝对路径:", DelsnapimagespathDir+"/") //+"/"
 		//pwd := snapimagespathDir
-		DirList, err := ioutil.ReadDir(snapimagespathDir + "/") //也可以不加
+		DirList, err := ioutil.ReadDir(DelsnapimagespathDir + "/") //也可以不加
 		if err != nil {
 			log.Println("扫描 /snap/images/文件夹 读取文件信息 error:", err)
 			time.Sleep(time.Second * 3)
@@ -1176,8 +1143,8 @@ func HandleDayTasks() {
 			log.Println("DirList[i].Name():", DirList[i].Name())
 			if DirList[i].IsDir() {
 
-				log.Println("日期文件夹的绝对目录:", snapimagespathDir+"/"+DirList[i].Name())
-				fileList, err := ioutil.ReadDir(snapimagespathDir + "/" + DirList[i].Name()) //可已不加"/"
+				log.Println("日期文件夹的绝对目录:", DelsnapimagespathDir+"/"+DirList[i].Name())
+				fileList, err := ioutil.ReadDir(DelsnapimagespathDir + "/" + DirList[i].Name()) //可已不加"/"
 				if err != nil {
 					log.Println("扫描 /snap/images/下文件夹 读取文件信息 error:", err, DirList[i].Name())
 					continue
@@ -1190,9 +1157,9 @@ func HandleDayTasks() {
 					for _, day := range oldday {
 						if DirList[i].Name() == day {
 							//删除空文件夹
-							log.Println("删除空文件夹path:", snapimagespathDir+"/"+DirList[i].Name())
+							log.Println("删除空文件夹path:", DelsnapimagespathDir+"/"+DirList[i].Name())
 
-							rmverr := os.RemoveAll(snapimagespathDir + "/" + DirList[i].Name())
+							rmverr := os.RemoveAll(DelsnapimagespathDir + "/" + DirList[i].Name())
 							if rmverr != nil {
 								log.Println("删除空文件夹失败:", rmverr)
 
@@ -1209,6 +1176,7 @@ func HandleDayTasks() {
 			}
 		}
 		log.Println("处理可能有要删除的空文件夹OK")
+		<-t.C
 		log.Println("执行线程，处理一天一次的定时任务【完成】11111111111111111111111111111111111111111111111111111111111111111")
 	}
 }
@@ -1235,7 +1203,7 @@ func ChepZH(ys string) string {
 		return "6"
 
 	default:
-		fmt.Println("ys", ys)
+		log.Println("ys", ys)
 		return "0"
 
 	}

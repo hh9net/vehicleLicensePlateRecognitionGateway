@@ -27,7 +27,8 @@ func main() {
 
 	//初始化配置文件
 	ConfigInit()
-	//ch := make(chan int, 1)
+	service.OSSCount = 0
+	service.ResultCount = 0
 	//进程管理
 	service.ProcessManagementService()
 	//	goroutine1

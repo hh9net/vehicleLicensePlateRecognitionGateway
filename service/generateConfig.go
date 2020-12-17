@@ -2,7 +2,7 @@ package service
 
 import (
 	"encoding/xml"
-	"fmt"
+
 	log "github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
@@ -23,6 +23,9 @@ func generateConfigToOne(configdata *OneToOneConfig) string {
 	fname := createxml(xmlname, outputxml)
 	if fname != "" {
 		log.Println("启动一对一进程配置文件生成OK，可以启动进程，fname=", fname)
+	} else {
+		log.Println("启动一对一进程配置文件生成失败，，fname=", fname)
+
 	}
 	return fname
 }
@@ -42,6 +45,9 @@ func generateYSConfig(configdata *MoreToMoreConfig) string {
 	fname := createxml(xmlname, outputxml)
 	if fname != "" {
 		log.Println("启动宇视进程配置文件生成OK，可以启动进程", fname)
+	} else {
+		log.Println("启动宇视进程配置文件生成error", fname)
+
 	}
 
 	return fname
@@ -62,6 +68,8 @@ func generateITSConfig(configdata *OneToMoreConfig) string {
 	fname := createxml(xmlname, outputxml)
 	if fname != "" {
 		log.Println("启动海康ITS进程配置文件生成OK，可以启动进程", fname)
+	} else {
+		log.Println("启动海康ITS进程配置文件生成error", fname)
 	}
 
 	return fname
@@ -74,22 +82,12 @@ func createxml(xmlname string, outputxml []byte) string {
 	log.Println("+++++++++++++++++++++++++当前路径：", dir)
 	var cameraConfigpathDir = filepath.Join(dir, "cameraConfig")
 	log.Println("cameraConfig绝对路径:", cameraConfigpathDir)
-	file, err := os.Open(cameraConfigpathDir)
-	defer func() {
-		_ = file.Close()
-	}()
-	//os.IsNotExist
-	if err != nil && os.IsNotExist(err) {
-		file, _ = os.Create(cameraConfigpathDir)
-	}
-
 	// check
 	if _, err := os.Stat(cameraConfigpathDir); err == nil {
-		fmt.Println("path exists 1", cameraConfigpathDir)
+		log.Println("path exists 1", cameraConfigpathDir)
 	} else {
-		fmt.Println("path not exists ", cameraConfigpathDir)
+		log.Println("path not exists ", cameraConfigpathDir)
 		err := os.MkdirAll(cameraConfigpathDir, 0711)
-
 		if err != nil {
 			log.Println("Error creating directory")
 			log.Println(err)
@@ -98,7 +96,7 @@ func createxml(xmlname string, outputxml []byte) string {
 
 	// check again
 	if _, err := os.Stat(cameraConfigpathDir); err == nil {
-		fmt.Println("path exists 2", cameraConfigpathDir)
+		log.Println("path exists 2", cameraConfigpathDir)
 	}
 
 	fw, f_werr := os.Create("./cameraConfig/" + xmlname + ".xml") //go run main.go
