@@ -60,13 +60,14 @@ func ProcessManagementService( /*ch chan int*/ ) {
 CQ:
 	resp, getTokenerr := GetGatawayToken()
 	if getTokenerr != nil {
-		log.Println("获取网关设备的token 失败") //getTokenerr 已打印
+		log.Println("获取网关设备的token 失败,重新请求", time.Now()) //getTokenerr 已打印
 		time.Sleep(time.Minute * 1)
 		goto CQ
 	}
 
 	//全局 Token  BacketName 	ObjectPrefix 赋值
 	if resp != nil {
+		log.Println("获取网关设备的token OK", time.Now())
 		Token = resp.Token
 		BacketName = resp.Oss.BacketName
 		ObjectPrefix = resp.Oss.ObjectPrefix

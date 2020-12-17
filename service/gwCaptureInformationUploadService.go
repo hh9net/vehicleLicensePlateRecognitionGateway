@@ -46,14 +46,14 @@ func GwCaptureInformationUploadPostWithXML(data *[]byte) (*dto.ResultRespXML, er
 
 //2.获取token
 func GetToken(deviceid string) (*dto.GetTokenRespXML, error) {
-
+	log.Println("Gettoken + deviceid：", Gettoken+deviceid)
 	//http://172.31.49.252/processor-control/collect/token/fe0442b5-2d40-486f-9682-d1043ceca4e5
 	resp, err := http.Get(Gettoken + deviceid)
 	if err != nil {
 		log.Println("GetToken http error!", err)
 		return nil, err
 	}
-	log.Println("GetToken http ok!")
+	log.Println("GetToken http 请求 ok!")
 
 	defer func() {
 		_ = resp.Body.Close()
@@ -64,10 +64,11 @@ func GetToken(deviceid string) (*dto.GetTokenRespXML, error) {
 	Resp := new(dto.GetTokenRespXML)
 	unmerr := xml.Unmarshal(body, Resp)
 	if unmerr != nil {
-		log.Println("xml.Unmarshal error", unmerr)
+		log.Println("GetToken http 请求 ok，但是xml.Unmarshal error!")
+
+		log.Println("xml.Unmarshal error：", unmerr)
 		return nil, unmerr
 	}
-
 	log.Println("Post request with  xml result:", Resp.Code, Resp.Msg)
 	return Resp, nil
 }
@@ -90,7 +91,7 @@ func GetCameraList(token string) (*dto.GetCameraList, error) {
 	Resp := new(dto.GetCameraList)
 	unmerr := xml.Unmarshal(body, &Resp)
 	if unmerr != nil {
-		log.Println(" xml.Unmarshal error", unmerr)
+		log.Println("根据token获取camera列表 xml.Unmarshal error", unmerr)
 		return nil, unmerr
 	}
 
