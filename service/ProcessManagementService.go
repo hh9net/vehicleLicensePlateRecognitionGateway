@@ -159,6 +159,7 @@ CQ:
 				//}
 			} else {
 				log.Println("一对一生成配置文件 为空 Configfname", Configfname)
+				return
 			}
 
 		case "one2many":
@@ -222,6 +223,7 @@ CQ:
 		//}
 	} else {
 		log.Println("宇视生成xml配置文件为空,YSConfigfname:", YSConfigfname)
+		return
 	}
 	//time.Sleep(time.Minute * 1)
 
@@ -297,6 +299,7 @@ CQ:
 			//}
 		} else {
 			log.Println("generateITSConfig生成启动进程的配置文件 文件名称为空，", itsfname)
+			return
 		}
 
 	}
