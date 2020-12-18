@@ -39,7 +39,7 @@ func GwCaptureInformationUploadPostWithXML(data *[]byte) (*dto.ResultRespXML, er
 	}
 
 	ResultCount = ResultCount + 1
-	log.Println("前置机抓拍信息上传接口ResultCount:", ResultCount, time.Now().Format("2006-01-02 15:04:05"))
+	log.Println("前置机抓拍信息上传接口 ok ResultCount:", ResultCount, time.Now().Format("2006-01-02 15:04:05"))
 	log.Println("前置机抓拍信息上传接口 Post request with  xml result:", Resp.Code, Resp.Msg)
 	return Resp, nil
 }

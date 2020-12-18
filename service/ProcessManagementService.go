@@ -18,6 +18,8 @@ import (
 
 var OSSCount int
 var ResultCount int
+var ResultOKCount int
+var AgainCount int
 var Deviceid string //网关设备id Token
 //var IpAddress string
 var StationId map[string]string
@@ -153,11 +155,6 @@ CQ:
 				//2、进程启动
 				//传 一个配置文件的绝对路径 全局唯一
 				go Runmain(Configfname)
-				//if err := Runmain(Configfname); err != nil {
-				//	log.Println("需要重启")
-				//} else {
-				//	log.Println("一对一的进程已启动ok", i+1)
-				//}
 
 			} else {
 				log.Println("一对一生成配置文件 为空 Configfname", Configfname)
@@ -218,11 +215,7 @@ CQ:
 		YSConfigfname = ysfname
 		//启动宇视的程序
 		go Runmain(YSConfigfname)
-		//if err := Runmain(YSConfigfname); err != nil {
-		//	log.Println("宇视需要重启")
-		//} else {
-		//	log.Println("启动宇视的程序ok")
-		//}
+
 	} else {
 		log.Println("宇视生成xml配置文件为空,YSConfigfname:", YSConfigfname)
 		return
@@ -243,26 +236,26 @@ CQ:
 		Chan.Id = its.Id
 		Chan.Index = its.Channel
 
-		log.Println("its.DevCompId++its.DevIp++its.Port++its.UserName++its.Password:", its.DevCompId+"|"+its.DevIp+"|"+its.Port+"|"+its.UserName+"|"+its.Password)
+		log.Println("its.DevCompId|its.DevIp|its.Port|its.UserName|its.Password:", its.DevCompId+"|"+its.DevIp+"|"+its.Port+"|"+its.UserName+"|"+its.Password)
 
-		if val, ok := itsmap[its.DevCompId+"+"+its.DevIp+"+"+its.Port+"+"+its.UserName+"+"+its.Password]; ok == true {
+		if val, ok := itsmap[its.DevCompId+"|"+its.DevIp+"|"+its.Port+"|"+its.UserName+"|"+its.Password]; ok == true {
 			log.Println("海康iTS的列表值已经存在", val, "｜海康iTS的map列表值已经存在", itsmap)
 
 			val = append(val, *Chan)
-			itsmap[its.DevCompId+"+"+its.DevIp+"+"+its.Port+"+"+its.UserName+"+"+its.Password] = val
+			itsmap[its.DevCompId+"|"+its.DevIp+"|"+its.Port+"|"+its.UserName+"|"+its.Password] = val
 
 			log.Println("海康iTS的列表新存在值：", *Chan, "｜海康iTS的新map列表存在值 ：", itsmap)
 
 		} else {
-			log.Println("海康iTS的列表值空值:", val, "+海康iTS的map列表值空值:", itsmap[its.DevCompId+"+"+its.DevIp+"+"+its.Port+"+"+its.UserName+"+"+its.Password])
+			log.Println("海康iTS的列表值空值:", val, "|海康iTS的map列表值空值:", itsmap[its.DevCompId+"|"+its.DevIp+"|"+its.Port+"|"+its.UserName+"|"+its.Password])
 
 			//新的ITS进程的配置文件
 			itschan := make([]OneToMoreConfigChannel, 0)
 			itschan = append(itschan, *Chan)
 
-			itsmap[its.DevCompId+"+"+its.DevIp+"+"+its.Port+"+"+its.UserName+"+"+its.Password] = itschan
+			itsmap[its.DevCompId+"|"+its.DevIp+"|"+its.Port+"|"+its.UserName+"|"+its.Password] = itschan
 
-			log.Println("海康iTS的列表空值:", val, "+海康iTS的map列表第一个值:", itsmap[its.DevCompId+"+"+its.DevIp+"+"+its.Port+"+"+its.UserName+"+"+its.Password])
+			log.Println("海康iTS的列表空值:", val, "|海康iTS的map列表第一个值:", itsmap[its.DevCompId+"|"+its.DevIp+"|"+its.Port+"|"+its.UserName+"|"+its.Password])
 
 		}
 	}
@@ -274,7 +267,7 @@ CQ:
 		//生成配置文件
 		//ITS 多对多启动   OneToMoreConfig
 		ITSconfdata := new(OneToMoreConfig)
-		k := strings.Split(key, "+") //its.DevCompId+"+"+its.DevIp+"+"+its.Port+"+"+its.UserName+"+"+its.Password
+		k := strings.Split(key, "|") //its.DevCompId+"|"+its.DevIp+"|"+its.Port+"|"+its.UserName+"|"+its.Password
 		ITSconfdata.DevCompId = k[0]
 		ITSconfdata.Uuid = HIKITS + k[1] + k[2] + "+" + strconv.Itoa(P) //方便确定是哪一个进程发出的数据 我取品牌名称+进程端口号
 		ITSconfdata.Udplistenport = P
@@ -293,12 +286,7 @@ CQ:
 			ITSConfigfname = itsfname
 			//启动海康的程序
 			go Runmain(ITSConfigfname)
-			//if err := Runmain(ITSConfigfname); err != nil {
-			//	log.Println("海康ITS需要重启")
-			//
-			//} else {
-			//	log.Println("启动海康的程序ok")
-			//}
+
 		} else {
 			log.Println("generateITSConfig生成启动进程的配置文件 文件名称为空，", itsfname)
 			return
@@ -313,8 +301,8 @@ CQ:
 //1、启动进程
 func Runmain(Configfname string) {
 
-	log.Println("Configfname:", Configfname)
-	//与抓拍进程交互心跳 [ ]
+	log.Println("启动进程Configfname:", Configfname)
+
 	port := strings.Split(Configfname, "+")
 
 	//心跳port
@@ -327,12 +315,12 @@ func Runmain(Configfname string) {
 
 	var billoutputDir = filepath.Join(additionalBilldataDir, "snap", "udpmain.exe")
 
-	log.Println("capture.exe绝对路径:", billoutputDir)
+	log.Println("udpmain.exe绝对路径:", billoutputDir)
 
 	cmd := exec.Command(billoutputDir)
 
 	path := make([]string, 0)
-	//	path = append(path, "ConfigPath:")
+
 	var configxmlpath = filepath.Join(additionalBilldataDir, "cameraConfig", Configfname)
 	//绝对路径
 	path = append(path, configxmlpath)
@@ -689,6 +677,10 @@ func HandleFileAgainUpload() {
 				utils.DelFile(source)
 				log.Println("再次上传的抓拍结果成功,已经删除/snap/xml/error/upload/中 再次上传的抓拍结果的xml成功 ")
 
+				//再次上传的数量或者说第一次上传失败的
+				AgainCount = AgainCount + 1
+				log.Println("再次上传的数量或者说第一次上传失败的数量")
+				log.Println("再次上传的抓拍结果成功,AgainCount:", AgainCount, time.Now())
 			}
 
 			if (*result).Code == 0 {
@@ -886,7 +878,10 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, errorpa
 	}
 
 	if (*result).Code == 0 {
-
+		if result.Msg == "接收成功" {
+			ResultOKCount = ResultOKCount + 1
+			log.Println("前置机抓拍信息第一次上传抓拍结果成功ok,并接收成功 ResultCount:", ResultOKCount, time.Now().Format("2006-01-02 15:04:05"))
+		}
 		log.Println("第一次上传抓拍结果成功 ")
 
 		return nil
@@ -942,17 +937,18 @@ XT:
 		goto XT
 	}
 
-	log.Println("管理平台 UDP监听 address:", address)
+	log.Println("抓拍进程管理平台 UDP监听地址 address:", address)
 
 	defer func() {
 		_ = conn.Close()
 	}()
+
+	xtsj := time.Now()
 	data := make([]byte, 4096)
 	for {
 		//获取数据
 		// Here must use make and give the lenth of buffer
-
-		//返回一个UDPAddr        ReadFromUDP从c读取一个UDP数据包，将有效负载拷贝到b，返回拷贝字节数和数据包来源地址。
+		//返回一个UDPAddr ReadFromUDP从c读取一个UDP数据包，将有效负载拷贝到b，返回拷贝字节数和数据包来源地址。
 		//ReadFromUDP方法会在超过一个固定的时间点之后超时，并返回一个错误。
 		log.Println("执行 conn.ReadFromUDP address:", address)
 		_, rAddr, err := conn.ReadFromUDP(data)
@@ -967,16 +963,35 @@ XT:
 		if herr != nil {
 			log.Println(rAddr, "UDP接收时xml.Unmarshal 失败！")
 			log.Println(herr)
+			continue
 		} else {
+			//接收到数据
 			log.Println(rAddr, "h.Type｜1、心跳|2、新数据通知|3、 日志|4、采集进程被动关闭命令:", h.Type, h.Uuid)
+		}
+
+		now := time.Now()
+		sjcstr := utils.TimeDifference(xtsj, now)
+
+		SJC := strings.Split(sjcstr, "s")
+		sjc, _ := strconv.Atoi(SJC[0])
+		//超时推出
+		if sjc > 10 {
+			log.Println("心跳时间差大于10秒，需要重启程序")
+			// 4、采集进程被动关闭命令
+			//h := new(dto.Heartbeat)
+			//heartbeatresp.Uuid = h.Uuid
+			//heartbeatresp.Type = 4            //<type> 1、心跳   2、新数据通知  3、 日志  4、采集进程被动关闭命令
+			//heartbeatresp.Version = h.Version //<version>  抓拍程序版本号
+			//heartbeatresp.Time = h.Time       //<time>     字符串2020-11-12 12:12:12
+			//heartbeatresp.Seq = h.Seq         //<seq>   消息序号累加
+			log.Println("4、采集进程被动关闭命令 h.Type:", h.Type, h)
 		}
 
 		heartbeatresp := new(dto.Heartbeat)
 		//   1、心跳   2、新数据通知  3、 日志  4、采集进程被动关闭命令
 		switch h.Type {
-
+		//心跳
 		case 1:
-			//   1、心跳
 			h := new(dto.Heartbeat)
 			herr := xml.Unmarshal(data, h)
 			if herr != nil {
@@ -995,7 +1010,6 @@ XT:
 				sjcstr := utils.TimeDifference(old, now)
 
 				SJC := strings.Split(sjcstr, "s")
-
 				sjc, _ := strconv.Atoi(SJC[0])
 				//超时推出
 				if sjc > 10 {
@@ -1009,7 +1023,6 @@ XT:
 					heartbeatresp.Seq = h.Seq         //<seq>   消息序号累加
 					log.Println("4、采集进程被动关闭命令 h.Type:", h.Type, h)
 				}
-
 			}
 
 		case 2:
@@ -1025,7 +1038,6 @@ XT:
 				heartbeatresp.Version = h.Version //<version>        抓拍程序版本号
 				heartbeatresp.Time = h.Time       //<time>     字符串2020-11-12 12:12:12
 				heartbeatresp.Seq = h.Seq         //<seq>   消息序号累加
-
 			}
 
 		case 3:
@@ -1046,6 +1058,7 @@ XT:
 		}
 
 		heartbeatresp.Content = time.Now().Format("2006-01-02 15:04:05")
+		//回复udp的消息
 		resp, hresperr := xml.Marshal(heartbeatresp)
 		if hresperr != nil {
 			log.Println(hresperr)
@@ -1065,12 +1078,13 @@ XT:
 		hferr := Heartbeatclient(port, resp)
 		if hferr != nil {
 			//log已经打印过了
+			continue
 		} else {
 			log.Println("回复成功，但是不退出，继续udp交互，", rAddr)
 		}
 
 		//不管结果如何，我重启它
-		log.Println("++++++++++++++++不管结果如何，我重启它")
+		//log.Println("++++++++++++++++不管结果如何，我重启它")
 	}
 }
 
@@ -1087,27 +1101,23 @@ func Heartbeatclient(port string, toWrite []byte) error {
 	defer func() {
 		_ = conn.Close()
 	}()
-
 	var n int
-
 	n, err = conn.Write([]byte(toWrite))
 	if err != nil {
 		log.Println("管理平台 主动给抓拍进程心跳 UDP err:", err)
 		return err
 	}
-
 	log.Println(" 管理平台 主动给抓拍进程心跳 UDP Write:", string(toWrite), "n:", n)
 	log.Println(" 管理平台 主动给抓拍进程心跳 UDP 写的字节数n:", n)
-
-	msg := make([]byte, 32)
-	n, err = conn.Read(msg)
-	if err != nil {
-		log.Println("管理平台 主动给抓拍进程心跳后，要收（Read）抓拍进程响应的信息 error:", err)
-		return err
-	}
-	log.Println("管理平台 主动给抓拍进程心跳后，收到抓拍进程响应的信息，Response:", string(msg), "n:", n)
-
-	log.Println("管理平台 主动给抓拍进程心跳后，收到抓拍进程响应的信息，Response 字节数量n:", n)
+	//msg := make([]byte, 32)
+	//n, err = conn.Read(msg)
+	//if err != nil {
+	//	log.Println("管理平台 主动给抓拍进程心跳后，要收（Read）抓拍进程响应的信息 error:", err)
+	//	return err
+	//}
+	//log.Println("管理平台 主动给抓拍进程心跳后，收到抓拍进程响应的信息，Response:", string(msg), "n:", n)
+	//
+	//log.Println("管理平台 主动给抓拍进程心跳后，收到抓拍进程响应的信息，Response 字节数量n:", n)
 	return nil
 }
 
@@ -1131,9 +1141,12 @@ func HandleDayTasks() {
 		<-t.C //阻塞等待第二天到来才执行
 		OSSCount = 0
 		ResultCount = 0
+		AgainCount = 0
+		ResultOKCount = 0
+		log.Println("执行重置OSS上传数量与抓拍结果上传数量OSSCount, ResultCount,AgainCount ,ResultOKCount：", OSSCount, ResultCount, AgainCount, ResultOKCount, time.Now().Format("2006-01-02T15:04:05"))
 
 		//删除前几天日期文件夹中为空的文件夹
-		log.Println("执行删除前几天日期文件夹中为空的文件夹")
+		log.Println("执行删除前几天日期文件夹中为空的文件夹", time.Now())
 		//2、处理文件
 		//扫描 captureXml 文件夹 读取文件信息
 		dir, _ := os.Getwd()

@@ -29,6 +29,8 @@ func main() {
 	ConfigInit()
 	service.OSSCount = 0
 	service.ResultCount = 0
+	service.AgainCount = 0
+	service.ResultOKCount = 0
 	//进程管理
 	service.ProcessManagementService()
 	//	goroutine1
