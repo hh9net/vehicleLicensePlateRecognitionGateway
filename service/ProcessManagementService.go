@@ -500,7 +500,7 @@ func UploadFileToOSS(snapxmlPathdir, xmlnamepath string) (err error) {
 	var result dto.CaptureDateXML
 	uerr := xml.Unmarshal(content, &result)
 	if uerr != nil {
-		log.Println("执行 扫描 该captureXml文件夹下需要解析的xml文件内容时，错误信息为：", uerr)
+		log.Println("执行UploadFileToOSS扫描 该snap/xml/文件夹下需要解析的xml文件内容时，错误信息为：", uerr)
 		return uerr
 	}
 
@@ -593,7 +593,7 @@ func UploadFileToOSS(snapxmlPathdir, xmlnamepath string) (err error) {
 			//		log.Println(err)
 			//	}
 			//}
-			//
+
 			//// check again
 			//if _, err := os.Stat(snapxmlPathDir + "/parsed/"); err == nil {
 			//	log.Println("path exists 2", snapxmlPathDir+"/parsed/")
@@ -934,7 +934,7 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, errorpa
 	if (*result).Code == 0 {
 		if result.Msg == "接收成功" {
 			ResultOKCount = ResultOKCount + 1
-			log.Println("前置机抓拍信息第一次上传抓拍结果成功ok,并接收成功 ResultCount:", ResultOKCount, time.Now().Format("2006-01-02 15:04:05"))
+			log.Println("前置机抓拍信息第一次上传抓拍结果成功ok,并接收成功 ResultOKCount:", ResultOKCount, time.Now().Format("2006-01-02 15:04:05"))
 		}
 		log.Println("第一次上传抓拍结果成功 ")
 	}
