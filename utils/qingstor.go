@@ -35,7 +35,7 @@ const (
 
 var BacketName string
 
-func QingStorUpload(path, fname, prefix string) (int, int64, string) {
+func QingStorUpload(path, fname, Pname string) (int, int64, string) {
 
 	//发起请求前首先建立需要初始化服务:
 	//1、初始化了一个 QingStor Service
@@ -59,21 +59,20 @@ func QingStorUpload(path, fname, prefix string) (int, int64, string) {
 	defer func() {
 		_ = f.Close()
 	}()
+	log.Printf("前缀/站点Id/摄像机ID/日期/passid===:%s", Pname)
 
-	// Put object          &service: 包名称
-	//Output, err := bucket.PutObject(fname, &service.PutObjectInput{Body: f})
-	log.Printf("PutObject:prefix+/+fname:%s", prefix+"/"+fname)
-	Output, PutObjecterr := bucket.PutObject(prefix+"/"+fname, &qs.PutObjectInput{Body: f})
+	Output, PutObjecterr := bucket.PutObject(Pname, &qs.PutObjectInput{Body: f})
 	if PutObjecterr != nil {
 		// 所有 >= 400 的 HTTP 返回码都被视作错误 Example: QingStor Error: StatusCode 403, Code "permission_denied"...
-		log.Println("上传结果有错误:", PutObjecterr)
+		log.Println("上传图片到OSS有错误:", PutObjecterr)
+		return 444, time.Now().Unix(), Pname
 	} else {
 		// Print the HTTP status code. Example: 201
-		log.Println("http://" + BacketName + "." + CHEPZone + ".qingstor.com/" + prefix + "/" + fname)
-		log.Println("上传结果:", qs.IntValue(Output.StatusCode))
+		log.Println("http://" + BacketName + "." + CHEPZone + ".qingstor.com/" + Pname)
+		log.Println("青云上传结果码:", qs.IntValue(Output.StatusCode))
 	}
-
-	return qs.IntValue(Output.StatusCode), time.Now().Unix(), prefix + "/" + fname
+	log.Println(qs.IntValue(Output.StatusCode), time.Now().Unix(), Pname)
+	return qs.IntValue(Output.StatusCode), time.Now().Unix(), Pname
 }
 
 func QingStorGetFile(fname, fm string) {

@@ -8,6 +8,7 @@ require (
 	github.com/Shopify/sarama v1.27.2
 	github.com/garyburd/redigo v1.6.2
 	github.com/gin-gonic/gin v1.6.3
+	github.com/go-kratos/kratos v0.6.0
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang/protobuf v1.4.1
 	github.com/jinzhu/gorm v1.9.16

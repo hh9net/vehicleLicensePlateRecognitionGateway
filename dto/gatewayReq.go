@@ -117,9 +117,9 @@ type TBXJLprInfo struct {
 	PassId         string   `xml:"passId"`         // 过车编号
 	CamId          string   `xml:"camId"`          //camId>    摄像机编号
 	DeviceId       string   `xml:"deviceId"`       //deviceId>前置机编号
-	PassTime       string   `xml:"passTime"`       //passTime>     过车编号
-	VehicleImgPath string   `xml:"vehicleImgPath"` //vehicleImgPath>     过车图片地址
-	PlateImgPath   string   `xml:"plateImgPath"`   //<plateImgPath/>     车牌图片地址
+	PassTime       string   `xml:"passTime"`       //passTime>过车编号
+	VehicleImgPath string   `xml:"vehicleImgPath"` //vehicleImgPath> 过车图片地址
+	PlateImgPath   string   `xml:"plateImgPath"`   //<plateImgPath/>车牌图片地址
 	BucketId       string   `xml:"bucketId"`       //bucketId>   bucket编号
 	ImageType      int      `xml:"imageType"`      //	imageType> 图片类型
 	UploadStamp    int64    `xml:"uploadStamp"`    //	uploadStamp> 上传时间
@@ -170,7 +170,7 @@ type TBXJVehicleInfo struct {
 type CaptureDateXML struct {
 	XMLName         xml.Name `xml:"PlateInfo"`
 	PassId          string   `xml:"passId"`          //<passId>sxjgl_yzjtd_320200_G2_K1071_2_0_004_20201124_000031</passId>
-	CamId           string   `xml:"camId"`           //<camId>sxjgl_yzjtd_320200_G2_K1071_2_0_004</camId>
+	CamId           string   `xml:"camId"`           //<camId>sxjgl_yzjtd_320200_G2_K1071_2_0_004</camId>摄像机编号
 	PassTime        string   `xml:"passTime"`        //<passTime>2020-11-24 14:35:17</passTime>
 	VehicleImgPath  string   `xml:"vehicleImgPath"`  //<vehicleImgPath>C:\Users\Administrator\Desktop\HSJDEBUG\images\20201124\sxjgl_yzjtd_320200_G2_K1071_2_0_004_20201124143417_000031.jpg</vehicleImgPath>
 	VehicleImgPath1 string   `xml:"vehicleImgPath1"` //<vehicleImgPath1></vehicleImgPath1>

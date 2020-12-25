@@ -1,14 +1,17 @@
 package service
 
 import (
+	"context"
 	"encoding/xml"
-
+	"github.com/go-kratos/kratos/pkg/sync/errgroup"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -16,7 +19,12 @@ import (
 	"vehicleLicensePlateRecognitionGateway/utils"
 )
 
+var (
+	Parsexmlcount int
+	files         chan string
+)
 var OSSCount int
+var Parsed int
 var ResultCount int
 var ResultOKCount int
 var AgainCount int
@@ -29,6 +37,8 @@ var ImageType map[string]string
 var EngineId map[string]string
 
 var Token string
+
+//var HasUploadFile []string
 
 var BacketName string
 var ObjectPrefix string
@@ -366,241 +376,287 @@ func GetGatawayCameraList() (*dto.GetCameraList, error) {
 
 //上传文件  开线程读取xml文件 上传图片到oss  上传抓拍结果到车牌识别云端服务器
 func UploadFile() {
-
-	//tiker := time.NewTicker(time.Second * 15) //每5秒执行一下
+	Parsexmlcount = 0
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, os.Interrupt)
+		<-c
+		cancel()
+	}()
+	files = make(chan string, 100)
+	eg := errgroup.WithContext(ctx)
+	eg.GOMAXPROCS(runtime.NumCPU())
+	for i := 0; i < runtime.NumCPU(); i++ {
+		go parse(ctx)
+	}
 	for {
 		//上传图片以及抓拍结果到车牌识别云端服务器
-		HandleFile()
+		hferr := HandleFile(ctx)
+		if hferr != nil {
+			log.Println("执行HandleFile上传图片以及抓拍结果 到 车牌识别云端服务器hferr error:", hferr)
+		}
 
-		HandleFileAgainUpload()
-
-		log.Println("执行 UploadFile() 上传图片以及抓拍结果 到 车牌识别云端服务器完成")
-		time.Sleep(time.Second * 15)
-		//<-tiker.C
 	}
-
 }
 
-// 判断所给路径是否为文件夹
-func IsDir(path string) bool {
-	s, err := os.Stat(path)
+func HandleFile(ctx context.Context) error {
+	//起go程提取xml文件
+	err, hasNew := extract(ctx)
 	if err != nil {
-		return false
+		log.Printf("extract: %v\n", err)
 	}
-	return s.IsDir()
+	if !hasNew {
+		time.Sleep(time.Second)
+	}
+	return nil
 }
 
-func HandleFile() {
-	//定期检查抓拍文件夹文件夹/snap/xml/
-
-	log.Println(" 执行 HandleFile() 处理xml数据包解析以及oss上传以及抓拍结果上传")
-	//2、处理文件
-	//扫描 captureXml 文件夹 读取文件信息
+//提取文件
+func extract(Ctx context.Context) (err error, hasNewFile bool) {
 	dir, _ := os.Getwd()
-	log.Println("++++++++++++++当前路径：", dir)
+	log.Println("当前路径：", dir)
 	var snapxmlPathDir = filepath.Join(dir, "snap", "xml")
-	log.Println("/snap/xml/绝对路径:", snapxmlPathDir) //可以不需要加"/"
-	//pwd := "./snap/xml/"
-
 	// check
 	if _, err := os.Stat(snapxmlPathDir); err == nil {
 		log.Println("path exists 1", snapxmlPathDir)
 	} else {
 		log.Println("path not exists ", snapxmlPathDir)
 		err := os.MkdirAll(snapxmlPathDir, 0711)
-
 		if err != nil {
 			log.Println("Error creating directory")
 			log.Println(err)
 		}
 	}
-
-	// check again
-	if _, err := os.Stat(snapxmlPathDir); err == nil {
-		log.Println("path exists 2", snapxmlPathDir)
-	}
-
-	fileList, err := ioutil.ReadDir(snapxmlPathDir) //不需要加"/"
+	//	for {
+	//提取xml文件夹下文件
+	fileList, err := ioutil.ReadDir(snapxmlPathDir)
 	if err != nil {
-		log.Println("扫描 captureXml 文件夹 读取文件信息 error:", err)
-		return
+		log.Println("扫描 snapxml 文件夹 读取文件信息 error:", err)
+		return err, false
 	}
-	log.Println("执行 扫描 该captureXml文件夹下有文件的数量 ：", len(fileList))
+	log.Println("执行 扫描 该snap/xml/文件夹下有文件的数量 ：", len(fileList))
 	if len(fileList) == 1 {
-		log.Println("执行 扫描 该captureXml 文件夹下可能没有需要解析的xml文件") //有隐藏文件
-
+		log.Println("执行 扫描 该snap/xml文件夹下可能没有需要解析的xml文件") //有隐藏文件
 	} else {
 		if len(fileList) == 0 {
-			log.Println("执行 扫描 该captureXml 文件夹下没有需要解析的xml文件")
-			return
+			log.Println("执行 扫描 该snap/xml/文件夹下没有需要解析的xml文件")
+			return nil, false
 		}
 	}
 
 	for i := range fileList {
 		//判断文件的结尾名
 		if strings.HasSuffix(fileList[i].Name(), ".xml") {
-			log.Println("执行 扫描 该captureXml文件夹下需要解析的xml文件名字为:", fileList[i].Name())
-
-			content, err := ioutil.ReadFile(snapxmlPathDir + "/" + fileList[i].Name())
-			if err != nil {
-				log.Println("执行  读文件位置错误信息：", err)
+			log.Println("执行 扫描 该snap/xml/文件夹下需要解析的xml文件名字为:", fileList[i].Name())
+			Renameerr := RenameFile(snapxmlPathDir+"/"+fileList[i].Name(), snapxmlPathDir+"/"+fileList[i].Name()+"_suffix")
+			if Renameerr != nil {
 				continue
 			}
+			select {
+			case files <- snapxmlPathDir + "/" + fileList[i].Name() + "_suffix":
 
-			//将xml文件转换为对象
-			var result dto.CaptureDateXML
-			uerr := xml.Unmarshal(content, &result)
-			if uerr != nil {
-				log.Println("执行 扫描 该captureXml文件夹下需要解析的xml文件内容时，错误信息为：", uerr)
-				continue
+			case <-Ctx.Done():
+				return
 			}
 
-			log.Println("获取抓拍结果，result:", result.VehicleImgPath)
+		} // if .xml
+	}
+	//	time.Sleep(time.Second * 1)
+	log.Println("执行 UploadFile() 上传图片以及抓拍结果 到 车牌识别云端服务器完成")
+	return nil, true
+}
 
-			//把图片上传到oss上
-			//D:\\PlateUpload\\vehicleLicensePlateRecognitionGateway\\vehicleLicensePlateRecognitionGateway\\snap\\images\\20201209\\sxjgl_ggzx_320600_G40_K212_2_0_1001_20201209120558_001153.jpg"
-			//result.VehicleImgPath C:\Users\Administrator\Desktop\HSJDEBUG\images\20201124\sxjgl_yzjtd_320200_G2_K1071_2_0_004_20201124143417_000031.jpg 图片路径
-			//c := strings.Split(result.VehicleImgPath, ":")
-			//str2 := strings.Replace(c[1], "\\", "/", -1) //linux
+//解析xml文件
+func parse(Ctx context.Context) {
 
-			//log.Println(str2)
-			//strfname := strings.Split(str2, "/")
-			strfname := strings.Split(result.VehicleImgPath, "\\") //windows
-			//上传到oss                    日期文件夹     图片名称               前缀"/jiangsu/suhuaiyangs"
-			//
+	dir, _ := os.Getwd()
+	log.Println("当前路径：", dir)
+	var snapxmlPathdir = filepath.Join(dir, "snap", "xml")
 
-			log.Println("上传到oss:图片地址     图片名称   前缀", result.VehicleImgPath, strfname[len(strfname)-1], ObjectPrefix)
-
-			ImgPath := strings.Split(result.VehicleImgPath, strfname[len(strfname)-1])
-
-			// check
-			if _, err := os.Stat(ImgPath[0]); err == nil {
-				log.Println("path exists 1", ImgPath[0])
-			} else {
-				log.Println("path not exists ", ImgPath[0])
-				err := os.MkdirAll(ImgPath[0], 0711)
-
-				if err != nil {
-					log.Println("Error creating directory")
-					log.Println(err)
-				}
+	for {
+		select {
+		case filePath := <-files:
+			if err := UploadFileToOSS(snapxmlPathdir, filePath); err == nil {
+				log.Println("+++++++++++++执行parse处理xml数据包解析以及oss上传以及抓拍结果上传完成")
 			}
-
-			// check again
-			if _, err := os.Stat(ImgPath[0]); err == nil {
-				log.Println("path exists 2", ImgPath[0])
-			}
-
-			//上传oss图片
-			code, scsj, ossDZ := utils.QingStorUpload(result.VehicleImgPath, strfname[len(strfname)-1], ObjectPrefix)
-
-			if code == utils.UPloadOK {
-				OSSCount = OSSCount + 1
-				log.Println("上传到oss   成功，开始返回抓拍结果给云平台")
-				log.Println("上传到oss   成功，OSSCount:", OSSCount, time.Now().Format("2006-01-02 15:04:05"))
-				//删除本地图片result.VehicleImgPath
-				//utils.DelFile("./images/" + strfname[6] + "/" + strfname[7])
-				utils.DelFile(result.VehicleImgPath)
-				//D:\\PlateUpload\\vehicleLicensePlateRecognitionGateway\\vehicleLicensePlateRecognitionGateway\\snap\\images\\20201209\\sxjgl_ggzx_320600_G40_K212_2_0_1001_20201209120558_001153.jpg"
-				//生产xml返回给云平台 [暂时上传到模拟云平台]
-				// check
-				if _, err := os.Stat(snapxmlPathDir + "/error/upload/"); err == nil {
-					log.Println("path exists 1", snapxmlPathDir+"/error/upload/")
-				} else {
-					log.Println("path not exists ", snapxmlPathDir+"/error/upload/")
-					err := os.MkdirAll(snapxmlPathDir+"/error/upload/", 0711)
-
-					if err != nil {
-						log.Println("Error creating directory")
-						log.Println(err)
-					}
-				}
-
-				// check again
-				if _, err := os.Stat(snapxmlPathDir + "/error/upload/"); err == nil {
-					log.Println("path exists 2", snapxmlPathDir+"/error/upload/")
-				}
-
-				uploaderr := GwCaptureInforUpload(&result, scsj, ossDZ, snapxmlPathDir+"/error/upload/"+fileList[i].Name())
-				if uploaderr != nil {
-					//删除抓拍xml文件
-					//xml/error
-					source := snapxmlPathDir + "/" + fileList[i].Name()
-					d := snapxmlPathDir + "/error/" + fileList[i].Name()
-					mverr := utils.MoveFile(source, d)
-					if mverr != nil {
-						log.Println(mverr)
-						continue
-					}
-					log.Println("第一次上传抓拍结果xml文件到云平台失败，进程抓拍结果的xml文件移动到error文件夹成功")
-					continue
-				} else {
-					//删除抓拍xml文件
-					//xml/parsed
-					// check
-					if _, err := os.Stat(snapxmlPathDir + "/parsed/"); err == nil {
-						log.Println("path exists 1", snapxmlPathDir+"/parsed/")
-					} else {
-						log.Println("path not exists ", snapxmlPathDir+"/parsed/")
-						err := os.MkdirAll(snapxmlPathDir+"/parsed/", 0711)
-
-						if err != nil {
-							log.Println("Error creating directory")
-							log.Println(err)
-						}
-					}
-
-					// check again
-					if _, err := os.Stat(snapxmlPathDir + "/parsed/"); err == nil {
-						log.Println("path exists 2", snapxmlPathDir+"/parsed/")
-					}
-
-					source := snapxmlPathDir + "/" + fileList[i].Name()
-					d := snapxmlPathDir + "/parsed/" + fileList[i].Name()
-					mverr := utils.MoveFile(source, d)
-					if mverr != nil {
-						log.Println(mverr)
-						continue
-					}
-					log.Println("第一次上传抓拍结果xml文件到云平台成功，进程抓拍结果xml移动到parsed 成功")
-
-				}
-
-			} else {
-				log.Println("上传oss失败")
-				//上传oss失败
-				//删除抓拍xml文件
-				//xml/error
-				// check
-				if _, err := os.Stat(snapxmlPathDir + "/error/noimages/"); err == nil {
-					log.Println("path exists 1", snapxmlPathDir+"/error/noimages/")
-				} else {
-					log.Println("path not exists ", snapxmlPathDir+"/error/noimages/")
-					err := os.MkdirAll(snapxmlPathDir+"/error/noimages/", 0711)
-
-					if err != nil {
-						log.Println("Error creating directory")
-						log.Println(err)
-					}
-				}
-
-				// check again
-				if _, err := os.Stat(snapxmlPathDir + "/error/noimages/"); err == nil {
-					log.Println("path exists 2", snapxmlPathDir+"/error/noimages/")
-				}
-
-				source := snapxmlPathDir + "/" + fileList[i].Name()
-				d := snapxmlPathDir + "/error/noimages/" + fileList[i].Name()
-				mverr := utils.MoveFile(source, d)
-				if mverr != nil {
-					log.Println(mverr)
-					continue
-				}
-				log.Println("第一次上传抓拍结果xml文件到云平台失败，进程抓拍结果的xml文件移动到error文件夹成功")
-				continue
-			}
+		case <-Ctx.Done():
+			return
 		}
 	}
+
+}
+
+func UploadFileToOSS(snapxmlPathdir, xmlnamepath string) (err error) {
+	log.Println("获取抓拍的结果的xml的文件夹路径，snapxmlPathdir:", snapxmlPathdir)
+	log.Println("获取抓拍的结果xml文件绝对路径，xmlnamepath", xmlnamepath)
+	content, err := ioutil.ReadFile(xmlnamepath)
+	if err != nil {
+		log.Println("执行读取抓拍结果xml文件的位置错误信息:", err)
+		return err
+	}
+	//将xml文件转换为对象
+	var result dto.CaptureDateXML
+	uerr := xml.Unmarshal(content, &result)
+	if uerr != nil {
+		log.Println("执行 扫描 该captureXml文件夹下需要解析的xml文件内容时，错误信息为：", uerr)
+		return uerr
+	}
+
+	log.Println("获取抓拍结果中，图片路径result.VehicleImgPath:", result.VehicleImgPath)
+
+	//把图片上传到oss上
+	strfname := strings.Split(result.VehicleImgPath, "\\") //windows
+	//上传到oss                    日期文件夹     图片名称               前缀"/jiangsu/suhuaiyangs"
+	log.Println("上传到oss图片的地址", result.VehicleImgPath)
+	log.Println("上传到oss图片的名称", strfname[len(strfname)-1])
+	log.Println("上传到oss的前缀", ObjectPrefix)
+
+	ImgPath := strings.Split(result.VehicleImgPath, strfname[len(strfname)-1])
+	// check，防止被删除文件夹
+	//新建图片文件夹
+	if _, err := os.Stat(ImgPath[0]); err == nil {
+		log.Println("path exists 1", ImgPath[0])
+	} else {
+		log.Println("path not exists ", ImgPath[0])
+		err := os.MkdirAll(ImgPath[0], 0711)
+
+		if err != nil {
+			log.Println("Error creating directory")
+			log.Println(err)
+		}
+	}
+	//xml的文件路径
+	strxmlnamepath := strings.Split(xmlnamepath, "/")
+	//获取文件名称
+	Xmlname := strxmlnamepath[len(strxmlnamepath)-1]
+	log.Println("xml的文件路径中Xmlname:", Xmlname)
+	//上传oss图片
+	Stationid := ""
+	if val, ok := StationId[result.CamId]; ok == true {
+		Stationid = val //   string   `xml:"stationid"`//	stationid站点编号
+	}
+	log.Println("站点IdStationid:", Stationid)
+	//前缀/站点Id/摄像机ID/日期/passid
+	Pname := ObjectPrefix + "/" + Stationid + "/" + result.CamId + "/" + time.Now().Format("2006-01-02") + "/" + strfname[len(strfname)-1]
+	log.Printf("前缀/站点Id/摄像机ID/日期/passid==:%s", Pname)
+	code, scsj, ossDZ := utils.QingStorUpload(result.VehicleImgPath, strfname[len(strfname)-1], Pname)
+
+	if code == utils.UPloadOK {
+		OSSCount = OSSCount + 1
+		log.Println("上传到oss   成功，开始返回抓拍结果给云平台")
+		log.Println("上传到oss   成功，OSSCount:", OSSCount, time.Now().Format("2006-01-02 15:04:05"))
+		//删除本地图片 result.VehicleImgPath
+		utils.DelFile(result.VehicleImgPath)
+		//生产xml返回给云平台 [暂时上传到模拟云平台]
+		// check
+		if _, err := os.Stat(snapxmlPathdir + "/error/upload/"); err == nil {
+			log.Println("path exists 1", snapxmlPathdir+"/error/upload/")
+		} else {
+			log.Println("path not exists ", snapxmlPathdir+"/error/upload/")
+			err := os.MkdirAll(snapxmlPathdir+"/error/upload/", 0711)
+
+			if err != nil {
+				log.Println("Error creating directory")
+				log.Println(err)
+			}
+		}
+
+		//第一次上传失败的抓拍结果存储于【errorpathname】：snapxmlPathDir+"/error/upload/"+fileList[i].Name()
+		uploaderr := GwCaptureInforUpload(&result, scsj, ossDZ, snapxmlPathdir+"/error/upload/"+Xmlname)
+		if uploaderr != nil {
+			//删除抓拍xml文件
+			//xml/error
+			source := snapxmlPathdir + "/" + Xmlname
+			d := snapxmlPathdir + "/error/" + Xmlname
+			mverr := utils.MoveFile(source, d)
+			if mverr != nil {
+				log.Println("第一次上传抓拍结果xml文件到云平台失败，进程抓拍结果的xml文件移动到error文件夹失败！")
+				log.Println(mverr)
+				return mverr
+			}
+			log.Println("第一次上传抓拍结果xml文件到云平台失败，进程抓拍结果的xml文件移动到error文件夹成功")
+			return nil
+		} else {
+			//删除抓拍xml文件
+			//xml/parsed
+			// check
+			//if _, err := os.Stat(snapxmlPathDir + "/parsed/"); err == nil {
+			//	log.Println("path exists 1", snapxmlPathDir+"/parsed/")
+			//} else {
+			//	log.Println("path not exists ", snapxmlPathDir+"/parsed/")
+			//	err := os.MkdirAll(snapxmlPathDir+"/parsed/", 0711)
+			//
+			//	if err != nil {
+			//		log.Println("Error creating directory")
+			//		log.Println(err)
+			//	}
+			//}
+			//
+			//// check again
+			//if _, err := os.Stat(snapxmlPathDir + "/parsed/"); err == nil {
+			//	log.Println("path exists 2", snapxmlPathDir+"/parsed/")
+			//}
+			//	source := snapxmlPathdir + "/" + Xmlname
+			//d := snapxmlPathDir + "/parsed/" + fileList[i].Name()
+			DelFile(xmlnamepath)
+			Parsed = Parsed + 1
+			Parsexmlcount = Parsexmlcount + 1
+			log.Println("Parsexmlcount:", Parsexmlcount)
+			log.Println("第一次上传抓拍结果xml文件到云平台成功，进程抓拍结果xml移动到parsed 成功,Parsed:", Parsed, time.Now())
+		}
+	} else {
+		log.Println("上传oss失败", code)
+		//上传oss失败
+		//删除抓拍xml文件
+		//xml/error
+		// check
+		// ossError 或者是上传oos的其他问题
+		if _, err := os.Stat(snapxmlPathdir + "/error/ossError/"); err == nil {
+			log.Println("path exists 1", snapxmlPathdir+"/error/ossError/")
+		} else {
+			log.Println("path not exists ", snapxmlPathdir+"/error/ossError/")
+			err := os.MkdirAll(snapxmlPathdir+"/error/ossError/", 0711)
+
+			if err != nil {
+				log.Println("Error creating directory")
+				log.Println(err)
+			}
+		}
+		source := snapxmlPathdir + "/" + Xmlname
+		d := snapxmlPathdir + "/error/ossError/" + Xmlname
+		mverr := utils.MoveFile(source, d)
+		if mverr != nil {
+			log.Println("上传oss失败，进程抓拍结果的xml文件移动到error文件夹失败")
+			log.Println(mverr)
+			return mverr
+		}
+		log.Println("上传oss失败，进程抓拍结果的xml文件移动到error文件夹成功")
+		return nil
+	}
+	return nil
+}
+
+func DelFile(src string) {
+	//"./1.txt"
+	del := os.Remove(src)
+	if del != nil {
+		log.Println("删除失败", del)
+		return
+	}
+	//time.Sleep(time.Millisecond * 100)
+	log.Println("删除xmlok", src)
+}
+
+func RenameFile(src string, des string) error {
+	//err := os.Rename("./a", "/tmp/a")
+	err := os.Rename(src, des)
+	if err != nil {
+		log.Println("Rename错误:", err)
+		return err
+	}
+	log.Printf("Rename文件：%s to： %s 成功", src, des)
+	return nil
 }
 
 func HandleFileAgainUpload() {
@@ -614,78 +670,80 @@ func HandleFileAgainUpload() {
 	var AgainUpsnapxmlpathDir = filepath.Join(dir, "snap", "xml", "error", "upload")
 	log.Println("/snap/xml/error/upload/绝对路径:", AgainUpsnapxmlpathDir) //可以不需要加"/"
 
-	// check
-	if _, err := os.Stat(AgainUpsnapxmlpathDir); err == nil {
-		log.Println("path exists 1", AgainUpsnapxmlpathDir)
-	} else {
-		log.Println("path not exists ", AgainUpsnapxmlpathDir)
-		err := os.MkdirAll(AgainUpsnapxmlpathDir, 0711)
-		if err != nil {
-			log.Println("Error creating directory")
-			log.Println(err)
+	for {
+		// check
+		if _, err := os.Stat(AgainUpsnapxmlpathDir); err == nil {
+			log.Println("path exists 1", AgainUpsnapxmlpathDir)
+		} else {
+			log.Println("path not exists ", AgainUpsnapxmlpathDir)
+			err := os.MkdirAll(AgainUpsnapxmlpathDir, 0711)
+			if err != nil {
+				log.Println("Error creating directory")
+				log.Println(err)
+			}
 		}
-	}
 
-	// check again
-	if _, err := os.Stat(AgainUpsnapxmlpathDir); err == nil {
-		log.Println("path exists 2", AgainUpsnapxmlpathDir)
-	}
+		// check again
+		if _, err := os.Stat(AgainUpsnapxmlpathDir); err == nil {
+			log.Println("path exists 2", AgainUpsnapxmlpathDir)
+		}
 
-	fileList, err := ioutil.ReadDir(AgainUpsnapxmlpathDir) //不需要加"/"
-	if err != nil {
-		log.Println("扫描/snap/xml/error/upload/ 文件夹 读取文件信息 error:", err)
-		return
-	}
-	log.Println("执行 扫描 该/snap/xml/error/upload/文件夹下有文件的数量 ：", len(fileList))
-	if len(fileList) == 1 {
-		log.Println("执行 扫描 该 /snap/xml/error/upload/ 文件夹下可能没有需要解析的xml文件") //有隐藏文件
-
-	} else {
-		if len(fileList) == 0 {
-			log.Println("执行 扫描 该 /snap/xml/error/upload/ 文件夹下没有需要解析的xml文件")
+		fileList, err := ioutil.ReadDir(AgainUpsnapxmlpathDir) //不需要加"/"
+		if err != nil {
+			log.Println("扫描/snap/xml/error/upload/ 文件夹 读取文件信息 error:", err)
 			return
 		}
-	}
+		log.Println("执行 扫描 该/snap/xml/error/upload/文件夹下有文件的数量 ：", len(fileList))
+		if len(fileList) == 1 {
+			log.Println("执行 扫描 该 /snap/xml/error/upload/ 文件夹下可能没有需要解析的xml文件") //有隐藏文件
 
-	for i := range fileList {
-		//判断文件的结尾名
-		if strings.HasSuffix(fileList[i].Name(), ".xml") {
-			log.Println("执行 扫描 该/snap/xml/error/upload/ 文件夹下需要解析的xml文件名字为:", fileList[i].Name())
-			//error/upload/fname
-			content, err := ioutil.ReadFile(AgainUpsnapxmlpathDir + "/" + fileList[i].Name())
-			if err != nil {
-				log.Println("执行  读文件位置错误信息：", err)
-				continue
+		} else {
+			if len(fileList) == 0 {
+				log.Println("执行 扫描 该 /snap/xml/error/upload/ 文件夹下没有需要解析的xml文件")
+				return
 			}
-
-			result, UploadPostWithXMLerr := GwCaptureInformationUploadPostWithXML(&content)
-			if UploadPostWithXMLerr != nil {
-				log.Println("需要再次上传的抓拍结果xml文件pathname:", AgainUpsnapxmlpathDir+"/"+fileList[i].Name())
-				log.Println("需要再次上传的抓拍结果xml文件失败：", UploadPostWithXMLerr)
-				continue
-			} else {
-
-				//删除抓拍xml文件
-				//xml/error/upload/
-				source := AgainUpsnapxmlpathDir + "/" + fileList[i].Name()
-				utils.DelFile(source)
-				log.Println("再次上传的抓拍结果成功,已经删除/snap/xml/error/upload/中 再次上传的抓拍结果的xml成功 ")
-
-				//再次上传的数量或者说第一次上传失败的
-				AgainCount = AgainCount + 1
-				log.Println("再次上传的数量或者说第一次上传失败的数量")
-				log.Println("再次上传的抓拍结果成功,AgainCount:", AgainCount, time.Now())
-			}
-
-			if (*result).Code == 0 {
-				log.Println("再次上传的抓拍结果成功")
-				continue
-			} else {
-				log.Println("再次上传的抓拍结果失败")
-				continue
-			}
-
 		}
+
+		for i := range fileList {
+			//判断文件的结尾名
+			if strings.HasSuffix(fileList[i].Name(), ".xml") {
+				log.Println("执行 扫描 该/snap/xml/error/upload/ 文件夹下需要解析的xml文件名字为:", fileList[i].Name())
+				//error/upload/fname
+				content, err := ioutil.ReadFile(AgainUpsnapxmlpathDir + "/" + fileList[i].Name())
+				if err != nil {
+					log.Println("执行  读文件位置错误信息：", err)
+					continue
+				}
+
+				result, UploadPostWithXMLerr := GwCaptureInformationUploadPostWithXML(&content)
+				if UploadPostWithXMLerr != nil {
+					log.Println("需要再次上传的抓拍结果xml文件pathname:", AgainUpsnapxmlpathDir+"/"+fileList[i].Name())
+					log.Println("需要再次上传的抓拍结果xml文件失败：", UploadPostWithXMLerr)
+					continue
+				} else {
+					//删除抓拍xml文件
+					//xml/error/upload/
+					source := AgainUpsnapxmlpathDir + "/" + fileList[i].Name()
+					utils.DelFile(source)
+					log.Println("再次上传的抓拍结果成功,已经删除/snap/xml/error/upload/中 再次上传的抓拍结果的xml成功 ")
+
+					//再次上传的数量或者说第一次上传失败的
+					AgainCount = AgainCount + 1
+					log.Println("再次上传的数量或者说第一次上传失败的数量")
+					log.Println("再次上传的抓拍结果成功,AgainCount:", AgainCount, time.Now())
+				}
+				if (*result).Code == 0 {
+					log.Println("再次上传的抓拍结果成功")
+					continue
+				} else {
+					log.Println("再次上传的抓拍结果失败")
+					continue
+				}
+			}
+		}
+
+		time.Sleep(time.Second * 15)
+
 	}
 }
 
@@ -785,7 +843,7 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, errorpa
 		//MarshalIndent 有缩进 xml.Marshal ：无缩进
 
 		ba, _ = xml.MarshalIndent(data, "  ", "  ")
-		log.Println("+++++++++", string(ba))
+		log.Println("前置机抓拍信息上传数据 +++++++++", string(ba))
 
 	} else {
 		data := new(dto.DateXML)
@@ -861,12 +919,13 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, errorpa
 	}
 
 	log.Println("前置机抓拍信息上传接口 Address:", GwCaptureInformationUploadIpAddress)
-	//
+	//调用云平台接口
 	result, err := GwCaptureInformationUploadPostWithXML(&ba)
 	if err != nil {
-		//需要再次上传的抓拍结果
+		//需要再次上传的抓拍结果，所以需要把抓拍结果保存下来
 		uploadagainxml := createXml(errorpathname, ba)
-		log.Println("需要再次上传的抓拍结果xml文件pathname:", uploadagainxml)
+		log.Println("第一次上传抓拍结果失败")
+		log.Println("需要再次上传的抓拍结果xml文件uploadagainxml:", uploadagainxml)
 		log.Println("需要再次上传的抓拍结果xml文件生成成功")
 		return err
 	}
@@ -877,12 +936,8 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, errorpa
 			log.Println("前置机抓拍信息第一次上传抓拍结果成功ok,并接收成功 ResultCount:", ResultOKCount, time.Now().Format("2006-01-02 15:04:05"))
 		}
 		log.Println("第一次上传抓拍结果成功 ")
-
-		return nil
-	} else {
-		log.Println("第一次上传抓拍结果失败")
-		return err
 	}
+	return nil
 }
 
 //创建xml文件
@@ -909,7 +964,6 @@ func createXml(xmlname string, outputxml []byte) string {
 	}()
 
 	return xmlname
-
 }
 
 //与抓拍进程交互心跳，得知抓拍进程程序死活
@@ -1056,7 +1110,7 @@ XT:
 		if hresperr != nil {
 			log.Println(address, hresperr)
 		} else {
-			log.Println(address, "xml.Marshal ok! 管理平台收到抓拍进程的 h.Type:", h.Type, "1、心跳|2、新数据通知|3、 日志|4、采集进程被动关闭命令")
+			//	log.Println(address, "xml.Marshal ok! 管理平台收到抓拍进程的 h.Type:", h.Type, "1、心跳|2、新数据通知|3、 日志|4、采集进程被动关闭命令")
 		}
 
 		////回复udp数据
@@ -1070,7 +1124,7 @@ XT:
 		//回复udp数据
 		hferr := Heartbeatclient(port, resp)
 		if hferr != nil {
-			log.Println(address, "此log已经打印过了")
+			//	log.Println(address, "此log已经打印过了")
 			//log已经打印过了
 			continue
 		} else {
@@ -1101,8 +1155,8 @@ func Heartbeatclient(port string, toWrite []byte) error {
 		log.Println("管理平台 主动给抓拍进程心跳 UDP err:", err)
 		return err
 	}
-	log.Println(" 管理平台 主动给抓拍进程心跳 UDP Write:", string(toWrite), "n:", n)
-	log.Println(" 管理平台 主动给抓拍进程心跳 UDP 写的字节数n:", n)
+	log.Println(" 管理平台 主动给抓拍进程心跳 UDP Write:", "n:", n)
+	//log.Println(" 管理平台 主动给抓拍进程心跳 UDP 写的字节数n:", n)
 	//msg := make([]byte, 32)
 	//n, err = conn.Read(msg)
 	//if err != nil {

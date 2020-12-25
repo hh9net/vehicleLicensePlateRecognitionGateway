@@ -56,3 +56,9 @@ func TestHeartbeat(t *testing.T) {
 	Heartbeat("5000")
 
 }
+
+func TestHeartbeatclient(t *testing.T) {
+	//Runmain()
+
+	Heartbeatclient("4999", []byte("haha"))
+}
