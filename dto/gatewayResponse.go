@@ -80,6 +80,7 @@ type CameraListData struct {
 	Channel     string   `xml:"channel"`     //新增0   通道 HIK 一对多用
 	LaneNo      string   `xml:"laneNo"`      //新增1   车道编号
 	Gantryid    string   `xml:"gantryId"`    //新增    门架id
+	ProcessPort string   `xml:"processPort"` //新增its使用
 }
 
 /*

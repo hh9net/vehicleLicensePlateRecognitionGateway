@@ -108,6 +108,7 @@ type OneToMoreConfigDev struct {
 	Port     string   `xml:"port"`
 	UserName string   `xml:"userName"`
 	Password string   `xml:"password"`
+	ITSPort  string   `xml:"ITSPort"`
 	Id       string   `xml:"id"`
 }
 

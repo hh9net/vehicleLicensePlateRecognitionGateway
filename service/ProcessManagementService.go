@@ -246,26 +246,26 @@ CQ:
 		Chan.Id = its.Id
 		Chan.Index = its.Channel
 
-		log.Println("its.DevCompId|its.DevIp|its.Port|its.UserName|its.Password:", its.DevCompId+"|"+its.DevIp+"|"+its.Port+"|"+its.UserName+"|"+its.Password)
+		log.Println("its.DevCompId|its.DevIp|its.Port|its.UserName|its.Password|ProcessPort:", its.DevCompId+"|"+its.DevIp+"|"+its.Port+"|"+its.UserName+"|"+its.Password+"|"+its.ProcessPort)
 
-		if val, ok := itsmap[its.DevCompId+"|"+its.DevIp+"|"+its.Port+"|"+its.UserName+"|"+its.Password]; ok == true {
+		if val, ok := itsmap[its.DevCompId+"|"+its.DevIp+"|"+its.Port+"|"+its.UserName+"|"+its.Password+"|"+its.ProcessPort]; ok == true {
 			log.Println("海康iTS的列表值已经存在", val, "｜海康iTS的map列表值已经存在", itsmap)
 
 			val = append(val, *Chan)
-			itsmap[its.DevCompId+"|"+its.DevIp+"|"+its.Port+"|"+its.UserName+"|"+its.Password] = val
+			itsmap[its.DevCompId+"|"+its.DevIp+"|"+its.Port+"|"+its.UserName+"|"+its.Password+"|"+its.ProcessPort] = val
 
 			log.Println("海康iTS的列表新存在值：", *Chan, "｜海康iTS的新map列表存在值 ：", itsmap)
 
 		} else {
-			log.Println("海康iTS的列表值空值:", val, "|海康iTS的map列表值空值:", itsmap[its.DevCompId+"|"+its.DevIp+"|"+its.Port+"|"+its.UserName+"|"+its.Password])
+			log.Println("海康iTS的列表值空值:", val, "|海康iTS的map列表值空值:", itsmap[its.DevCompId+"|"+its.DevIp+"|"+its.Port+"|"+its.UserName+"|"+its.Password+"|"+its.ProcessPort])
 
 			//新的ITS进程的配置文件
 			itschan := make([]OneToMoreConfigChannel, 0)
 			itschan = append(itschan, *Chan)
 
-			itsmap[its.DevCompId+"|"+its.DevIp+"|"+its.Port+"|"+its.UserName+"|"+its.Password] = itschan
+			itsmap[its.DevCompId+"|"+its.DevIp+"|"+its.Port+"|"+its.UserName+"|"+its.Password+"|"+its.ProcessPort] = itschan
 
-			log.Println("海康iTS的列表空值:", val, "|海康iTS的map列表第一个值:", itsmap[its.DevCompId+"|"+its.DevIp+"|"+its.Port+"|"+its.UserName+"|"+its.Password])
+			log.Println("海康iTS的列表空值:", val, "|海康iTS的map列表第一个值:", itsmap[its.DevCompId+"|"+its.DevIp+"|"+its.Port+"|"+its.UserName+"|"+its.Password+"|"+its.ProcessPort])
 
 		}
 	}
@@ -277,7 +277,7 @@ CQ:
 		//生成配置文件
 		//ITS 多对多启动   OneToMoreConfig
 		ITSconfdata := new(OneToMoreConfig)
-		k := strings.Split(key, "|") //its.DevCompId+"|"+its.DevIp+"|"+its.Port+"|"+its.UserName+"|"+its.Password
+		k := strings.Split(key, "|") //its.DevCompId+"|"+its.DevIp+"|"+its.Port+"|"+its.UserName+"|"+its.Password+"|"+its.ProcessPort
 		ITSconfdata.DevCompId = k[0]
 		ITSconfdata.Uuid = HIKITS + k[1] + k[2] + "+" + strconv.Itoa(P) //方便确定是哪一个进程发出的数据 我取品牌名称+进程端口号
 		ITSconfdata.Udplistenport = P
@@ -286,6 +286,7 @@ CQ:
 		ITSconfdata.Devlist.Dev.Password = k[4]
 		ITSconfdata.Devlist.Dev.DevIp = k[1]
 		ITSconfdata.Devlist.Dev.Port = k[2]
+		ITSconfdata.Devlist.Dev.ITSPort = k[5]
 		//ITSconfdata.Devlist.Dev.Id   =
 		ITSconfdata.Channellist.Channel = itsone
 
