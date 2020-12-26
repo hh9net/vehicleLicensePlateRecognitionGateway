@@ -62,3 +62,14 @@ func TestHeartbeatclient(t *testing.T) {
 
 	Heartbeatclient("4999", []byte("haha"))
 }
+
+func TestStatisticalResults(t *testing.T) {
+
+	StatisticalResults(0, 0, 0, 0, 0, 0, 0, 0)
+}
+
+//
+func TestStatisticalFile(t *testing.T) {
+
+	StatisticalFile("abv")
+}

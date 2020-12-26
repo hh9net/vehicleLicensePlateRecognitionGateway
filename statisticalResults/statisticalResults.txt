@@ -1,0 +1,34 @@
+车牌抓拍统计结果]
+; 所有图片数量
+ImgAllCount              = 12
+; 所有抓拍记录数量
+ResultAllCount           = 0
+; 一天的所有图片数量
+ImgDayAllCount           = 0
+; 一天的所有抓拍结果数量
+ResultDayAllCount        = 0
+; 一天上传OK的图片数量
+ImgDayUpOkCount          = 0
+; 一天上传OK的抓拍结果数量
+ResultDayUpOkCount       = 0
+; 一天上传失败的图片数量
+ImgDayUpErrorCount       = 0
+; 一天上传失败的抓拍结果数量
+ResultDayUpErrorCount    = 0
+; 所有图片数量
+ImgAllCountStr           = 
+; 所有抓拍记录数量
+ResultAllCountStr        = 
+; 一天的所有图片数量
+ImgDayAllCountStr        = 
+; 一天的所有抓拍结果数量
+ResultDayAllCountStr     = 
+; 一天上传OK的图片数量
+ImgDayUpOkCountStr       = 
+; 一天上传OK的抓拍结果数量
+ResultDayUpOkCountStr    = 
+; 一天上传失败的图片数量
+ImgDayUpErrorCountStr    = 
+; 一天上传失败的抓拍结果数量
+ResultDayUpErrorCountStr = 
+

@@ -442,6 +442,7 @@ func extract(Ctx context.Context) (err error, hasNewFile bool) {
 	} else {
 		if len(fileList) == 0 {
 			log.Println("执行 扫描 该snap/xml/文件夹下没有需要解析的xml文件")
+			time.Sleep(time.Second * 1)
 			return nil, false
 		}
 	}
@@ -572,7 +573,7 @@ func UploadFileToOSS(snapxmlPathdir, xmlnamepath string) (err error) {
 			d := snapxmlPathdir + "/error/" + Xmlname
 			mverr := utils.MoveFile(source, d)
 			if mverr != nil {
-				log.Println("第一次上传抓拍结果xml文件到云平台失败，进程抓拍结果的xml文件移动到error文件夹失败！")
+				log.Println("c，进程抓拍结果的xml文件移动到error文件夹失败！")
 				log.Println(mverr)
 				return mverr
 			}
@@ -701,7 +702,8 @@ func HandleFileAgainUpload() {
 		} else {
 			if len(fileList) == 0 {
 				log.Println("执行 扫描 该 /snap/xml/error/upload/ 文件夹下没有需要解析的xml文件")
-				return
+				time.Sleep(time.Second * 5)
+				continue
 			}
 		}
 
