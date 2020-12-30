@@ -41,6 +41,7 @@ func main() {
 	go service.HandleDayTasks()
 	//goroutine3 抓拍结果再次上传
 	go service.HandleFileAgainUpload()
+
 	go func() {
 		log.Println(http.ListenAndServe("0.0.0.0:6060", nil))
 	}()
