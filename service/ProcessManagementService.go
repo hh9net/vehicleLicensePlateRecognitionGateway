@@ -613,7 +613,7 @@ func UploadFileToOSS(snapxmlPathdir, xmlnamepath string) (err error) {
 		//删除抓拍xml文件
 		//xml/error
 		// check
-		// ossError 或者是上传oos的其他问题
+		// ossError 图片不存在或者是上传oos的其他问题
 		if _, err := os.Stat(snapxmlPathdir + "/error/ossError/"); err == nil {
 			log.Println("path exists 1", snapxmlPathdir+"/error/ossError/")
 		} else {
@@ -708,8 +708,8 @@ func HandleFileAgainUpload() {
 		}
 
 		for i := range fileList {
-			//判断文件的结尾名
-			if strings.HasSuffix(fileList[i].Name(), ".xml") {
+			//判断文件的结尾名+ "_suffix"
+			if strings.HasSuffix(fileList[i].Name(), ".xml_suffix") {
 				log.Println("执行 扫描 该/snap/xml/error/upload/ 文件夹下需要解析的xml文件名字为:", fileList[i].Name())
 				//error/upload/fname
 				content, err := ioutil.ReadFile(AgainUpsnapxmlpathDir + "/" + fileList[i].Name())

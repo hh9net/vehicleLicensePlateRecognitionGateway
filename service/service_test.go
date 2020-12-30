@@ -71,5 +71,5 @@ func TestStatisticalResults(t *testing.T) {
 //
 func TestStatisticalFile(t *testing.T) {
 
-	StatisticalFile("abv")
+	StatisticalFile("abv\n")
 }

@@ -9,7 +9,7 @@ mysql_databasename = payflow
 
 ;日志配置
 ;[logconf]
-log_maxAge       = 365 ;//日志最大保存时间（天）
+log_maxAge       =1;//日志最大保存时间（天）365
 log_rotationTime = 24  ;//日志切割时间间隔（小时）
 log_rotationCount = 5  ;//
 log_rotationSize = 1000000000;   ;//10M[10485760] 日志切割时间间隔（["104857600" //100M] ["1048576" //1M] ["102400" //100K] ["1024" //1KB]    1kB ）

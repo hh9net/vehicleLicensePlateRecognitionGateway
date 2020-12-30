@@ -21,3 +21,35 @@
         <ZXType></ZXType>
     </AppedInfo>
 </PlateInfo>
+ <!--<data>
+ <token>3fa3c2c3c3dcff2bf12e</token>
+ <lprInfo>
+     <passId>sxjgl_ggzx_320600_G40_K212_2_0_003_20201209_001104</passId>
+     <camId>sxjgl_ggzx_320600_G40_K212_2_0_003</camId>
+     <deviceId>f91f8fd1-7a81-4e0b-a835-a32637948c24</deviceId>
+     <passTime>2020-12-09 12:06:54</passTime>
+     <vehicleImgPath>cloud_lpr/jiangsu/ggzx/sxjgl_ggzx_320600_G40_K212_2_0_003_20201209120554_001104.jpg</vehicleImgPath>
+     <plateImgPath></plateImgPath>
+     <bucketId>ydcpsbxt</bucketId>
+     <imageType>0</imageType>
+     <uploadStamp>1607486763</uploadStamp>
+     <stationid></stationid>
+     <laneType>0</laneType>
+ </lprInfo><lpaResult>
+     <passId>sxjgl_ggzx_320600_G40_K212_2_0_003_20201209_001104</passId>
+     <engineType></engineType>
+     <engineId></engineId>
+     <plateNo>沪FG7696</plateNo>
+     <plateColor>黄</plateColor>
+     <computeInterval>0</computeInterval>
+     <vehicleColor></vehicleColor>
+     <vehicleType></vehicleType>
+     <vehicleBrand></vehicleBrand>
+     <vehicleYear>0</vehicleYear>
+     <lprFrameEntity>
+         <plateLeft>0</plateLeft>
+         <plateTop>0</plateTop>
+         <plateRight>0</plateRight>
+         <plateBottom>0</plateBottom>
+     </lprFrameEntity></lpaResult>
+ </data>-->

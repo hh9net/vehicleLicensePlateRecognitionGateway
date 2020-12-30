@@ -205,6 +205,11 @@ func StatisticalResults(ImgAllCount, ResultAllCount, ImgDayAllCount, ResultDayAl
 	if SET == 8 {
 		m.Unlock()
 		return
+	} else {
+
+		content := ""
+		StatisticalFile(content)
+
 	}
 
 	//新值存文件
@@ -242,7 +247,7 @@ func GetStrValue(cfg *ini.File, key string) string {
 	return cfg.Section("").Key(key).String()
 }
 
-func StatisticalFile(val string) {
+func StatisticalFile(content string) {
 	//用OpenFile创建一个可读可写的文件
 	f, err := os.OpenFile("../statisticalResults/statisticalResultsFile.txt", os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
@@ -251,11 +256,7 @@ func StatisticalFile(val string) {
 	defer func() {
 		_ = f.Close()
 	}()
-
-	//写入字符串
-	_, err = f.WriteString(val)
-	//n,err:=f.WriteString("hello word,你好世界，I love you")
-	if err != nil {
-		log.Println(err)
-	}
+	n, _ := f.Seek(0, 2)
+	// 从末尾的偏移量开始写入内容
+	_, err = f.WriteAt([]byte(content), n)
 }
