@@ -21,6 +21,7 @@ func ConfigInit() {
 	service.GetCameraListip = conf.GetCameraList //http://172.31.49.252/processor-control/collect/cameras/
 
 	service.Deviceid = conf.Deviceid //fe0442b5-2d40-486f-9682-d1043ceca4e5
+	service.StatisticalReportIpAddress = conf.StatisticalReportIpAddress
 
 }
 
@@ -34,19 +35,23 @@ func main() {
 	service.ResultOKCount = 0
 	//进程管理
 	service.ProcessManagementService()
-	//	goroutine1
-	//	开线程读取xml文件 上传图片到oss  上传抓拍结果到车牌识别云端服务器
+	//goroutine1
+	//开线程读取xml文件 上传图片到oss  上传抓拍结果到车牌识别云端服务器
 	go service.UploadFile()
 	//goroutine2
 	go service.HandleDayTasks()
 	//goroutine3 抓拍结果再次上传
 	go service.HandleFileAgainUpload()
+	//goroutine4 定时20秒网关上报自身状态、摄像机状态状态至平台
+	//	go service.StatisticalReport()
+	//goroutine5 网关每隔10分钟轮询请求服务器的版本
+	//	go service.VersionQeq()
 
 	go func() {
 		log.Println(http.ListenAndServe("0.0.0.0:6060", nil))
 	}()
-	//
-	tiker := time.NewTicker(time.Minute * 3) //每15秒执行一下
+
+	tiker := time.NewTicker(time.Minute * 5) //每15秒执行一下
 	for {
 		<-tiker.C
 		log.Println("主go程执行 抓拍进程管理程序 OK呢！")

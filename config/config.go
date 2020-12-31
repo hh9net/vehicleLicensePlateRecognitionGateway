@@ -38,7 +38,7 @@ type Config struct { //配置文件要通过tag来指定配置文件中的名称
 	Deviceid string `ini:"deviceid"`
 
 	//
-
+	StatisticalReportIpAddress string `ini:"statistical_report_ipAddress"`
 }
 
 //读取配置文件并转成结构体
