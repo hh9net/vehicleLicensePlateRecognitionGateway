@@ -1147,7 +1147,7 @@ XT:
 
 		} else {
 			//接收到数据
-			log.Println(address, rAddr, "接收到数据h.Type｜1、心跳|2、新数据通知|3、 日志|4、采集进程被动关闭命令:", h.Type, h.Uuid)
+			log.Println(address, rAddr, "接收到数据h.Type｜1、心跳|2、新数据通知|3、日志|4、采集进程被动关闭命令:", h.Type, h.Uuid)
 		}
 
 		//now := time.Now()
@@ -1223,7 +1223,7 @@ XT:
 				heartbeatresp.Seq = h.Seq         //<seq>   消息序号累加
 			}
 
-		case 3:
+			/*case 3:
 			//3、 日志
 			h := new(dto.HeartbeatLog)
 			herr := xml.Unmarshal(data, h)
@@ -1236,7 +1236,7 @@ XT:
 				heartbeatresp.Version = h.Version //<version>        抓拍程序版本号
 				heartbeatresp.Time = h.Time       //<time>     字符串2020-11-12 12:12:12
 				heartbeatresp.Seq = h.Seq         //<seq>   消息序号累加
-			}
+			}*/
 		}
 
 		heartbeatresp.Content = time.Now().Format("2006-01-02 15:04:05")
