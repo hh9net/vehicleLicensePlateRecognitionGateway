@@ -90,12 +90,13 @@ CQ:
 		log.Printf("ObjectPrefix:%s", ObjectPrefix)
 
 	}
-
+CmlistQ:
 	//2、根据token获取camera列表
 	CameraList, listerr := GetGatawayCameraList()
 	if listerr != nil {
 		log.Println("获取相机列表错误", listerr)
-		return
+		time.Sleep(time.Second * 30)
+		goto CmlistQ
 	}
 
 	DeviceId = make(map[string]string, len(CameraList.Data))
@@ -453,6 +454,8 @@ func extract(Ctx context.Context) (err error, hasNewFile bool) {
 			log.Println("执行 扫描 该snap/xml/文件夹下需要解析的xml文件名字为:", fileList[i].Name())
 			Renameerr := RenameFile(snapxmlPathDir+"/"+fileList[i].Name(), snapxmlPathDir+"/"+fileList[i].Name()+"_suffix")
 			if Renameerr != nil {
+				log.Println("执行 扫描该snap/xml/文件夹下需要解析的xml改文件名时错误，文件名字为:", fileList[i].Name())
+				time.Sleep(time.Second * 1)
 				continue
 			}
 			select {
@@ -464,8 +467,9 @@ func extract(Ctx context.Context) (err error, hasNewFile bool) {
 
 		} // if .xml
 	}
-	//	time.Sleep(time.Second * 1)
-	log.Println("执行 UploadFile() 上传图片以及抓拍结果 到 车牌识别云端服务器完成")
+
+	log.Println("执行 UploadFile() 上传图片以及抓拍结果 到 车牌识别云端服务器完成。休息1秒中")
+	time.Sleep(time.Second * 1)
 	return nil, true
 }
 
@@ -865,7 +869,7 @@ func HandleFileAgainUpload() {
 					//再次上传的数量或者说第一次上传失败的
 					AgainCount = AgainCount + 1
 					log.Println("再次上传的数量或者说第一次上传失败的数量")
-					log.Println("再次上传的抓拍结果成功,AgainCount:", AgainCount, time.Now())
+					log.Println("再次上传的抓拍结果成功,AgainCount:", AgainCount)
 				}
 				if (*result).Code == 0 {
 					log.Println("再次上传的抓拍结果成功")
@@ -1143,7 +1147,7 @@ XT:
 		herr := xml.Unmarshal(data, h)
 		if herr != nil {
 			log.Println(address, rAddr, "UDP接收时xml.Unmarshal 失败！", herr)
-			log.Println(address, "UDP接收数据data:", string(data[:256]))
+			//log.Println(address, "UDP接收数据data:", string(data[:256]))
 
 		} else {
 			//接收到数据
@@ -1187,25 +1191,25 @@ XT:
 				heartbeatresp.Time = h.Time       //<time>   字符串2020-11-12 12:12:12
 				heartbeatresp.Seq = h.Seq         //<seq>   消息序号累加
 
-				old := utils.WindowsStrTimeTotime(heartbeatresp.Time)
+				/*				old := utils.WindowsStrTimeTotime(heartbeatresp.Time)
 
-				now := time.Now()
-				sjcstr := utils.TimeDifference(old, now)
+								now := time.Now()
+								sjcstr := utils.TimeDifference(old, now)
 
-				SJC := strings.Split(sjcstr, "s")
-				sjc, _ := strconv.Atoi(SJC[0])
-				//超时推出
-				if sjc > 10 {
-					log.Println(address, "心跳时间差大于10秒，需要重启程序")
-					// 4、采集进程被动关闭命令
-					h := new(dto.Heartbeat)
-					heartbeatresp.Uuid = h.Uuid
-					heartbeatresp.Type = 4            //<type> 1、心跳   2、新数据通知  3、 日志  4、采集进程被动关闭命令
-					heartbeatresp.Version = h.Version //<version>  抓拍程序版本号
-					heartbeatresp.Time = h.Time       //<time>     字符串2020-11-12 12:12:12
-					heartbeatresp.Seq = h.Seq         //<seq>   消息序号累加
-					log.Println(address, "4、采集进程被动关闭命令 h.Type:", h.Type, h)
-				}
+								SJC := strings.Split(sjcstr, "s")
+								sjc, _ := strconv.Atoi(SJC[0])
+								//超时推出
+								if sjc > 10 {
+									log.Println(address, "心跳时间差大于10秒，需要重启程序")
+									// 4、采集进程被动关闭命令
+									h := new(dto.Heartbeat)
+									heartbeatresp.Uuid = h.Uuid
+									heartbeatresp.Type = 4            //<type> 1、心跳   2、新数据通知  3、 日志  4、采集进程被动关闭命令
+									heartbeatresp.Version = h.Version //<version>  抓拍程序版本号
+									heartbeatresp.Time = h.Time       //<time>     字符串2020-11-12 12:12:12
+									heartbeatresp.Seq = h.Seq         //<seq>   消息序号累加
+									log.Println(address, "4、采集进程被动关闭命令 h.Type:", h.Type, h)
+								}*/
 			}
 
 		case 2:
@@ -1322,11 +1326,20 @@ func HandleDayTasks() {
 		t := time.NewTimer(next.Sub(now)) //计算当前时间到凌晨的时间间隔，设置一个定时器
 
 		<-t.C //阻塞等待第二天到来才执行
+
+		sj := time.Now().Format("2006-01-02T15:04:05")
+		content := sj + "上传到oss成功数量，OSSCount=" + strconv.Itoa(OSSCount) + "\n前置机抓拍信息第一次上传抓拍结果成功ok,并接收成功 ResultOKCount:" + strconv.Itoa(ResultOKCount)
+		content = content + "\n第一次上传抓拍结果xml文件到云平台成功，进程抓拍结果xml移动到parsed成功,Parsed:" + strconv.Itoa(Parsed)
+		content = content + "\n再次上传的抓拍结果成功,AgainCount:" + strconv.Itoa(AgainCount)
+		content = content + "\n前置机抓拍信息上传接口 ok ResultCount:" + strconv.Itoa(ResultCount)
+
+		StatisticalFile(content)
+
 		OSSCount = 0
 		ResultCount = 0
 		AgainCount = 0
 		ResultOKCount = 0
-		log.Println("执行重置OSS上传数量与抓拍结果上传数量OSSCount, ResultCount,AgainCount ,ResultOKCount：", OSSCount, ResultCount, AgainCount, ResultOKCount, time.Now().Format("2006-01-02T15:04:05"))
+		//	log.Println("执行重置OSS上传数量与抓拍结果上传数量OSSCount, ResultCount,AgainCount ,ResultOKCount：", OSSCount, ResultCount, AgainCount, ResultOKCount, time.Now().Format("2006-01-02T15:04:05"))
 
 		//删除前几天日期文件夹中为空的文件夹
 		log.Println("执行删除前几天日期文件夹中为空的文件夹", time.Now())

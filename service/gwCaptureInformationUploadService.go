@@ -35,6 +35,7 @@ func GwCaptureInformationUploadPostWithXML(data *[]byte) (*dto.ResultRespXML, er
 	unmerr := xml.Unmarshal(body, &Resp)
 	if unmerr != nil {
 		log.Println("前置机抓拍信息上传接口响应数据 xml.Unmarshal error：", unmerr)
+		log.Println("body:", string(body))
 		return nil, unmerr
 	}
 
@@ -67,6 +68,7 @@ func GetToken(deviceid string) (*dto.GetTokenRespXML, error) {
 		log.Println("GetToken http 请求 ok，但是xml.Unmarshal error!")
 
 		log.Println("xml.Unmarshal error：", unmerr)
+		log.Println("body:", string(body))
 		return nil, unmerr
 	}
 	log.Println("Post request with  xml result:", Resp.Code, Resp.Msg)
@@ -92,6 +94,7 @@ func GetCameraList(token string) (*dto.GetCameraList, error) {
 	unmerr := xml.Unmarshal(body, &Resp)
 	if unmerr != nil {
 		log.Println("根据token获取camera列表 xml.Unmarshal error", unmerr)
+		log.Println("body:", string(body))
 		return nil, unmerr
 	}
 

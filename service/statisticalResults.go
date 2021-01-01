@@ -249,7 +249,7 @@ func GetStrValue(cfg *ini.File, key string) string {
 
 func StatisticalFile(content string) {
 	//用OpenFile创建一个可读可写的文件
-	f, err := os.OpenFile("../statisticalResults/statisticalResultsFile.txt", os.O_RDWR|os.O_CREATE, 0666)
+	f, err := os.OpenFile("./statisticalResults/statisticalResultsFile.txt", os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
 		log.Println(err)
 	}
