@@ -22,6 +22,9 @@ func ConfigInit() {
 
 	service.Deviceid = conf.Deviceid //fe0442b5-2d40-486f-9682-d1043ceca4e5
 	service.StatisticalReportIpAddress = conf.StatisticalReportIpAddress
+	vs := "2021-01-02T21h00m00s_build"
+	vs = "\n" + vs + ""
+	service.VersionFile(vs)
 
 }
 

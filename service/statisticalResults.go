@@ -260,3 +260,29 @@ func StatisticalFile(content string) {
 	// 从末尾的偏移量开始写入内容
 	_, err = f.WriteAt([]byte(content), n)
 }
+
+func VersionFile(content string) {
+
+	if _, err := os.Stat("./Mainversion/"); err == nil {
+		log.Println("path exists 1", "./Mainversion/")
+	} else {
+		log.Println("path not exists ", "./Mainversion/")
+		err := os.MkdirAll("./Mainversion/", 0711)
+
+		if err != nil {
+			log.Println("Error creating directory")
+			log.Println(err)
+		}
+	}
+	//用OpenFile创建一个可读可写的文件
+	f, err := os.OpenFile("./Mainversion/MainVersionFile.txt", os.O_RDWR|os.O_CREATE, 0666)
+	if err != nil {
+		log.Println(err)
+	}
+	defer func() {
+		_ = f.Close()
+	}()
+	n, _ := f.Seek(0, 2)
+	// 从末尾的偏移量开始写入内容
+	_, err = f.WriteAt([]byte(content), n)
+}

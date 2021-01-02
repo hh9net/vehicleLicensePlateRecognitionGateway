@@ -73,3 +73,11 @@ func TestStatisticalFile(t *testing.T) {
 
 	StatisticalFile("abv\n")
 }
+
+//
+func TestVersionFile(t *testing.T) {
+	vs := "20210102T21h00m00s_build"
+	vs = "\n" + vs
+	VersionFile(vs)
+
+}
