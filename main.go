@@ -10,7 +10,9 @@ import (
 	"vehicleLicensePlateRecognitionGateway/utils"
 )
 
-func ConfigInit() {
+func Init() {
+	//进程互斥
+
 	conf := config.ConfigInit() //初始化配置文件
 	log.Println("配置文件信息：", *conf)
 	//初始化日志
@@ -22,20 +24,20 @@ func ConfigInit() {
 
 	service.Deviceid = conf.Deviceid //fe0442b5-2d40-486f-9682-d1043ceca4e5
 	service.StatisticalReportIpAddress = conf.StatisticalReportIpAddress
-	vs := "2021-01-02T21h00m00s_build"
+	//作为一个每次发布的一个版本记录
+	vs := "2021-01-02T23h00m00s_build"
 	vs = "\n" + vs + ""
 	service.VersionFile(vs)
-
+	service.OSSCount = 0
+	service.ResultCount = 0
+	service.AgainCount = 0
+	service.ResultOKCount = 0
 }
 
 func main() {
 
 	//初始化配置文件
-	ConfigInit()
-	service.OSSCount = 0
-	service.ResultCount = 0
-	service.AgainCount = 0
-	service.ResultOKCount = 0
+	Init()
 	//进程管理
 	service.ProcessManagementService()
 	//goroutine1

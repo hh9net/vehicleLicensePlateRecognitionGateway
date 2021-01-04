@@ -77,10 +77,10 @@ func GetToken(deviceid string) (*dto.GetTokenRespXML, error) {
 
 //3.根据token获取camera列表
 func GetCameraList(token string) (*dto.GetCameraList, error) {
-	log.Println("根据token获取camera列表url:", GetCameraListip+token)
+	log.Println("根据token获取camera列表的url:", GetCameraListip+token)
 	resp, err := http.Get(GetCameraListip + token)
 	if err != nil {
-		log.Println("GetCameraList http error!", err)
+		log.Println("GetCameraList http error!:", err)
 		return nil, err
 	}
 
@@ -93,7 +93,7 @@ func GetCameraList(token string) (*dto.GetCameraList, error) {
 	Resp := new(dto.GetCameraList)
 	unmerr := xml.Unmarshal(body, &Resp)
 	if unmerr != nil {
-		log.Println("根据token获取camera列表 xml.Unmarshal error", unmerr)
+		log.Println("根据token获取camera列表 xml.Unmarshal error:", unmerr)
 		log.Println("body:", string(body))
 		return nil, unmerr
 	}

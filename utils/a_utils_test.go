@@ -27,3 +27,8 @@ func TestQingStorUpload(t *testing.T) {
 func TestQingStorDeleteFile(t *testing.T) {
 	QingStorDeleteFile("sxjgl_yzjtd_320200_G2_K1071_2_0_004_20201124143417_000031.jpg")
 }
+
+//
+func TestMainMutexFile(t *testing.T) {
+	MainMutexFileCreate()
+}
