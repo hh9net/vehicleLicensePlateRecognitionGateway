@@ -6,7 +6,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
-	"time"
 	"vehicleLicensePlateRecognitionGateway/dto"
 )
 
@@ -25,12 +24,12 @@ func GwCaptureInformationUploadPostWithXML(data *[]byte) (*dto.ResultRespXML, er
 		log.Println("post请求指标信息查询接口失败:", err)
 		return nil, err
 	} else {
-		log.Println("前置机抓拍信息上传接口调用OK")
+		log.Println("")
 	}
 
 	body, _ := ioutil.ReadAll(resp.Body)
 	Resp := new(dto.ResultRespXML)
-	log.Println("前置机抓拍信息上传接口 返回 body:", string(body))
+	log.Println("前置机抓拍信息上传接口调用OK,前置机抓拍信息上传接口返回body OK")
 	//
 	unmerr := xml.Unmarshal(body, &Resp)
 	if unmerr != nil {
@@ -40,8 +39,8 @@ func GwCaptureInformationUploadPostWithXML(data *[]byte) (*dto.ResultRespXML, er
 	}
 
 	ResultCount = ResultCount + 1
-	log.Println("前置机抓拍信息上传接口 ok ResultCount:", ResultCount, time.Now().Format("2006-01-02 15:04:05"))
-	log.Println("前置机抓拍信息上传接口 Post request with  xml result:", Resp.Code, Resp.Msg)
+	log.Println("前置机抓拍信息上传接口 ok ResultCount:", ResultCount /*, time.Now().Format("2006-01-02 15:04:05")*/)
+	log.Println("前置机抓拍信息上传接口 Post result:", Resp.Code, Resp.Msg)
 	return Resp, nil
 }
 

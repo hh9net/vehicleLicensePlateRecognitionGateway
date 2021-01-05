@@ -53,7 +53,28 @@ func TestGetCameraList(t *testing.T) {
 
 func TestHeartbeat(t *testing.T) {
 	//Runmain()
-	Heartbeat("5000")
+	Heartbeat("6002")
+
+}
+
+func TestHeartbeatClient(t *testing.T) {
+	hferr := Heartbeatclient("6001", []byte(`<message>
+<uuid></uuid>
+<type>1</type>//1
+<version></version>
+<time></time>
+<seq></seq>
+<pid>123999</pid>
+<RunParamXMLFile></RunParamXMLFile>
+<content></content>
+</message>`))
+	if hferr != nil {
+		//	log.Println(address, "此log已经打印过了")
+		//log已经打印过了
+
+	} else {
+		log.Println("回复成功，但是不退出，继续udp交互，")
+	}
 
 }
 

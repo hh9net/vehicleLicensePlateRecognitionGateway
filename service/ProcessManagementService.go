@@ -42,9 +42,6 @@ var (
 	ObjectPrefix string
 )
 
-const SERVER_PORT = "5000"
-const SERVER_RECV_LEN = 10
-
 const (
 	Signalway    string = "Signalway"    // 信路威
 	HIKITS       string = "HIKITS"       // 海康ITS !!!!!!!!
@@ -470,7 +467,7 @@ func extract(Ctx context.Context) (err error, hasNewFile bool) {
 
 			log.Println("获取抓拍结果中，图片路径result.VehicleImgPath:", result.VehicleImgPath)
 
-			log.Println("执行 扫描 该snap/xml/文件夹下需要解析的xml文件名字为:", fileList[i].Name())
+			log.Println("该snap/xml/文件夹下需要解析的xml文件名字为:", fileList[i].Name())
 
 			Renameerr := RenameFile(snapxmlPathDir+"/"+fileList[i].Name(), snapxmlPathDir+"/"+fileList[i].Name()+"_suffix")
 			if Renameerr != nil {
@@ -482,13 +479,13 @@ func extract(Ctx context.Context) (err error, hasNewFile bool) {
 			case files <- snapxmlPathDir + "/" + fileList[i].Name() + "_suffix":
 
 			case <-Ctx.Done():
-				return
+				//return
 			}
 
 		} // if .xml
 	}
 
-	log.Println("执行 extract()提取完成。休息3秒中")
+	log.Println("extract()提取文件完成。休息3秒中")
 	time.Sleep(time.Second * 3)
 	return nil, true
 }
@@ -504,7 +501,7 @@ func parse(Ctx context.Context) {
 		select {
 		case filePath := <-files:
 			if err := UploadFileToOSS(snapxmlPathdir, filePath); err == nil {
-				log.Println("+++++++++++++执行parse处理xml数据包解析以及oss上传以及抓拍结果上传完成")
+				log.Println("执行parse处理xml数据包解析以及oss上传以及抓拍结果上传完成")
 			}
 		case <-Ctx.Done():
 			return
@@ -587,9 +584,9 @@ func UploadFileToOSS(snapxmlPathdir, xmlnamepath string) (err error) {
 		//生产xml返回给云平台 [暂时上传到模拟云平台]
 		// check
 		if _, err := os.Stat(snapxmlPathdir + "/error/upload/"); err == nil {
-			log.Println("path exists 1", snapxmlPathdir+"/error/upload/")
+			fmt.Println("path exists 1", snapxmlPathdir+"/error/upload/")
 		} else {
-			log.Println("path not exists ", snapxmlPathdir+"/error/upload/")
+			fmt.Println("path not exists ", snapxmlPathdir+"/error/upload/")
 			err := os.MkdirAll(snapxmlPathdir+"/error/upload/", 0711)
 
 			if err != nil {
@@ -629,9 +626,9 @@ func UploadFileToOSS(snapxmlPathdir, xmlnamepath string) (err error) {
 		// check
 		// ossError 图片不存在或者是上传oos的其他问题
 		if _, err := os.Stat(snapxmlPathdir + "/error/ossError/"); err == nil {
-			log.Println("path exists 1", snapxmlPathdir+"/error/ossError/")
+			fmt.Println("path exists 1", snapxmlPathdir+"/error/ossError/")
 		} else {
-			log.Println("path not exists ", snapxmlPathdir+"/error/ossError/")
+			fmt.Println("path not exists ", snapxmlPathdir+"/error/ossError/")
 			err := os.MkdirAll(snapxmlPathdir+"/error/ossError/", 0711)
 
 			if err != nil {
@@ -674,9 +671,9 @@ func SignalwayNewUpload(result dto.CaptureDateXML, xmlnamepath, snapxmlPathdir s
 	// check，防止被删除文件夹
 	//新建图片文件夹
 	if _, err := os.Stat(ImgPath[0]); err == nil {
-		log.Println("path exists 1", ImgPath[0])
+		fmt.Println("path exists 1", ImgPath[0])
 	} else {
-		log.Println("path not exists ", ImgPath[0])
+		fmt.Println("path not exists ", ImgPath[0])
 		err := os.MkdirAll(ImgPath[0], 0711)
 
 		if err != nil {
@@ -694,7 +691,7 @@ func SignalwayNewUpload(result dto.CaptureDateXML, xmlnamepath, snapxmlPathdir s
 	if val, ok := StationId[result.CamId]; ok == true {
 		Stationid = val //   string   `xml:"stationid"`//	stationid站点编号
 	}
-	log.Println("站点IdStationid:", Stationid)
+	//log.Println("站点IdStationid:", Stationid)
 	//前缀/站点Id/摄像机ID/日期/passid
 	Pname := ObjectPrefix + "/" + Stationid + "/" + result.CamId + "/" + time.Now().Format("2006-01-02") + "/" + strfname[len(strfname)-1]
 	log.Printf("前缀/站点Id/摄像机ID/日期/passid==:%s", Pname)
@@ -709,9 +706,9 @@ func SignalwayNewUpload(result dto.CaptureDateXML, xmlnamepath, snapxmlPathdir s
 		//生产xml返回给云平台 [暂时上传到模拟云平台]
 		// check
 		if _, err := os.Stat(snapxmlPathdir + "/error/upload/"); err == nil {
-			log.Println("path exists 1", snapxmlPathdir+"/error/upload/")
+			fmt.Println("path exists 1", snapxmlPathdir+"/error/upload/")
 		} else {
-			log.Println("path not exists ", snapxmlPathdir+"/error/upload/")
+			fmt.Println("path not exists ", snapxmlPathdir+"/error/upload/")
 			err := os.MkdirAll(snapxmlPathdir+"/error/upload/", 0711)
 
 			if err != nil {
@@ -771,13 +768,13 @@ func SignalwayNewUpload(result dto.CaptureDateXML, xmlnamepath, snapxmlPathdir s
 		// check
 		// ossError 图片不存在或者是上传oos的其他问题
 		if _, err := os.Stat(snapxmlPathdir + "/error/ossError/"); err == nil {
-			log.Println("path exists 1", snapxmlPathdir+"/error/ossError/")
+			fmt.Println("path exists 1", snapxmlPathdir+"/error/ossError/")
 		} else {
-			log.Println("path not exists ", snapxmlPathdir+"/error/ossError/")
+			fmt.Println("path not exists ", snapxmlPathdir+"/error/ossError/")
 			err := os.MkdirAll(snapxmlPathdir+"/error/ossError/", 0711)
 
 			if err != nil {
-				log.Println("Error creating directory")
+				fmt.Println("Error creating directory")
 				log.Println(err)
 			}
 		}
@@ -918,13 +915,13 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, errorpa
 		} else {
 			data.LprInfo.Stationid = ""
 		}
-		log.Println("data.LprInfo.Stationid:", data.LprInfo.Stationid)
+		//	log.Println("data.LprInfo.Stationid:", data.LprInfo.Stationid)
 		if val, ok := DeviceId[Result.CamId]; ok == true {
 			data.LprInfo.DeviceId = val //    string   `xml:"deviceId"`//deviceId>前置机编号  deviceid应该用gantryID
 		} else {
 			data.LprInfo.DeviceId = ""
 		}
-		log.Println("data.LprInfo.DeviceId:", data.LprInfo.DeviceId)
+		//	log.Println("data.LprInfo.DeviceId:", data.LprInfo.DeviceId)
 		data.LprInfo.PassId = Result.PassId //    string   `xml:"passId"`         // 过车编号
 		data.LprInfo.CamId = Result.CamId   //    string   `xml:"camId"`          //camId>    摄像机编号
 
@@ -940,7 +937,7 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, errorpa
 			data.LprInfo.ImageType = 0
 		}
 
-		log.Println("data.LprInfo.ImageType:", data.LprInfo.ImageType)
+		//	log.Println("data.LprInfo.ImageType:", data.LprInfo.ImageType)
 		data.LprInfo.UploadStamp = scsj //   int64    `xml:"uploadStamp"`    //	uploadStamp> 上传时间
 
 		data.LprInfo.LaneType = 0 //   int      `xml:"laneType"`       //	laneType> 出入口类型 0:入口；1：出口
@@ -951,11 +948,11 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, errorpa
 		} else {
 			data.LprInfo.LaneType = 0
 		}
-		log.Println("data.LprInfo.LaneType:", data.LprInfo.LaneType)
+		//log.Println("data.LprInfo.LaneType:", data.LprInfo.LaneType)
 
 		data.LpaResult.PassId = Result.PassId  //passId>过车编号
 		data.LpaResult.EngineType = EngineType //`xml:"engineType"`      //engineType>   引擎类型  写死sjk-camera-lpa
-		log.Println("data.LpaResult.EngineType:", data.LpaResult.EngineType)
+		//log.Println("data.LpaResult.EngineType:", data.LpaResult.EngineType)
 
 		//EngineId
 		if val, ok := EngineId[Result.CamId]; ok == true {
@@ -965,7 +962,7 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, errorpa
 			data.LpaResult.EngineId = "0"
 
 		}
-		log.Println("data.LpaResult.EngineId:", data.LpaResult.EngineId)
+		//	log.Println("data.LpaResult.EngineId:", data.LpaResult.EngineId)
 
 		data.LpaResult.PlateNo = Result.PlateNo //`xml:"plateNo"`         //plateNo>     车牌编号
 
@@ -1010,13 +1007,13 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, errorpa
 		} else {
 			data.LprInfo.Stationid = ""
 		}
-		log.Println("data.LprInfo.Stationid:", data.LprInfo.Stationid)
+		//	log.Println("data.LprInfo.Stationid:", data.LprInfo.Stationid)
 		if val, ok := DeviceId[Result.CamId]; ok == true {
 			data.LprInfo.DeviceId = val //    string   `xml:"deviceId"`//deviceId>前置机编号  deviceid应该用gantryID
 		} else {
 			data.LprInfo.DeviceId = ""
 		}
-		log.Println("data.LprInfo.DeviceId:", data.LprInfo.DeviceId)
+		//		log.Println("data.LprInfo.DeviceId:", data.LprInfo.DeviceId)
 		data.LprInfo.PassId = Result.PassId //    string   `xml:"passId"`         // 过车编号
 		data.LprInfo.CamId = Result.CamId   //    string   `xml:"camId"`          //camId>    摄像机编号
 
@@ -1030,7 +1027,7 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, errorpa
 		} else {
 			data.LprInfo.ImageType = 0
 		}
-		log.Println("data.LprInfo.ImageType:", data.LprInfo.ImageType)
+		//	log.Println("data.LprInfo.ImageType:", data.LprInfo.ImageType)
 		data.LprInfo.UploadStamp = scsj //     int64    `xml:"uploadStamp"`    //	uploadStamp> 上传时间
 
 		if val, ok := LaneType[Result.CamId]; ok == true {
@@ -1039,11 +1036,11 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, errorpa
 		} else {
 			data.LprInfo.LaneType = 0
 		}
-		log.Println("data.LprInfo.LaneType:", data.LprInfo.LaneType)
+		//	log.Println("data.LprInfo.LaneType:", data.LprInfo.LaneType)
 		data.LpaResult.PassId = Result.PassId  //passId>     过车编号
 		data.LpaResult.EngineType = EngineType //`xml:"engineType"`      //engineType>   引擎类型 写死 sjk-camera-lpa
 
-		log.Println("data.LpaResult.EngineType:", data.LpaResult.EngineType)
+		//	log.Println("data.LpaResult.EngineType:", data.LpaResult.EngineType)
 
 		//EngineId
 		if val, ok := EngineId[Result.CamId]; ok == true {
@@ -1053,7 +1050,7 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, errorpa
 			data.LpaResult.EngineId = "0"
 
 		}
-		log.Println("data.LpaResult.EngineId:", data.LpaResult.EngineId)
+		//log.Println("data.LpaResult.EngineId:", data.LpaResult.EngineId)
 
 		data.LpaResult.PlateNo = Result.PlateNo               //`xml:"plateNo"`         //plateNo>     车牌编号
 		data.LpaResult.PlateColor = ChepZH(Result.PlateColor) // `xml:"plateColor"`      //plateColor>     车牌颜色
@@ -1079,9 +1076,8 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, errorpa
 	if err != nil {
 		//需要再次上传的抓拍结果，所以需要把抓拍结果保存下来
 		uploadagainxml := createXml(errorpathname, ba)
-		log.Println("第一次上传抓拍结果失败")
 		log.Println("需要再次上传的抓拍结果xml文件uploadagainxml:", uploadagainxml)
-		log.Println("需要再次上传的抓拍结果xml文件生成成功")
+		log.Println("第一次上传抓拍结果失败,需要再次上传的抓拍结果xml文件生成成功")
 		return err
 	}
 
@@ -1137,44 +1133,49 @@ XT:
 		time.Sleep(time.Second * 3)
 		goto XT
 	}
-	log.Println("抓拍进程管理平台,UDP监听地址,address:", address)
+	log.Println("抓拍进程管理平台,UDP监听地址address:", address)
 	defer func() {
 		_ = conn.Close()
 	}()
 
 	//心跳开始时间
 	xtbeginsj := time.Now()
-	data := make([]byte, 4096)
+	data := make([]byte, 2048)
 	for {
 		//获取数据
 		// Here must use make and give the lenth of buffer
 		//返回一个UDPAddr ReadFromUDP从c读取一个UDP数据包，将有效负载拷贝到b，返回拷贝字节数和数据包来源地址。
-		//【！！！！！！】ReadFromUDP方法会在超过一个固定的时间点之后超时，并返回一个错误。
+		//ReadFromUDP方法会在超过一个固定的时间点之后超时，并返回一个错误。
 		log.Println("conn.ReadFromUDP address:", address)
 		_, rAddr, err := conn.ReadFromUDP(data)
 		if err != nil {
 			log.Println(address, "conn.ReadFromUDP error:", err)
 			continue
 		}
-		log.Println(address, "conn.ReadFromUDP ok！rAddr:", rAddr)
+		//log.Println(address, "conn.ReadFromUDP ok！rAddr:", rAddr)
 		//反序列化udp数据
 		h := new(dto.Heartbeatbasic)
 		herr := xml.Unmarshal(data, h)
 		if herr != nil {
-			log.Println(address, rAddr, "UDP接收时,xml.Unmarshal失败！", herr) //这样解析是肯定OK的
+			log.Println(address, "UDP接收时,xml.Unmarshal失败！", herr) //这样解析是肯定OK的
 			//log.Println(address, "UDP接收数据data:", string(data[:256]))
 
 		} else {
 			//接收到数据
-			log.Println(address, rAddr, "接收到数据h.Type｜1、心跳|2、新数据通知|3、日志|4、采集进程被动关闭命令:", h.Type, h.Uuid)
+			log.Println(address, "接收到数据1、心跳,2、新数据通知;h.Type:", h.Type, h.Uuid)
 		}
 
 		now := time.Now()
 		//upd时间差
 		updsjcstr := utils.TimeDifference(xtbeginsj, now)
+		if strings.Contains(updsjcstr, "m") {
+			log.Println("心跳时间差大于60秒，需要重启程序")
+
+		}
 
 		updSJC := strings.Split(updsjcstr, "s")
 		updsjc, _ := strconv.Atoi(updSJC[0])
+
 		//超时推出
 		if updsjc > 60 {
 			log.Println("心跳时间差大于60秒，需要重启程序")
@@ -1300,20 +1301,20 @@ func Heartbeatclient(port string, toWrite []byte) error {
 		log.Println(serverAddr, "管理平台主动给抓拍进程返回数据,net.Dial执行时err:", err)
 		return err
 	}
-	log.Println("管理平台主动给抓拍进程心跳 UDP net.Dial serverAddr:", serverAddr)
+	log.Println("管理平台主动给抓拍进程返回数据 UDP net.Dial serverAddr:", serverAddr)
 
 	defer func() {
 		_ = conn.Close()
 	}()
 
-	var n int
-	n, err = conn.Write([]byte(toWrite))
+	//var n int
+	_, err = conn.Write(toWrite)
 	if err != nil {
 		log.Println("管理平台主动给抓拍进程心跳UDP err:", err)
 		return err
 	}
-	log.Println(" 管理平台主动给抓拍进程心跳UDP Write:", "n:", n)
 	//log.Println(" 管理平台 主动给抓拍进程心跳 UDP 写的字节数n:", n)
+
 	//msg := make([]byte, 32)
 	//n, err = conn.Read(msg)
 	//if err != nil {

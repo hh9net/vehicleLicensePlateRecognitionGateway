@@ -218,12 +218,14 @@ type AppedInfo struct {
 
 //发送与接受的心跳
 type Heartbeatbasic struct {
-	XMLName xml.Name `xml:"message"`
-	Uuid    string   `xml:"uuid"`    //<uuid>
-	Type    int      `xml:"type"`    //<type>    1、心跳   2、新数据通知  3、 日志  4、采集进程被动关闭命令
-	Version string   `xml:"version"` //<version>        抓拍程序版本号
-	Time    string   `xml:"time"`    //<time>     字符串2020-11-12 12:12:12
-	Seq     int      `xml:"seq"`     //<seq>   消息序号累加
+	XMLName         xml.Name `xml:"message"`
+	Uuid            string   `xml:"uuid"`            //<uuid>
+	Type            int      `xml:"type"`            //<type>    1、心跳   2、新数据通知  3、 日志  4、采集进程被动关闭命令
+	Version         string   `xml:"version"`         //<version> 抓拍程序版本号
+	Time            string   `xml:"time"`            //<time>     字符串2020-11-12 12:12:12
+	Seq             int      `xml:"seq"`             //<seq>   消息序号累加
+	Pid             string   `xml:"pid"`             //进程ID
+	RunParamXMLFile string   `xml:"RunParamXMLFile"` //运行XML文件名
 }
 
 //1、心跳
@@ -244,12 +246,15 @@ type HeartbeatLogContent struct {
 }
 
 // 心跳
-/*<message>
+/*
+<message>
 <uuid></uuid>
 <type>1</type>//1
 <version></version>
 <time></time>
 <seq></seq>
+<pid>123999</pid>
+<RunParamXMLFile></RunParamXMLFile>
 <content></content>
 </message>
 
