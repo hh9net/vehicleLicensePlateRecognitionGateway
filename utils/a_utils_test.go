@@ -32,3 +32,8 @@ func TestQingStorDeleteFile(t *testing.T) {
 func TestMainMutexFile(t *testing.T) {
 	MainMutexFileCreate()
 }
+
+//
+func TestProcessMutexBegin(t *testing.T) {
+	ProcessMutexBegin()
+}

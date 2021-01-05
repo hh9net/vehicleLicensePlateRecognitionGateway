@@ -4,6 +4,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	_ "net/http/pprof"
+	"os"
 	"time"
 	"vehicleLicensePlateRecognitionGateway/config"
 	"vehicleLicensePlateRecognitionGateway/service"
@@ -11,7 +12,6 @@ import (
 )
 
 func Init() {
-	//进程互斥
 
 	conf := config.ConfigInit() //初始化配置文件
 	log.Println("配置文件信息：", *conf)
@@ -35,7 +35,15 @@ func Init() {
 }
 
 func main() {
-
+	go func() {
+		Listenerr := http.ListenAndServe("0.0.0.0:6060", nil)
+		if Listenerr != nil {
+			//进程互斥
+			log.Println("监控gc内存 Listen:", Listenerr)
+			log.Println("监控gc内存 该端口已经启动，无法运行新进程！")
+			os.Exit(0)
+		}
+	}()
 	//初始化配置文件
 	Init()
 	//进程管理
@@ -52,13 +60,10 @@ func main() {
 	//goroutine5 网关每隔10分钟轮询请求服务器的版本
 	//	go service.VersionQeq()
 
-	go func() {
-		log.Println(http.ListenAndServe("0.0.0.0:6060", nil))
-	}()
-
 	tiker := time.NewTicker(time.Minute * 5) //每15秒执行一下
 	for {
-		<-tiker.C
 		log.Println("主go程执行 抓拍进程管理程序 OK呢！")
+		<-tiker.C
+
 	}
 }

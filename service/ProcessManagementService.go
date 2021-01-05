@@ -72,7 +72,7 @@ CQ:
 	resp, getTokenerr := GetGatawayToken()
 	if getTokenerr != nil {
 		log.Println("获取网关设备的token 失败,重新请求!", time.Now()) //getTokenerr 已打印
-		time.Sleep(time.Second * 30)
+		time.Sleep(time.Second * 10)
 		goto CQ
 	}
 
@@ -94,7 +94,7 @@ CmlistQ:
 	CameraList, listerr := GetGatawayCameraList()
 	if listerr != nil {
 		log.Println("获取相机列表错误:", listerr)
-		time.Sleep(time.Second * 20)
+		time.Sleep(time.Second * 10)
 		goto CmlistQ
 	}
 
@@ -450,7 +450,25 @@ func extract(Ctx context.Context) (err error, hasNewFile bool) {
 	for i := range fileList {
 		//判断文件的结尾名
 		if strings.HasSuffix(fileList[i].Name(), ".xml") {
+
+			//这里对文件做一个处理先解析文件，以防xml中数据没有写完
+			content, err := ioutil.ReadFile(snapxmlPathDir + "/" + fileList[i].Name())
+			if err != nil {
+				log.Println("防止抓拍程序写xml中数据没有写完时。读取这文件失败:", err)
+				continue
+			}
+			//将xml文件转换为对象
+			var result dto.CaptureDateXML
+			uerr := xml.Unmarshal(content, &result)
+			if uerr != nil {
+				log.Println("该snap/xml/文件夹下需要解析的xml文件内容时，这个xml文件还没有写完，error:", uerr)
+				continue
+			}
+
+			log.Println("获取抓拍结果中，图片路径result.VehicleImgPath:", result.VehicleImgPath)
+
 			log.Println("执行 扫描 该snap/xml/文件夹下需要解析的xml文件名字为:", fileList[i].Name())
+
 			Renameerr := RenameFile(snapxmlPathDir+"/"+fileList[i].Name(), snapxmlPathDir+"/"+fileList[i].Name()+"_suffix")
 			if Renameerr != nil {
 				log.Println("该snap/xml/文件夹下需要解析的xml，改文件名时错误，文件名字为:", fileList[i].Name())
@@ -1122,7 +1140,7 @@ XT:
 	}()
 
 	//心跳开始时间
-	//xtsj := time.Now()
+	//xtbeginsj := time.Now()
 	data := make([]byte, 4096)
 	for {
 		//获取数据
@@ -1140,7 +1158,7 @@ XT:
 		h := new(dto.Heartbeatbasic)
 		herr := xml.Unmarshal(data, h)
 		if herr != nil {
-			log.Println(address, rAddr, "UDP接收时,xml.Unmarshal失败！", herr)
+			log.Println(address, rAddr, "UDP接收时,xml.Unmarshal失败！", herr) //这样解析是肯定OK的
 			//log.Println(address, "UDP接收数据data:", string(data[:256]))
 
 		} else {
