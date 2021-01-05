@@ -396,6 +396,7 @@ func UploadFile() {
 		hferr := HandleFile(ctx)
 		if hferr != nil {
 			log.Println("执行HandleFile上传图片以及抓拍结果 到 车牌识别云端服务器hferr error:", hferr)
+			time.Sleep(time.Second * 1)
 		}
 
 	}
@@ -408,7 +409,7 @@ func HandleFile(ctx context.Context) error {
 		log.Printf("extract: %v\n", err)
 	}
 	if !hasNew {
-		time.Sleep(time.Second)
+		time.Sleep(time.Second * 1)
 	}
 	return nil
 }
@@ -434,11 +435,13 @@ func extract(Ctx context.Context) (err error, hasNewFile bool) {
 	fileList, err := ioutil.ReadDir(snapxmlPathDir)
 	if err != nil {
 		log.Println("扫描 snapxml 文件夹 读取文件信息 error:", err)
+		time.Sleep(time.Second * 1)
 		return err, false
 	}
 	log.Println("执行 扫描 该snap/xml/文件夹下有文件的数量 ：", len(fileList))
 	if len(fileList) == 1 {
 		fmt.Println("执行 扫描 该snap/xml文件夹下可能没有需要解析的xml文件") //有隐藏文件
+		time.Sleep(time.Second * 1)
 	} else {
 		if len(fileList) == 0 {
 			fmt.Println("执行 扫描 该snap/xml/文件夹下没有需要解析的xml文件")
@@ -485,8 +488,8 @@ func extract(Ctx context.Context) (err error, hasNewFile bool) {
 		} // if .xml
 	}
 
-	log.Println("执行 extract()提取完成。休息1秒中")
-	time.Sleep(time.Second * 2)
+	log.Println("执行 extract()提取完成。休息3秒中")
+	time.Sleep(time.Second * 3)
 	return nil, true
 }
 
@@ -1140,7 +1143,7 @@ XT:
 	}()
 
 	//心跳开始时间
-	//xtbeginsj := time.Now()
+	xtbeginsj := time.Now()
 	data := make([]byte, 4096)
 	for {
 		//获取数据
@@ -1166,24 +1169,25 @@ XT:
 			log.Println(address, rAddr, "接收到数据h.Type｜1、心跳|2、新数据通知|3、日志|4、采集进程被动关闭命令:", h.Type, h.Uuid)
 		}
 
-		//now := time.Now()
-		////upd时间差
-		//updsjcstr := utils.TimeDifference(xtsj, now)
-		//
-		//updSJC := strings.Split(updsjcstr, "s")
-		//updsjc, _ := strconv.Atoi(updSJC[0])
-		////超时推出
-		//if updsjc > 10 {
-		//	log.Println("心跳时间差大于10秒，需要重启程序")
-		//	// 4、采集进程被动关闭命令
-		//	//h := new(dto.Heartbeat)
-		//	//heartbeatresp.Uuid = h.Uuid
-		//	//heartbeatresp.Type = 4            //<type> 1、心跳   2、新数据通知  3、 日志  4、采集进程被动关闭命令
-		//	//heartbeatresp.Version = h.Version //<version>  抓拍程序版本号
-		//	//heartbeatresp.Time = h.Time       //<time>     字符串2020-11-12 12:12:12
-		//	//heartbeatresp.Seq = h.Seq         //<seq>   消息序号累加
-		//	log.Println("4、采集进程被动关闭命令 h.Type:", h.Type, h)
-		//}
+		now := time.Now()
+		//upd时间差
+		updsjcstr := utils.TimeDifference(xtbeginsj, now)
+
+		updSJC := strings.Split(updsjcstr, "s")
+		updsjc, _ := strconv.Atoi(updSJC[0])
+		//超时推出
+		if updsjc > 60 {
+			log.Println("心跳时间差大于60秒，需要重启程序")
+			// 4、采集进程被动关闭命令
+			//h := new(dto.Heartbeat)
+			//heartbeatresp.Uuid = h.Uuid
+			//heartbeatresp.Type = 4            //<type> 1、心跳   2、新数据通知  3、 日志  4、采集进程被动关闭命令
+			//heartbeatresp.Version = h.Version //<version>  抓拍程序版本号
+			//heartbeatresp.Time = h.Time       //<time>     字符串2020-11-12 12:12:12
+			//heartbeatresp.Seq = h.Seq         //<seq>   消息序号累加
+			//	log.Println("4、采集进程被动关闭命令 h.Type:", h.Type, h)
+		}
+		xtbeginsj = now
 
 		heartbeatresp := new(dto.Heartbeat)
 		//   1、心跳   2、新数据通知  3、 日志  4、采集进程被动关闭命令
