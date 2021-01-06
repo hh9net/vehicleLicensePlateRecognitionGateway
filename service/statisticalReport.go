@@ -3,7 +3,6 @@ package service
 import (
 	"bytes"
 	"encoding/json"
-	"encoding/xml"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
@@ -30,7 +29,7 @@ func GwStatusUploadPostWithJson(GWStudata *dto.GWStuStatisticalReportQeq) error 
 	Resp := new(dto.Resp)
 	log.Println("网关状态上传接口 返回 body:", string(body))
 	//
-	unmerr := xml.Unmarshal(body, &Resp)
+	unmerr := json.Unmarshal(body, &Resp)
 	if unmerr != nil {
 		log.Println("网关状态上传接口响应数据 xml.Unmarshal error：", unmerr)
 		return unmerr
@@ -56,7 +55,7 @@ func CameraStuUploadPostWithJson(CameraStudata *dto.CameraStuQeq) error {
 	Resp := new(dto.Resp)
 	log.Println("摄像机状态上报接口返回 body:", string(body))
 	//
-	unmerr := xml.Unmarshal(body, &Resp)
+	unmerr := json.Unmarshal(body, &Resp)
 	if unmerr != nil {
 		log.Println("摄像机状态上报接口响应数据 xml.Unmarshal error：", unmerr)
 		return unmerr
@@ -82,7 +81,7 @@ func ExcprptStuUploadPostWithJson(ExcprptStudata *dto.ExcprptStuQeq) error {
 	Resp := new(dto.Resp)
 	log.Println("异常上报接口返回 body:", string(body))
 	//
-	unmerr := xml.Unmarshal(body, &Resp)
+	unmerr := json.Unmarshal(body, &Resp)
 	if unmerr != nil {
 		log.Println("异常上报接口响应数据 xml.Unmarshal error：", unmerr)
 		return unmerr
@@ -108,7 +107,7 @@ func VersionQeqUploadPostWithJson(VersionQeqdata *dto.VersionQeq) error {
 	Resp := new(dto.Resp)
 	log.Println("版本查询接口 body:", string(body))
 	//
-	unmerr := xml.Unmarshal(body, &Resp)
+	unmerr := json.Unmarshal(body, &Resp)
 	if unmerr != nil {
 		log.Println("版本查询接口响应数据 xml.Unmarshal error：", unmerr)
 		return unmerr

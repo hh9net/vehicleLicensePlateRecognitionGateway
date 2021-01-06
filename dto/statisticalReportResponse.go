@@ -3,9 +3,9 @@ package dto
 //json
 
 type Resp struct {
-	Code int         `json:"code"` //201
-	Msg  string      `json:"msg"`  //接收成功
-	Data interface{} `json:"data"`
+	Code int    `json:"code"` //201
+	Msg  string `json:"msg"`  //接收成功
+	//Data interface{} `json:"data"`
 }
 
 //2.5.	版本查询接口响应值

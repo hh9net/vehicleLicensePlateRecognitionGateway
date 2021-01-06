@@ -31,12 +31,14 @@ var (
 	Deviceid                 string //网关设备id Token
 	StationId                map[string]string
 	DeviceId                 map[string]string
+	CmeraId                  map[string]string
 	LaneType                 map[string]string
 	ImageType                map[string]string
 	EngineId                 map[string]string
 	Token                    string
 	NewDataNotificationCount int //新数据通知
 	// HasUploadFile []string
+	Pid map[string]string
 
 	BacketName   string
 	ObjectPrefix string
@@ -152,6 +154,7 @@ CmlistQ:
 			confdata.Devlist.Dev.Password = cmera.Password
 			confdata.Devlist.Dev.Id = cmera.Id //相机id
 
+			CmeraId[strconv.Itoa(PorT)] = confdata.Uuid        //方便确定是哪一个进程发出的数据 我取相机id+进程端口号
 			confdata.Channellist.Channel.Id = cmera.Id         //相机id
 			confdata.Channellist.Channel.Index = cmera.Channel //通道号
 
@@ -215,6 +218,7 @@ CmlistQ:
 		Chan.Index = ys.Channel
 		YSconfdata.Channellist.Channel = append(YSconfdata.Channellist.Channel, *Chan)
 	}
+	CmeraId[strconv.Itoa(P)] = YSconfdata.Uuid
 	YSConfigfname := ""
 	//宇视生成xml配置文件
 	ysfname := generateYSConfig(YSconfdata)
@@ -286,6 +290,7 @@ CmlistQ:
 		ITSconfdata.Devlist.Dev.ITSPort = k[5]
 		//ITSconfdata.Devlist.Dev.Id   =
 		ITSconfdata.Channellist.Channel = itsone
+		CmeraId[strconv.Itoa(P)] = ITSconfdata.Uuid
 
 		//生成启动进程的配置文件
 		ITSConfigfname := ""
@@ -1149,28 +1154,55 @@ XT:
 		err = conn.SetReadDeadline(time.Now().Add(readTimeout)) // timeout
 		if err != nil {
 			log.Println("setReadDeadline failed:", err)
-			break
+			time.Sleep(time.Second * 3)
+			continue
 		}
-
-		_, err := conn.Read(buffer)
-		if err != nil {
-			log.Println("Read failed:", err)
-			break
-		}
-
-		//获取数据
-		// Here must use make and give the lenth of buffer
-		//返回一个UDPAddr ReadFromUDP从c读取一个UDP数据包，将有效负载拷贝到b，返回拷贝字节数和数据包来源地址。
-		//ReadFromUDP方法会在超过一个固定的时间点之后超时，并返回一个错误。
-		//log.Println("conn.ReadFromUDP address:", address)
-		//_, rAddr, err := conn.ReadFromUDP(buffer)
-		//if err != nil {
-		//	log.Println(address, "conn.ReadFromUDP error:", err)
-		//	continue
-		//}
-		//log.Println(address, "conn.ReadFromUDP ok！rAddr:", rAddr)
 		//反序列化udp数据
 		h := new(dto.Heartbeatbasic)
+		_, err := conn.Read(buffer)
+		if err != nil {
+			log.Println("Read udp failed:", err)
+			now := time.Now()
+			//upd时间差
+			updsjcstr := utils.TimeDifference(xtbeginsj, now)
+			//超时推出
+			if strings.Contains(updsjcstr, "m") {
+				log.Println("时间差:", updsjcstr, "心跳时间差大于60秒，需要重启程序", port)
+				ycdata := new(dto.ExcprptStuQeq)
+				ycdata.GatewayId = Deviceid                                  //1	gatewayId		网关id
+				ycdata.CameraId = CmeraId[port]                              //2	cameraId		摄像机id
+				ycdata.ReportTime = time.Now().Format("2006-01-02 15:04:05") //3	reportTime	2020-12-21 12:05:12	上报时间
+
+				ycdata.CamStatus = -5 //4	0	摄像机状态 0 : 正常 -1: 连接摄像机网络失败； -2：摄像机注册/登陆失败； -3：摄像机异常(接口返回)； -4：24小时无数据；-5心跳时间差大于60秒，需要重启程序
+
+				ycdata.CamStatusDes = "心跳时间差大于60秒，需要重启程序" //5	camStatusDes	正常	摄像机状态描述
+				ycsberr := ExcprptStuUploadPostWithJson(ycdata)
+				if ycsberr != nil {
+
+				}
+				//重启程序
+				rsudperr := RestartUpdmain(port)
+				if rsudperr != nil {
+					log.Println("重启程序时，error:", rsudperr)
+				}
+			}
+			xtbeginsj = now
+			time.Sleep(time.Second * 3)
+			break
+		}
+
+		/*	//获取数据
+			// Here must use make and give the lenth of buffer
+			//返回一个UDPAddr ReadFromUDP从c读取一个UDP数据包，将有效负载拷贝到b，返回拷贝字节数和数据包来源地址。
+			//ReadFromUDP方法会在超过一个固定的时间点之后超时，并返回一个错误。
+			//log.Println("conn.ReadFromUDP address:", address)
+			//_, rAddr, err := conn.ReadFromUDP(buffer)
+			//if err != nil {
+			//	log.Println(address, "conn.ReadFromUDP error:", err)
+			//	continue
+			//}
+			//log.Println(address, "conn.ReadFromUDP ok！rAddr:", rAddr)*/
+
 		herr := xml.Unmarshal(buffer, h)
 		if herr != nil {
 			log.Println(address, "UDP接收时,xml.Unmarshal失败！", herr) //这样解析是肯定OK的
@@ -1178,28 +1210,19 @@ XT:
 		} else {
 			//接收到数据
 			log.Println(address, "接收到数据1、心跳,2、新数据通知;h.Type:", h.Type, h.Uuid)
+			//port 6002
+			Pid[port] = h.Pid
+
 		}
 
 		now := time.Now()
 		//upd时间差
 		updsjcstr := utils.TimeDifference(xtbeginsj, now)
-
 		//超时推出
 		if strings.Contains(updsjcstr, "m") {
 			log.Println("时间差:", updsjcstr, "心跳时间差大于60秒，需要重启程序")
-
 		}
-
-		/*		updSJC := strings.Split(updsjcstr, "s")
-				updsjc, _ := strconv.Atoi(updSJC[0])
-
-				//超时推出
-				if updsjc > 60 {
-					log.Println("心跳时间差大于60秒，需要重启程序")
-
-				}*/
 		xtbeginsj = now
-
 		heartbeatresp := new(dto.Heartbeat)
 		//   1、心跳   2、新数据通知  3、 日志  4、采集进程被动关闭命令
 		switch h.Type {
@@ -1255,20 +1278,22 @@ XT:
 				heartbeatresp.Seq = h.Seq         //<seq>   消息序号累加
 			}
 
-			/*case 3:
-			//3、 日志
-			h := new(dto.HeartbeatLog)
-			herr := xml.Unmarshal(data, h)
-			if herr != nil {
-				log.Println(herr)
-			} else {
-				log.Println(address, "抓拍进程的日志：", h)
-				heartbeatresp.Uuid = h.Uuid
-				heartbeatresp.Type = h.Type       //<type>    1、心跳   2、新数据通知  3、 日志  4、采集进程被动关闭命令
-				heartbeatresp.Version = h.Version //<version>        抓拍程序版本号
-				heartbeatresp.Time = h.Time       //<time>     字符串2020-11-12 12:12:12
-				heartbeatresp.Seq = h.Seq         //<seq>   消息序号累加
-			}*/
+		/*case 3:
+		//3、 日志
+		h := new(dto.HeartbeatLog)
+		herr := xml.Unmarshal(data, h)
+		if herr != nil {
+			log.Println(herr)
+		} else {
+			log.Println(address, "抓拍进程的日志：", h)
+			heartbeatresp.Uuid = h.Uuid
+			heartbeatresp.Type = h.Type       //<type>    1、心跳   2、新数据通知  3、 日志  4、采集进程被动关闭命令
+			heartbeatresp.Version = h.Version //<version>        抓拍程序版本号
+			heartbeatresp.Time = h.Time       //<time>     字符串2020-11-12 12:12:12
+			heartbeatresp.Seq = h.Seq         //<seq>   消息序号累加
+		}*/
+		default:
+			continue
 		}
 
 		heartbeatresp.Content = time.Now().Format("2006-01-02 15:04:05")

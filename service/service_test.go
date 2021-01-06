@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 	"vehicleLicensePlateRecognitionGateway/config"
+	"vehicleLicensePlateRecognitionGateway/dto"
 	"vehicleLicensePlateRecognitionGateway/utils"
 )
 
@@ -100,5 +101,20 @@ func TestVersionFile(t *testing.T) {
 	vs := "20210102T21h00m00s_build"
 	vs = "\n" + vs
 	VersionFile(vs)
+
+}
+
+func TestExcprptStuUploadPostWithJson(t *testing.T) {
+	StatisticalReportIpAddress = "https://newydcpsbxt.jchc.cn/gateway-report"
+	ycdata := new(dto.ExcprptStuQeq)
+	ycdata.GatewayId = "ceshibbbbb"                              //1	gatewayId		网关id
+	ycdata.CameraId = "ceshiccccc"                               //2	cameraId		摄像机id
+	ycdata.ReportTime = time.Now().Format("2006-01-02 15:04:05") //3	reportTime	2020-12-21 12:05:12	上报时间
+	ycdata.CamStatus = -5                                        //4	camStatus	0	摄像机状态 0 : 正常 -1: 连接摄像机网络失败； -2：摄像机注册/登陆失败； -3：摄像机异常(接口返回)； -4：24小时无数据；-5 心跳超时
+	ycdata.CamStatusDes = "心跳时间差大于60秒，需要重启程序"                    //5	camStatusDes	正常	摄像机状态描述
+	ycsberr := ExcprptStuUploadPostWithJson(ycdata)
+	if ycsberr != nil {
+
+	}
 
 }

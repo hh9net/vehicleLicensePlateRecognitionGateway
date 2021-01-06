@@ -12,19 +12,21 @@ import (
 )
 
 func Init() {
-	Listenerr := http.ListenAndServe("0.0.0.0:6060", nil)
-	if Listenerr != nil {
-		//进程互斥
-		log.Println("监控gc内存 Listen:", Listenerr)
-		log.Println("监控gc内存 该端口已经启动，无法运行新进程！")
-		os.Exit(0)
-	}
-
 	conf := config.ConfigInit() //初始化配置文件
 	log.Println("配置文件信息：", *conf)
 	//初始化日志
 	utils.InitLogrus(conf.LogPath, conf.LogFileName, time.Duration(24*conf.LogMaxAge)*time.Hour, conf.LogRotationSize, time.Duration(conf.LogRotationTime)*time.Hour, conf.RotationCount)
+	service.DelcameraConfigDir() //删除旧cameraConfigDir文件夹
 	//
+	go func() {
+		Listenerr := http.ListenAndServe("0.0.0.0:3020", nil)
+		if Listenerr != nil {
+			//进程互斥
+			log.Println("监控gc内存 Listen:", Listenerr)
+			log.Println("监控gc内存 该端口已经启动，无法运行新进程！")
+			os.Exit(0)
+		}
+	}()
 	service.GwCaptureInformationUploadIpAddress = conf.GwCaptureInformationUploadIpAddress
 	service.Gettoken = conf.Gettoken             //http://172.31.49.252/processor-control/collect/token/
 	service.GetCameraListip = conf.GetCameraList //http://172.31.49.252/processor-control/collect/cameras/
@@ -32,7 +34,7 @@ func Init() {
 	service.Deviceid = conf.Deviceid //fe0442b5-2d40-486f-9682-d1043ceca4e5
 	service.StatisticalReportIpAddress = conf.StatisticalReportIpAddress
 	//作为一个每次发布的一个版本记录
-	vs := "2021-01-06T14h00m00s_build"
+	vs := "2021-01-06T15h30m00s_build"
 	vs = "\n" + vs + ""
 	service.VersionFile(vs)
 	service.OSSCount = 0
