@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -239,7 +240,7 @@ func TimeDifference(intime time.Time, outtime time.Time) string {
 	inT, _ := time.Parse("2006-01-02 15:04:05", in)
 	outT, _ := time.Parse("2006-01-02 15:04:05", out)
 	t := outT.Sub(inT).String()
-	log.Println("时间差", t)
+	fmt.Println("时间差", t)
 	return t
 }
 

@@ -1133,33 +1133,48 @@ XT:
 		time.Sleep(time.Second * 3)
 		goto XT
 	}
-	log.Println("抓拍进程管理平台,UDP监听地址address:", address)
+
+	log.Println("管理抓拍进程心跳,UDP监听地址address:", address)
+
 	defer func() {
 		_ = conn.Close()
 	}()
 
+	readTimeout := 60 * time.Second
 	//心跳开始时间
 	xtbeginsj := time.Now()
-	data := make([]byte, 2048)
+	buffer := make([]byte, 2048)
 	for {
+
+		err = conn.SetReadDeadline(time.Now().Add(readTimeout)) // timeout
+		if err != nil {
+			log.Println("setReadDeadline failed:", err)
+			break
+		}
+
+		_, err := conn.Read(buffer)
+		if err != nil {
+			log.Println("Read failed:", err)
+			break
+		}
+
 		//获取数据
 		// Here must use make and give the lenth of buffer
 		//返回一个UDPAddr ReadFromUDP从c读取一个UDP数据包，将有效负载拷贝到b，返回拷贝字节数和数据包来源地址。
 		//ReadFromUDP方法会在超过一个固定的时间点之后超时，并返回一个错误。
-		log.Println("conn.ReadFromUDP address:", address)
-		_, rAddr, err := conn.ReadFromUDP(data)
-		if err != nil {
-			log.Println(address, "conn.ReadFromUDP error:", err)
-			continue
-		}
+		//log.Println("conn.ReadFromUDP address:", address)
+		//_, rAddr, err := conn.ReadFromUDP(buffer)
+		//if err != nil {
+		//	log.Println(address, "conn.ReadFromUDP error:", err)
+		//	continue
+		//}
 		//log.Println(address, "conn.ReadFromUDP ok！rAddr:", rAddr)
 		//反序列化udp数据
 		h := new(dto.Heartbeatbasic)
-		herr := xml.Unmarshal(data, h)
+		herr := xml.Unmarshal(buffer, h)
 		if herr != nil {
 			log.Println(address, "UDP接收时,xml.Unmarshal失败！", herr) //这样解析是肯定OK的
 			//log.Println(address, "UDP接收数据data:", string(data[:256]))
-
 		} else {
 			//接收到数据
 			log.Println(address, "接收到数据1、心跳,2、新数据通知;h.Type:", h.Type, h.Uuid)
@@ -1168,26 +1183,21 @@ XT:
 		now := time.Now()
 		//upd时间差
 		updsjcstr := utils.TimeDifference(xtbeginsj, now)
-		if strings.Contains(updsjcstr, "m") {
-			log.Println("心跳时间差大于60秒，需要重启程序")
-
-		}
-
-		updSJC := strings.Split(updsjcstr, "s")
-		updsjc, _ := strconv.Atoi(updSJC[0])
 
 		//超时推出
-		if updsjc > 60 {
-			log.Println("心跳时间差大于60秒，需要重启程序")
-			// 4、采集进程被动关闭命令
-			//h := new(dto.Heartbeat)
-			//heartbeatresp.Uuid = h.Uuid
-			//heartbeatresp.Type = 4            //<type> 1、心跳   2、新数据通知  3、 日志  4、采集进程被动关闭命令
-			//heartbeatresp.Version = h.Version //<version>  抓拍程序版本号
-			//heartbeatresp.Time = h.Time       //<time>     字符串2020-11-12 12:12:12
-			//heartbeatresp.Seq = h.Seq         //<seq>   消息序号累加
-			//	log.Println("4、采集进程被动关闭命令 h.Type:", h.Type, h)
+		if strings.Contains(updsjcstr, "m") {
+			log.Println("时间差:", updsjcstr, "心跳时间差大于60秒，需要重启程序")
+
 		}
+
+		/*		updSJC := strings.Split(updsjcstr, "s")
+				updsjc, _ := strconv.Atoi(updSJC[0])
+
+				//超时推出
+				if updsjc > 60 {
+					log.Println("心跳时间差大于60秒，需要重启程序")
+
+				}*/
 		xtbeginsj = now
 
 		heartbeatresp := new(dto.Heartbeat)
@@ -1196,7 +1206,7 @@ XT:
 		//心跳
 		case 1:
 			h := new(dto.Heartbeat)
-			herr := xml.Unmarshal(data, h)
+			herr := xml.Unmarshal(buffer, h)
 			if herr != nil {
 				log.Println(address, "心跳xml.Unmarshal error:", herr)
 				continue
@@ -1232,7 +1242,7 @@ XT:
 		case 2:
 			//2、新数据通知
 			h := new(dto.Heartbeat)
-			herr := xml.Unmarshal(data, h)
+			herr := xml.Unmarshal(buffer, h)
 			if herr != nil {
 				log.Println(herr)
 			} else {
@@ -1285,7 +1295,7 @@ XT:
 			//log已经打印过了
 			continue
 		} else {
-			log.Println(address, "回复成功，但是不退出，继续udp交互，", rAddr)
+			log.Println(address, "回复成功，但是不退出，继续udp交互，")
 		}
 
 		//不管结果如何，我重启它

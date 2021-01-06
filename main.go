@@ -12,6 +12,13 @@ import (
 )
 
 func Init() {
+	Listenerr := http.ListenAndServe("0.0.0.0:6060", nil)
+	if Listenerr != nil {
+		//进程互斥
+		log.Println("监控gc内存 Listen:", Listenerr)
+		log.Println("监控gc内存 该端口已经启动，无法运行新进程！")
+		os.Exit(0)
+	}
 
 	conf := config.ConfigInit() //初始化配置文件
 	log.Println("配置文件信息：", *conf)
@@ -25,7 +32,7 @@ func Init() {
 	service.Deviceid = conf.Deviceid //fe0442b5-2d40-486f-9682-d1043ceca4e5
 	service.StatisticalReportIpAddress = conf.StatisticalReportIpAddress
 	//作为一个每次发布的一个版本记录
-	vs := "2021-01-02T23h00m00s_build"
+	vs := "2021-01-06T14h00m00s_build"
 	vs = "\n" + vs + ""
 	service.VersionFile(vs)
 	service.OSSCount = 0
@@ -35,15 +42,6 @@ func Init() {
 }
 
 func main() {
-	go func() {
-		Listenerr := http.ListenAndServe("0.0.0.0:6060", nil)
-		if Listenerr != nil {
-			//进程互斥
-			log.Println("监控gc内存 Listen:", Listenerr)
-			log.Println("监控gc内存 该端口已经启动，无法运行新进程！")
-			os.Exit(0)
-		}
-	}()
 	//初始化配置文件
 	Init()
 	//进程管理
