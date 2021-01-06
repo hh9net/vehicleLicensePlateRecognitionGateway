@@ -103,6 +103,7 @@ CmlistQ:
 	LaneType = make(map[string]string, len(CameraList.Data))
 	ImageType = make(map[string]string, len(CameraList.Data))
 	EngineId = make(map[string]string, len(CameraList.Data))
+	CmeraId = make(map[string]string, len(CameraList.Data))
 
 	log.Println(" 相机列表数据的len:", len(CameraList.Data))
 	log.Println(" 相机列表数据:", CameraList.Data)
