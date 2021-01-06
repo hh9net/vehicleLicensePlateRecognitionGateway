@@ -24,6 +24,7 @@ var (
 	Parsexmlcount            int
 	files                    chan string
 	OSSCount                 int
+	NewOSSCount              int
 	Parsed                   int
 	ResultCount              int
 	ResultOKCount            int
@@ -532,16 +533,16 @@ func UploadFileToOSS(snapxmlPathdir, xmlnamepath string) (err error) {
 	}
 
 	log.Println("获取抓拍结果中，图片路径result.VehicleImgPath:", result.VehicleImgPath)
-	/*
-		//处理新版本的信路威有三种图片上传情况
-		if result.VehicleImgPath1 != "" {
-			swlNewerr := SignalwayNewUpload(result, xmlnamepath, snapxmlPathdir)
-			if swlNewerr != nil {
-				return swlNewerr
-			}
 
-			return nil
-		}*/
+	//处理新版本的信路威有三种图片上传情况
+	if result.VehicleImgPath1 != "" {
+		swlNewerr := SignalwayNewUpload(result, xmlnamepath, snapxmlPathdir)
+		if swlNewerr != nil {
+			return swlNewerr
+		}
+
+		return nil
+	}
 
 	//把图片上传到oss上
 	strfname := strings.Split(result.VehicleImgPath, "\\") //windows
@@ -599,9 +600,10 @@ func UploadFileToOSS(snapxmlPathdir, xmlnamepath string) (err error) {
 				log.Println(err)
 			}
 		}
-
+		ossDZ3 := ""
+		ossDZ2 := ossDZ3
 		//第一次上传失败的抓拍结果存储于【errorpathname】：snapxmlPathDir+"/error/upload/"+fileList[i].Name()
-		uploaderr := GwCaptureInforUpload(&result, scsj, ossDZ, snapxmlPathdir+"/error/upload/"+Xmlname)
+		uploaderr := GwCaptureInforUpload(&result, scsj, ossDZ, ossDZ2, ossDZ3, snapxmlPathdir+"/error/upload/"+Xmlname)
 		if uploaderr != nil {
 			//删除抓拍xml文件
 			//xml/error
@@ -661,14 +663,18 @@ func SignalwayNewUpload(result dto.CaptureDateXML, xmlnamepath, snapxmlPathdir s
 	//把图片上传到oss上
 	strfname := strings.Split(result.VehicleImgPath, "\\") //windows
 	//上传到oss                    日期文件夹     图片名称               前缀"/jiangsu/suhuaiyangs"
-	log.Println("上传到oss图片1的地址，result.VehicleImgPath:", result.VehicleImgPath)
+	log.Println("上传到oss图片1的地址，result.VehicleImgPath1:", result.VehicleImgPath)
 	log.Println("上传到oss图片的名称", strfname[len(strfname)-1])
 
+	//
+	str2fname := strings.Split(result.VehicleImgPath, "\\") //windows
 	log.Println("上传到oss图片2的地址，result.VehicleImgPath2:", result.VehicleImgPath1)
-	log.Println("上传到oss图片的名称", strfname[len(strfname)-1])
+	log.Println("上传到oss图片的名称", str2fname[len(str2fname)-1])
 
+	//
+	str3fname := strings.Split(result.VehicleImgPath, "\\") //windows
 	log.Println("上传到oss图片3的地址，result.VehicleImgPath3:", result.VehicleImgPath2)
-	log.Println("上传到oss图片的名称", strfname[len(strfname)-1])
+	log.Println("上传到oss图片的名称", str3fname[len(str3fname)-1])
 
 	log.Println("上传到oss的前缀", ObjectPrefix)
 
@@ -686,6 +692,7 @@ func SignalwayNewUpload(result dto.CaptureDateXML, xmlnamepath, snapxmlPathdir s
 			log.Println(err)
 		}
 	}
+
 	//xml的文件路径
 	strxmlnamepath := strings.Split(xmlnamepath, "/")
 	//获取文件名称
@@ -702,12 +709,24 @@ func SignalwayNewUpload(result dto.CaptureDateXML, xmlnamepath, snapxmlPathdir s
 	log.Printf("前缀/站点Id/摄像机ID/日期/passid==:%s", Pname)
 	code, scsj, ossDZ := utils.QingStorUpload(result.VehicleImgPath, strfname[len(strfname)-1], Pname)
 
-	if code == utils.UPloadOK {
-		OSSCount = OSSCount + 1
-		log.Println("上传到oss   成功，开始返回抓拍结果给云平台")
-		log.Println("上传到oss   成功，OSSCount:", OSSCount, time.Now().Format("2006-01-02 15:04:05"))
+	Pname2 := ObjectPrefix + "/" + Stationid + "/" + result.CamId + "/" + time.Now().Format("2006-01-02") + "/" + str2fname[len(str2fname)-1]
+	log.Printf("前缀/站点Id/摄像机ID/日期/passid==:%s", Pname2)
+	code2, scsj2, ossDZ2 := utils.QingStorUpload(result.VehicleImgPath1, str2fname[len(str2fname)-1], Pname2)
+	log.Printf("第二张图片上传时间:%s", scsj2)
+
+	Pname3 := ObjectPrefix + "/" + Stationid + "/" + result.CamId + "/" + time.Now().Format("2006-01-02") + "/" + str3fname[len(str3fname)-1]
+	log.Printf("前缀/站点Id/摄像机ID/日期/passid==:%s", Pname3)
+	code3, scsj3, ossDZ3 := utils.QingStorUpload(result.VehicleImgPath2, str3fname[len(str3fname)-1], Pname3)
+	log.Printf("第二张图片上传时间:%s", scsj3)
+
+	if code == utils.UPloadOK && code2 == utils.UPloadOK && code3 == utils.UPloadOK {
+		NewOSSCount = NewOSSCount + 3
+		log.Println("新版信路威上传到oss 3图都成功，开始返回抓拍结果给云平台")
+		log.Println("新版信路威上传到oss 3图都成功，NewOSSCount:", NewOSSCount)
 		//删除本地图片 result.VehicleImgPath
 		utils.DelFile(result.VehicleImgPath)
+		utils.DelFile(result.VehicleImgPath1)
+		utils.DelFile(result.VehicleImgPath2)
 		//生产xml返回给云平台 [暂时上传到模拟云平台]
 		// check
 		if _, err := os.Stat(snapxmlPathdir + "/error/upload/"); err == nil {
@@ -723,7 +742,7 @@ func SignalwayNewUpload(result dto.CaptureDateXML, xmlnamepath, snapxmlPathdir s
 		}
 
 		//第一次上传失败的抓拍结果存储于【errorpathname】：snapxmlPathDir+"/error/upload/"+fileList[i].Name()
-		uploaderr := GwCaptureInforUpload(&result, scsj, ossDZ, snapxmlPathdir+"/error/upload/"+Xmlname)
+		uploaderr := GwCaptureInforUpload(&result, scsj, ossDZ, ossDZ2, ossDZ3, snapxmlPathdir+"/error/upload/"+Xmlname)
 		if uploaderr != nil {
 			//删除抓拍xml文件
 			//xml/error
@@ -731,11 +750,11 @@ func SignalwayNewUpload(result dto.CaptureDateXML, xmlnamepath, snapxmlPathdir s
 			d := snapxmlPathdir + "/error/" + Xmlname
 			mverr := utils.MoveFile(source, d)
 			if mverr != nil {
-				log.Println("c，进程抓拍结果的xml文件移动到error文件夹失败！")
+				log.Println("第一次上传3图抓拍结果xml文件到云平台失败，进程抓拍结果的xml文件移动到error文件夹失败！")
 				log.Println(mverr)
 				return mverr
 			}
-			log.Println("第一次上传抓拍结果xml文件到云平台失败，进程抓拍结果的xml文件移动到error文件夹成功")
+			log.Println("第一次上传3图抓拍结果xml文件到云平台失败，xml文件移动到error文件夹成功")
 			return nil
 		} else {
 			//删除抓拍xml文件
@@ -763,7 +782,7 @@ func SignalwayNewUpload(result dto.CaptureDateXML, xmlnamepath, snapxmlPathdir s
 			Parsed = Parsed + 1
 			Parsexmlcount = Parsexmlcount + 1
 			log.Println("Parsexmlcount:", Parsexmlcount)
-			log.Println("第一次上传抓拍结果xml文件到云平台成功，进程抓拍结果xml移动到parsed 成功,Parsed:", Parsed, time.Now())
+			log.Println("第一次上传3图抓拍结果xml文件到云平台成功，进程抓拍结果xml移动到parsed 成功,Parsed:", Parsed, time.Now())
 		}
 	} else {
 		log.Println("上传oss失败", code)
@@ -772,11 +791,11 @@ func SignalwayNewUpload(result dto.CaptureDateXML, xmlnamepath, snapxmlPathdir s
 		//xml/error
 		// check
 		// ossError 图片不存在或者是上传oos的其他问题
-		if _, err := os.Stat(snapxmlPathdir + "/error/ossError/"); err == nil {
-			fmt.Println("path exists 1", snapxmlPathdir+"/error/ossError/")
+		if _, err := os.Stat(snapxmlPathdir + "/error/3tuossError/"); err == nil {
+			fmt.Println("path exists 1", snapxmlPathdir+"/error/3tuossError/")
 		} else {
-			fmt.Println("path not exists ", snapxmlPathdir+"/error/ossError/")
-			err := os.MkdirAll(snapxmlPathdir+"/error/ossError/", 0711)
+			fmt.Println("path not exists ", snapxmlPathdir+"/error/3tuossError/")
+			err := os.MkdirAll(snapxmlPathdir+"/error/3tuossError/", 0711)
 
 			if err != nil {
 				fmt.Println("Error creating directory")
@@ -784,14 +803,14 @@ func SignalwayNewUpload(result dto.CaptureDateXML, xmlnamepath, snapxmlPathdir s
 			}
 		}
 		source := snapxmlPathdir + "/" + Xmlname
-		d := snapxmlPathdir + "/error/ossError/" + Xmlname
+		d := snapxmlPathdir + "/error/3tuossError/" + Xmlname
 		mverr := utils.MoveFile(source, d)
 		if mverr != nil {
-			log.Println("上传oss失败，进程抓拍结果的xml文件移动到error文件夹失败")
+			log.Println("上传3图的oss失败，进程抓拍结果的xml文件移动到error文件夹失败")
 			log.Println(mverr)
 			return mverr
 		}
-		log.Println("上传oss失败，进程抓拍结果的xml文件移动到error文件夹成功")
+		log.Println("上传3图的oss失败，进程抓拍结果的xml文件移动到error文件夹成功")
 		return nil
 	}
 	return nil
@@ -905,7 +924,7 @@ func HandleFileAgainUpload() {
 }
 
 //errorpathname：snapxmlPathDir+"/error/upload/"+fileList[i].Name()
-func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, errorpathname string) error {
+func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, ossDZ2, ossDZ3, errorpathname string) error {
 	//判断哪一种品牌相机
 	//Result.
 	var ba []byte
@@ -984,8 +1003,8 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, errorpa
 		data.LpaResult.LprFrameEntity.PlateRight = 0  // int      `xml:"plateRight"`  //plateRight>        车牌右坐标
 		data.LpaResult.LprFrameEntity.PlateBottom = 0 // int      `xml:"plateBottom"` //plateBottom>     车牌下坐标
 
-		//data.VehicleInfo.SideImgPath  =   // string   `xml:"sideImgPath"` //sideImgPath> 侧面图片地址
-		//data.VehicleInfo.TailImgPath  =   //  string   `xml:"tailImgPath"` //tailImgPath> 车尾图片地址
+		data.VehicleInfo.SideImgPath = ossDZ2               // string   `xml:"sideImgPath"` //sideImgPath> 侧面图片地址
+		data.VehicleInfo.TailImgPath = ossDZ3               //  string   `xml:"tailImgPath"` //tailImgPath> 车尾图片地址
 		data.VehicleInfo.CarType = Result.AppedInfo.CarType //  string   //CarType>  车辆型号
 		AxleNum, _ := strconv.Atoi(Result.AppedInfo.AxleNum)
 		data.VehicleInfo.AxleNum = AxleNum                                  //  int      //AxleNum>  轴数
@@ -1188,7 +1207,7 @@ XT:
 			}
 			xtbeginsj = now
 			time.Sleep(time.Second * 3)
-			break
+			continue
 		}
 
 		/*	//获取数据
@@ -1384,9 +1403,10 @@ func HandleDayTasks() {
 		content = content + "\n第一次上传抓拍结果xml文件到云平台成功，进程抓拍结果xml移动到parsed成功,Parsed:" + strconv.Itoa(Parsed)
 		content = content + "\n再次上传的抓拍结果成功,AgainCount:" + strconv.Itoa(AgainCount)
 		content = content + "\n前置机抓拍信息上传接口 ok ResultCount:" + strconv.Itoa(ResultCount)
+		content = content + "\n新版信路威上传到oss3图都成功，NewOSSCount:" + strconv.Itoa(NewOSSCount)
 
 		StatisticalFile(content)
-
+		NewOSSCount = 0
 		OSSCount = 0
 		ResultCount = 0
 		AgainCount = 0

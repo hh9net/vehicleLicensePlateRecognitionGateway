@@ -38,6 +38,7 @@ func Init() {
 	vs = "\n" + vs + ""
 	service.VersionFile(vs)
 	service.OSSCount = 0
+	service.NewOSSCount = 0
 	service.ResultCount = 0
 	service.AgainCount = 0
 	service.ResultOKCount = 0
