@@ -234,15 +234,26 @@ type Heartbeat struct {
 	Content string `xml:"content"` //<content>    内容
 }
 
-//3、日志
-type HeartbeatLog struct {
-	Heartbeatbasic
-	Content HeartbeatLogContent `xml:"content"` //<content>    内容
+//摄像机状态
+type StatusResult struct {
+	XMLName   xml.Name `xml:"message"`
+	GatewayId string   `xml:"gatewayId"`
+	StatusResultbasic
 }
-
-type HeartbeatLogContent struct {
-	Level string `xml:"level"` // <level> //级别
-	Data  string `xml:"data"`  //	<data> //字符串
+type StatusResultbasic struct {
+	Uuid string `xml:"uuid"` //<uuid>
+	Type int    `xml:"type"` //
+	//CameraId         string `xml:"cameraId"`         //摄像机id
+	VerNum           string `xml:"verNum"`           //<verNum>1.5.678.9</verNum>1
+	ReportTime       string `xml:"reportTime"`       //上报时间 字符串2020-11-12 12:12:12
+	ProgramStartTime string `xml:"programStartTime"` //程序启动时间 1970-01-01 00:00:01
+	CamBrand         string `xml:"camBrand"`         //品牌信息 UNIVIEW
+	CamStatus        int    `xml:"camStatus"`        // 0	摄像机状态 0 : 正常； -1: 连接摄像机网络失败；
+	CamStatusDes     string `xml:"camStatusDes"`     //正常	摄像机状态描述
+	ReConnCnt        int    `xml:"reConnCnt"`        //进程启动到目前为止，网络重连次数
+	CapCnt           int    `xml:"capCnt"`           //启动后摄像机抓拍总和
+	CapZeroCnt       int    `xml:"capZeroCnt"`       //启动后每日零时统计的总和
+	LastCaptime      string `xml:"lastCaptime"`      //lastCaptime	2020-05-10 15:01:02	最近一次抓拍的时间
 }
 
 // 心跳
@@ -285,19 +296,9 @@ eCloseApp      = 4,       // 采集进程被动关闭命令
 <content>d:\xxx\xxx.xml</content>//xml的完整路径
 </message>
 
+//
 
-// 日志
-<message>
-<uuid></uuid>
-<type>3</type>
-<version></version>
-<time></time>
-<seq></seq>
-<content>
-	<level></level>//级别
-	<data></data>//字符串
-</content>
-</message>
+
 
 
 //返回给抓拍进程

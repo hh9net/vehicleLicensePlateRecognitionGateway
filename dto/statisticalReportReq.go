@@ -6,7 +6,7 @@ package dto
 type GWStuStatisticalReportQeq struct {
 	GatewayId            string `json:"gatewayId"`            //1	gatewayId		网关id
 	VerDes               string `json:"verDes"`               //2	verDes	v1.0.21_20201221_gw	程序版本号
-	VerNum               int    `json:"verNum"`               //3	verNum	54	数字版本号
+	VerNum               string `json:"verNum"`               //3	verNum	54	数字版本号[main程序版本]
 	ReportTime           string `json:"reportTime"`           //4	reportTime	2020-12-21 12:05:12	上报时间
 	ProgramStartTime     string `json:"programStartTime"`     //5	programStartTime	2020-12-21 01:01:01	程序启动时间
 	CamCnt               int    `json:"camCnt"`               //6	camCnt	10	摄像机数量
@@ -32,7 +32,7 @@ type CameraStuQeq struct {
 	GatewayId        string `json:"gatewayId"  example:"123"` //1	gatewayId		网关id
 	CameraId         string `json:"cameraId"`                 //2	cameraId		摄像机id
 	VerDes           string `json:"verDes"`                   //3	verDes	v1.0.21_20201221_cam	程序版本号
-	VerNum           int    `json:"verNum"`                   //4	verNum	54	数字版本号
+	VerNum           string `json:"verNum"`                   //4	verNum	54	数字版本号
 	ReportTime       string `json:"reportTime"`               //5	reportTime	2020-12-21 12:05:12	上报时间
 	ProgramStartTime string `json:"programStartTime"`         //6	programStartTime	2020-12-21 01:01:01	程序启动时间
 	CamBrand         string `json:"camBrand"`                 //7	camBrand	华为	品牌信息

@@ -21,14 +21,30 @@ import (
 )
 
 var (
-	Parsexmlcount            int
-	files                    chan string
-	OSSCount                 int
-	NewOSSCount              int
-	Parsed                   int
-	ResultCount              int
-	ResultOKCount            int
-	AgainCount               int
+	Parsexmlcount int
+	files         chan string
+	CapCnt        int //启动后抓拍总和
+	CapZeroCnt    int //每日零点后抓拍的总和
+
+	UploadRecordCnt     int //启动后上传oss以及xml的总和
+	UploadRecordZeroCnt int //每日零点后上传的总和
+
+	UploadImgCnt     int // 启动后上传的总和
+	UploadImgZeroCnt int // 每日零点后上传的总和
+
+	UploadFailCnt     int //启动后上传失败的总和 会再次上传
+	UploadFailZeroCnt int //每日零点后上传的失败总和 会再次上传
+
+	UploadFailImgCnt     int //启动后上传失败的总和
+	UploadFailImgZeroCnt int //每日零点后上传的失败总和
+
+	OSSCount      int //上传成功的oss数量
+	NewOSSCount   int //上传成功的信路威新版图片数量
+	Parsed        int //上传成功的删除OK的抓拍xml数量
+	ResultCount   int
+	ResultOKCount int //
+	AgainCount    int //二次上传成功的数量
+
 	Deviceid                 string //网关设备id Token
 	StationId                map[string]string
 	DeviceId                 map[string]string
@@ -41,8 +57,11 @@ var (
 	// HasUploadFile []string
 	Pid map[string]string
 
-	BacketName   string
-	ObjectPrefix string
+	BacketName    string
+	ObjectPrefix  string
+	MainVersion   string
+	MainStartTime string
+	CameraCount   int
 )
 
 const (
@@ -98,6 +117,7 @@ CmlistQ:
 		goto CmlistQ
 	}
 
+	CameraCount = len(CameraList.Data)
 	DeviceId = make(map[string]string, len(CameraList.Data))
 	StationId = make(map[string]string, len(CameraList.Data))
 	LaneType = make(map[string]string, len(CameraList.Data))
@@ -473,6 +493,10 @@ func extract(Ctx context.Context) (err error, hasNewFile bool) {
 			}
 
 			log.Println("获取抓拍结果中，图片路径result.VehicleImgPath:", result.VehicleImgPath)
+			CapCnt = CapCnt + 1
+			log.Println("启动后抓拍总和:", CapCnt)
+			CapZeroCnt = CapZeroCnt + 1
+			log.Println("每日凌晨1点后抓拍的总和:", CapZeroCnt)
 
 			log.Println("该snap/xml/文件夹下需要解析的xml文件名字为:", fileList[i].Name())
 
@@ -517,7 +541,7 @@ func parse(Ctx context.Context) {
 
 }
 
-func UploadFileToOSS(snapxmlPathdir, xmlnamepath string) (err error) {
+func UploadFileToOSS(snapxmlPathdir, xmlnamepath string) error {
 	log.Println("获取抓拍的结果的xml的文件夹路径，snapxmlPathdir:", snapxmlPathdir)
 	log.Println("获取抓拍的结果xml文件绝对路径，xmlnamepath", xmlnamepath)
 	content, err := ioutil.ReadFile(xmlnamepath)
@@ -583,6 +607,10 @@ func UploadFileToOSS(snapxmlPathdir, xmlnamepath string) (err error) {
 	code, scsj, ossDZ := utils.QingStorUpload(result.VehicleImgPath, strfname[len(strfname)-1], Pname)
 
 	if code == utils.UPloadOK {
+		UploadRecordCnt = UploadRecordCnt + 1
+		UploadImgCnt = UploadImgCnt + 1
+		UploadRecordZeroCnt = UploadRecordZeroCnt + 1
+		UploadImgZeroCnt = UploadImgZeroCnt + 1
 		OSSCount = OSSCount + 1
 		log.Println("上传到oss   成功，开始返回抓拍结果给云平台")
 		log.Println("上传到oss   成功，OSSCount:", OSSCount, time.Now().Format("2006-01-02 15:04:05"))
@@ -606,6 +634,8 @@ func UploadFileToOSS(snapxmlPathdir, xmlnamepath string) (err error) {
 		//第一次上传失败的抓拍结果存储于【errorpathname】：snapxmlPathDir+"/error/upload/"+fileList[i].Name()
 		uploaderr := GwCaptureInforUpload(&result, scsj, ossDZ, ossDZ2, ossDZ3, snapxmlPathdir+"/error/upload/"+Xmlname)
 		if uploaderr != nil {
+			UploadFailCnt = UploadFailCnt + 1
+			UploadFailZeroCnt = UploadFailZeroCnt + 1
 			//删除抓拍xml文件
 			//xml/error
 			source := snapxmlPathdir + "/" + Xmlname
@@ -628,6 +658,8 @@ func UploadFileToOSS(snapxmlPathdir, xmlnamepath string) (err error) {
 		}
 	} else {
 		log.Println("上传oss失败", code)
+		UploadFailImgCnt = UploadFailImgCnt + 1
+		UploadFailImgZeroCnt = UploadFailImgZeroCnt + 1
 		//上传oss失败
 		//删除抓拍xml文件
 		//xml/error
@@ -721,6 +753,10 @@ func SignalwayNewUpload(result dto.CaptureDateXML, xmlnamepath, snapxmlPathdir s
 	log.Printf("第二张图片上传时间:%v", scsj3)
 
 	if code == utils.UPloadOK && code2 == utils.UPloadOK && code3 == utils.UPloadOK {
+		UploadRecordCnt = UploadRecordCnt + 1
+		UploadImgCnt = UploadImgCnt + 1
+		UploadImgZeroCnt = UploadImgZeroCnt + 1
+		UploadRecordZeroCnt = UploadRecordZeroCnt + 1
 		NewOSSCount = NewOSSCount + 3
 		log.Println("新版信路威上传到oss 3图都成功，开始返回抓拍结果给云平台")
 		log.Println("新版信路威上传到oss 3图都成功，NewOSSCount:", NewOSSCount)
@@ -747,6 +783,8 @@ func SignalwayNewUpload(result dto.CaptureDateXML, xmlnamepath, snapxmlPathdir s
 		if uploaderr != nil {
 			//删除抓拍xml文件
 			//xml/error
+			UploadFailCnt = UploadFailCnt + 1
+			UploadFailZeroCnt = UploadFailZeroCnt + 1
 			source := snapxmlPathdir + "/" + Xmlname
 			d := snapxmlPathdir + "/error/" + Xmlname
 			mverr := utils.MoveFile(source, d)
@@ -787,6 +825,9 @@ func SignalwayNewUpload(result dto.CaptureDateXML, xmlnamepath, snapxmlPathdir s
 		}
 	} else {
 		log.Println("上传oss失败", code)
+		UploadFailImgCnt = UploadFailImgCnt + 1
+		UploadFailImgZeroCnt = UploadFailImgZeroCnt + 1
+
 		//上传oss失败
 		//删除抓拍xml文件
 		//xml/error
@@ -1306,20 +1347,20 @@ XT:
 				heartbeatresp.Seq = h.Seq         //<seq>   消息序号累加
 			}
 
-		/*case 3:
-		//3、 日志
-		h := new(dto.HeartbeatLog)
-		herr := xml.Unmarshal(data, h)
-		if herr != nil {
-			log.Println(herr)
-		} else {
-			log.Println(address, "抓拍进程的日志：", h)
-			heartbeatresp.Uuid = h.Uuid
-			heartbeatresp.Type = h.Type       //<type>    1、心跳   2、新数据通知  3、 日志  4、采集进程被动关闭命令
-			heartbeatresp.Version = h.Version //<version>        抓拍程序版本号
-			heartbeatresp.Time = h.Time       //<time>     字符串2020-11-12 12:12:12
-			heartbeatresp.Seq = h.Seq         //<seq>   消息序号累加
-		}*/
+		case 5:
+			//5、 摄像机状态
+			h := new(dto.StatusResult)
+			herr := xml.Unmarshal(buffer, h)
+			if herr != nil {
+				log.Println(herr)
+			} else {
+				log.Println(address, "抓拍进程的摄像机状态数据：", h)
+				//heartbeatresp.Uuid = h.Uuid
+				heartbeatresp.Type = h.Type       //<type>    1、心跳   2、新数据通知  3、 日志  4、采集进程被动关闭命令
+				heartbeatresp.Version = h.VerNum  //<version>   抓拍程序版本号
+				heartbeatresp.Time = h.ReportTime //<time>     字符串2020-11-12 12:12:12
+			}
+			Camrpt(h)
 		default:
 			continue
 		}
@@ -1395,6 +1436,24 @@ func checkError(err error) {
 		log.Println(err)
 		//return
 		os.Exit(1)
+	}
+}
+
+//
+func HandleDayZeroTasks() {
+	for {
+		now := time.Now()                                                                    //获取当前时间，放到now里面，要给next用
+		next := now.Add(time.Hour * 24)                                                      //通过now偏移24小时
+		next = time.Date(next.Year(), next.Month(), next.Day(), 0, 0, 0, 0, next.Location()) //获取下一个20点的日期
+		t := time.NewTimer(next.Sub(now))                                                    //计算当前时间到凌晨的时间间隔，设置一个定时器
+		<-t.C                                                                                //阻塞等待第二天到来才执行
+
+		CapZeroCnt = 0           //每日零点后抓拍的总和
+		UploadRecordZeroCnt = 0  //每日零点后上传的总和
+		UploadImgZeroCnt = 0     // 每日零点后上传的总和
+		UploadFailZeroCnt = 0    //每日零点后上传的失败总和 会再次上传
+		UploadFailImgZeroCnt = 0 //每日零点后上传的失败总和
+
 	}
 }
 

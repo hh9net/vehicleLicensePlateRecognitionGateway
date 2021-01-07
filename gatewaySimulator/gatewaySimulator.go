@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -16,7 +17,7 @@ import (
 
 func main() {
 	//192.168.26.248
-	IpAddress := "192.168.26.248:9898"
+	IpAddress := "192.168.128.99:9898"
 	logrus.Print("服务端 IpAddress：", IpAddress)
 	router := gin.New()
 	router.Use(Cors()) //跨域资源共享
@@ -43,6 +44,7 @@ func AuthAPIInit(route *gin.RouterGroup) {
 	route.GET("/getToken/:name", GetToken)
 	//获取相机列表
 	route.GET("/getList/:name", GetList)
+	route.POST("/getfile", Getfile)
 
 }
 
@@ -377,5 +379,45 @@ func createxml(xmlname string, outputxml []byte) string {
 	}()
 
 	return "/captureResultReceive/" + xmlname + ".xml"
+
+}
+
+type GetfileReq struct {
+	GatewayId string `json:"gatewayId"  example:"123"` //1	gatewayId		网关id
+}
+
+type GetfileResp struct {
+	GatewayId string `json:"gatewayId"  example:"123"` //1	gatewayId		网关id
+	Version   string `json:"version"  example:"123"`
+	Data      []byte `json:"data"  example:"123"`
+}
+
+//3、上传抓拍信息
+func Getfile(c *gin.Context) {
+	//获取抓拍结果
+	req := GetfileReq{}
+	if err := c.Bind(&req); err != nil {
+		log.Println("err:%v", err)
+		return
+	}
+	log.Println("gatewayId:", req)
+
+	//data := new(GetfileResp)
+	//data.GatewayId = req.GatewayId
+	//data.Version = "main.ext_buildTime_2021-01-02T12:12:12"
+
+	content, err := ioutil.ReadFile("./captureResultReceive/" + "sxjgl_shygs_320800011141003034288_20180705_001389.jpg.xml")
+	if err != nil {
+		log.Println("读取这文件失败:", err)
+		c.JSON(200, "读取这文件失败")
+	}
+	//data.Data = content
+	//c.JSON(200, *data)
+
+	c.Header("Content-Disposition", "attachment;filename="+"sxjgl_shygs_320800011141003034288_20180705_001389.jpg.xml")
+	n, _ := c.Writer.Write(content)
+	log.Println(n)
+	//utils.DelFile("./" + fileName)
+	log.Println("+++++++++++++++++++++++++++")
 
 }

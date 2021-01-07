@@ -58,17 +58,21 @@ func TestHeartbeat(t *testing.T) {
 
 }
 
-func TestHeartbeatClient(t *testing.T) {
+func TestHeartbeatClientbb(t *testing.T) {
 	hferr := Heartbeatclient("6001", []byte(`<message>
-<uuid></uuid>
-<type>1</type>//1
-<version></version>
-<time></time>
-<seq></seq>
-<pid>123999</pid>
-<RunParamXMLFile></RunParamXMLFile>
-<content></content>
-</message>`))
+	<gatewayId>TTTT</gatewayId>
+	<type>5</type>
+	<verNum>1.5.678.9</verNum>
+	<reportTime>1970-01-01 00:00:01</reportTime>
+	<programStartTime>1970-01-01 00:00:01</programStartTime>
+	<camBrand>UNIVIEW</camBrand>  
+	<camStatus>0</camStatus>
+	<camStatusDes>normal</camStatusDes> 				 
+	<reConnCnt>80</reConnCnt>
+	<capCnt>1221</capCnt>
+	<capZeroCnt>112</capZeroCnt>
+	<lastCaptime>1970-01-01 00:00:01</lastCaptime>
+  </message>`))
 	if hferr != nil {
 		//	log.Println(address, "此log已经打印过了")
 		//log已经打印过了
@@ -116,5 +120,27 @@ func TestExcprptStuUploadPostWithJson(t *testing.T) {
 	if ycsberr != nil {
 
 	}
+
+}
+
+//()
+func TestStatisticalReport(t *testing.T) {
+	StatisticalReportIpAddress = "https://newydcpsbxt.jchc.cn/gateway-report"
+	Deviceid = "aasffa"
+	MainVersion = "main.exe"
+	MainStartTime = "2021-01-07 12:12:12"
+	CameraCount = 100
+	CapCnt = 100
+	CapZeroCnt = 100
+	UploadRecordCnt = 100
+	UploadRecordZeroCnt = 100
+	UploadImgCnt = 100
+	UploadImgZeroCnt = 100
+	UploadFailCnt = 100
+
+	UploadFailZeroCnt = 100
+	UploadFailImgCnt = 100
+	UploadFailImgZeroCnt = 100
+	StatisticalReport()
 
 }

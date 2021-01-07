@@ -31,11 +31,11 @@ func GwStatusUploadPostWithJson(GWStudata *dto.GWStuStatisticalReportQeq) error 
 	//
 	unmerr := json.Unmarshal(body, &Resp)
 	if unmerr != nil {
-		log.Println("网关状态上传接口响应数据 xml.Unmarshal error：", unmerr)
+		log.Println("网关状态上传接口响应数据 json.Unmarshal error：", unmerr)
 		return unmerr
 	}
 	log.Println("网关状态上传接口 ok")
-	log.Println("网关状态上传接口 Post request with  xml result:", Resp.Code, Resp.Msg)
+	log.Println("网关状态上传接口 Post request with  json result:", Resp.Code, Resp.Msg)
 	return nil
 }
 
@@ -57,11 +57,11 @@ func CameraStuUploadPostWithJson(CameraStudata *dto.CameraStuQeq) error {
 	//
 	unmerr := json.Unmarshal(body, &Resp)
 	if unmerr != nil {
-		log.Println("摄像机状态上报接口响应数据 xml.Unmarshal error：", unmerr)
+		log.Println("摄像机状态上报接口响应数据 json.Unmarshal error：", unmerr)
 		return unmerr
 	}
 	log.Println("摄像机状态上报接口 ok")
-	log.Println("摄像机状态上报接口 Post request with  xml result:", Resp.Code, Resp.Msg)
+	log.Println("摄像机状态上报接口 Post request with json result:", Resp.Code, Resp.Msg)
 	return nil
 }
 
@@ -83,11 +83,11 @@ func ExcprptStuUploadPostWithJson(ExcprptStudata *dto.ExcprptStuQeq) error {
 	//
 	unmerr := json.Unmarshal(body, &Resp)
 	if unmerr != nil {
-		log.Println("异常上报接口响应数据 xml.Unmarshal error：", unmerr)
+		log.Println("异常上报接口响应数据 json.Unmarshal error：", unmerr)
 		return unmerr
 	}
 	log.Println("异常上报接口 ok")
-	log.Println("异常上报接口 Post request with  xml result:", Resp.Code, Resp.Msg)
+	log.Println("异常上报接口 Post request with  json result:", Resp.Code, Resp.Msg)
 	return nil
 }
 
@@ -109,11 +109,11 @@ func VersionQeqUploadPostWithJson(VersionQeqdata *dto.VersionQeq) error {
 	//
 	unmerr := json.Unmarshal(body, &Resp)
 	if unmerr != nil {
-		log.Println("版本查询接口响应数据 xml.Unmarshal error：", unmerr)
+		log.Println("版本查询接口响应数据 json.Unmarshal error：", unmerr)
 		return unmerr
 	}
 	log.Println("版本查询接口 ok")
-	log.Println("版本查询接口 Post request with  xml result:", Resp.Code, Resp.Msg)
+	log.Println("版本查询接口 Post request with  json result:", Resp.Code, Resp.Msg)
 	return nil
 }
 
@@ -124,7 +124,7 @@ func StatisticalReport() {
 	for {
 		<-tiker.C
 		Gatewayrpt()
-		Camrpt()
+		//Camrpt()
 		log.Println("定时20秒上报自身状态、摄像机状态状态至平台 ok")
 	}
 
@@ -160,27 +160,35 @@ func Gatewayrpt() {
 
 	gwstudata := new(dto.GWStuStatisticalReportQeq)
 	//数据赋值
-	gwstudata.GatewayId = ""           //1	gatewayId		网关id
-	gwstudata.VerDes = ""              //2	verDes	v1.0.21_20201221_gw	程序版本号
-	gwstudata.VerNum = 0               //3	verNum	54	数字版本号
-	gwstudata.ReportTime = ""          //4	reportTime	2020-12-21 12:05:12	上报时间
-	gwstudata.ProgramStartTime = ""    //5	programStartTime	2020-12-21 01:01:01	程序启动时间
-	gwstudata.CamCnt = 0               //6	camCnt	10	摄像机数量
-	gwstudata.CamErrCnt = 0            //7	camErrCnt	1	有问题的摄像机数量
-	gwstudata.IpAddr = ""              //8	ipAddr	10.132.12.42	网关IP地址
-	gwstudata.OsVer = ""               //9	osVer	win10.111123.23	操作系统版本号
-	gwstudata.CapCnt = 0               //10capCnt11231启动后抓拍总和
-	gwstudata.CapZeroCnt = 0           //11capZeroCnt112每日零点后抓拍的总和
-	gwstudata.UploadRecordCnt = 0      //12uploadRecordCnt1123启动后上传的总和
-	gwstudata.UploadRecordZeroCnt = 0  //13uploadRecordZeroCnt112每日零点后上传的总和
-	gwstudata.UploadImgCnt = 0         //14uploadImgCnt1123启动后上传的总和
-	gwstudata.UploadImgZeroCnt = 0     //15uploadImgZeroCnt112每日零点后上传的总和
-	gwstudata.UploadFailCnt = 0        //16uploadFailCnt12启动后上传失败的总和
-	gwstudata.UploadFailZeroCnt = 0    //17uploadFailZeroCnt1每日零点后上传的失败总和
-	gwstudata.UploadFailImgCnt = 0     //18uploadFailImgCnt12启动后上传失败的总和
-	gwstudata.UploadFailImgZeroCnt = 0 //19uploadFailImgZeroCnt1每日零点后上传的失败总和
-	gwstudata.UnUploadCnt = 0          //20unUploadCnt11当前未上传的数据总和
-	gwstudata.DiskUsed = ""            //21diskUsed31使用当前硬盘盘符百分比
+	gwstudata.GatewayId = Deviceid //1	gatewayId		网关id
+	gwstudata.VerDes = MainVersion //2	verDes	v1.0.21_20201221_gw	程序版本号
+	gwstudata.VerNum = "1.5.678.9" //3	verNum	54	数字版本号
+
+	gwstudata.ReportTime = time.Now().Format("2006-01-02 15:04:05") //4	reportTime	2020-12-21 12:05:12	上报时间
+
+	gwstudata.ProgramStartTime = MainStartTime //5	programStartTime	2020-12-21 01:01:01	程序启动时间
+
+	gwstudata.CamCnt = CameraCount    //6	camCnt	10	摄像机数量
+	gwstudata.CamErrCnt = 0           //7	camErrCnt	1	有问题的摄像机数量
+	gwstudata.IpAddr = ""             //8	ipAddr	10.132.12.42	网关IP地址
+	gwstudata.OsVer = "windows"       //9	osVer	win10.111123.23	操作系统版本号
+	gwstudata.CapCnt = CapCnt         //10capCnt11231启动后抓拍总和
+	gwstudata.CapZeroCnt = CapZeroCnt //11capZeroCnt112每日零点后抓拍的总和
+
+	gwstudata.UploadRecordCnt = UploadRecordCnt         //12uploadRecordCnt1123启动后上传的总和
+	gwstudata.UploadRecordZeroCnt = UploadRecordZeroCnt //13uploadRecordZeroCnt112每日零点后上传的总和
+
+	gwstudata.UploadImgCnt = UploadImgCnt         //14uploadImgCnt1123启动后上传的总和
+	gwstudata.UploadImgZeroCnt = UploadImgZeroCnt //15uploadImgZeroCnt112每日零点后上传的总和
+
+	gwstudata.UploadFailCnt = UploadFailCnt         //16uploadFailCnt12启动后上传失败的总和
+	gwstudata.UploadFailZeroCnt = UploadFailZeroCnt //17uploadFailZeroCnt1每日零点后上传的失败总和
+
+	gwstudata.UploadFailImgCnt = UploadFailImgCnt         //18uploadFailImgCnt12启动后上传失败的总和
+	gwstudata.UploadFailImgZeroCnt = UploadFailImgZeroCnt //19uploadFailImgZeroCnt1每日零点后上传的失败总和
+	gwstudata.UnUploadCnt = CapCnt - UploadRecordCnt      //当前未上传的数据总和
+
+	gwstudata.DiskUsed = "70.54" //utils.GetDisk() //21diskUsed31使用当前硬盘盘符百分比
 
 	//上报数据
 	sbaoerr := GwStatusUploadPostWithJson(gwstudata)
@@ -191,24 +199,26 @@ func Gatewayrpt() {
 }
 
 //摄像机状态状态至平台
-func Camrpt() {
+func Camrpt(data *dto.StatusResult) {
 	//获取数据
 
 	Camerastudata := new(dto.CameraStuQeq)
 	//数据赋值
-	Camerastudata.GatewayId = ""        //1	gatewayId		网关id
-	Camerastudata.CameraId = ""         //2	cameraId		摄像机id
-	Camerastudata.VerDes = ""           //3	verDes	v1.0.21_20201221_cam	程序版本号
-	Camerastudata.VerNum = 0            //4	verNum	54	数字版本号
-	Camerastudata.ReportTime = ""       //5	reportTime	2020-12-21 12:05:12	上报时间
-	Camerastudata.ProgramStartTime = "" //6	programStartTime	2020-12-21 01:01:01	程序启动时间
-	Camerastudata.CamBrand = ""         //7	camBrand	华为	品牌信息
-	Camerastudata.CamStatus = 0         //8	camStatus	0	摄像机状态 0 : 正常； -1: 连接摄像机网络失败； -2：摄像机注册/登陆失败； -3：摄像机异常(接口返回)； -4：24小时无数据；
-	Camerastudata.CamStatusDes = ""     //9	camStatusDes	正常	摄像机状态描述
-	Camerastudata.ReConnCnt = 0         //10	reConnCnt	15	进程启动到目前为止，网络重连次数
-	Camerastudata.CapCnt = 0            //11	capCnt	1221	启动后摄像机抓拍总和
-	Camerastudata.CapZeroCnt = 0        //12	capZeroCnt	112	启动后每日零时统计的总和
-	Camerastudata.LastCaptime = ""      //13	lastCaptime	2020-05-10 15:01:02	最近一次抓拍的时间
+	Camerastudata.GatewayId = Deviceid //1	gatewayId		网关id
+	Camerastudata.CameraId = data.Uuid //2	cameraId		摄像机id
+	Camerastudata.VerDes = MainVersion //3	verDes	v1.0.21_20201221_cam	程序版本号
+	Camerastudata.VerNum = data.VerNum //4	verNum	54	数字版本号
+
+	Camerastudata.ReportTime = data.ReportTime //time.Now().Format("2006-01-02 15:04:05") //5	reportTime	2020-12-21 12:05:12	上报时间
+
+	Camerastudata.ProgramStartTime = data.ProgramStartTime //6	programStartTime	2020-12-21 01:01:01	程序启动时间
+	Camerastudata.CamBrand = data.CamBrand                 //7	camBrand	华为	品牌信息
+	Camerastudata.CamStatus = data.CamStatus               //8	camStatus	0	摄像机状态 0 : 正常； -1: 连接摄像机网络失败； -2：摄像机注册/登陆失败； -3：摄像机异常(接口返回)； -4：24小时无数据；
+	Camerastudata.CamStatusDes = data.CamStatusDes         //9	camStatusDes	正常	摄像机状态描述
+	Camerastudata.ReConnCnt = data.ReConnCnt               //10	reConnCnt	15	进程启动到目前为止，网络重连次数
+	Camerastudata.CapCnt = data.CapCnt                     //11	capCnt	1221	启动后摄像机抓拍总和
+	Camerastudata.CapZeroCnt = data.CapZeroCnt             //12	capZeroCnt	112	启动后每日零时统计的总和
+	Camerastudata.LastCaptime = data.LastCaptime           //13	lastCaptime	2020-05-10 15:01:02	最近一次抓拍的时间
 
 	//上报数据
 	sbaoerr := CameraStuUploadPostWithJson(Camerastudata)
