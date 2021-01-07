@@ -34,7 +34,7 @@ func Init() {
 	service.Deviceid = conf.Deviceid //fe0442b5-2d40-486f-9682-d1043ceca4e5
 	service.StatisticalReportIpAddress = conf.StatisticalReportIpAddress
 	//作为一个每次发布的一个版本记录
-	vs := "2021-01-06T15h30m00s_build"
+	vs := "2021-01-07T20h30m00s_build"
 	vs = "\n" + vs + ""
 	service.VersionFile(vs)
 	service.OSSCount = 0

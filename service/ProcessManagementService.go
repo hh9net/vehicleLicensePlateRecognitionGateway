@@ -104,7 +104,7 @@ CmlistQ:
 	ImageType = make(map[string]string, len(CameraList.Data))
 	EngineId = make(map[string]string, len(CameraList.Data))
 	CmeraId = make(map[string]string, len(CameraList.Data))
-
+	Pid = make(map[string]string, len(CameraList.Data))
 	log.Println(" 相机列表数据的len:", len(CameraList.Data))
 	log.Println(" 相机列表数据:", CameraList.Data)
 	uniview := make([]dto.CameraListData, 0) // 宇视的列表
@@ -668,12 +668,12 @@ func SignalwayNewUpload(result dto.CaptureDateXML, xmlnamepath, snapxmlPathdir s
 	log.Println("上传到oss图片的名称", strfname[len(strfname)-1])
 
 	//
-	str2fname := strings.Split(result.VehicleImgPath, "\\") //windows
+	str2fname := strings.Split(result.VehicleImgPath1, "\\") //windows
 	log.Println("上传到oss图片2的地址，result.VehicleImgPath2:", result.VehicleImgPath1)
 	log.Println("上传到oss图片的名称", str2fname[len(str2fname)-1])
 
 	//
-	str3fname := strings.Split(result.VehicleImgPath, "\\") //windows
+	str3fname := strings.Split(result.VehicleImgPath2, "\\") //windows
 	log.Println("上传到oss图片3的地址，result.VehicleImgPath3:", result.VehicleImgPath2)
 	log.Println("上传到oss图片的名称", str3fname[len(str3fname)-1])
 
@@ -713,12 +713,12 @@ func SignalwayNewUpload(result dto.CaptureDateXML, xmlnamepath, snapxmlPathdir s
 	Pname2 := ObjectPrefix + "/" + Stationid + "/" + result.CamId + "/" + time.Now().Format("2006-01-02") + "/" + str2fname[len(str2fname)-1]
 	log.Printf("前缀/站点Id/摄像机ID/日期/passid==:%s", Pname2)
 	code2, scsj2, ossDZ2 := utils.QingStorUpload(result.VehicleImgPath1, str2fname[len(str2fname)-1], Pname2)
-	log.Printf("第二张图片上传时间:%s", scsj2)
+	log.Printf("第二张图片上传时间:%v", scsj2)
 
 	Pname3 := ObjectPrefix + "/" + Stationid + "/" + result.CamId + "/" + time.Now().Format("2006-01-02") + "/" + str3fname[len(str3fname)-1]
 	log.Printf("前缀/站点Id/摄像机ID/日期/passid==:%s", Pname3)
 	code3, scsj3, ossDZ3 := utils.QingStorUpload(result.VehicleImgPath2, str3fname[len(str3fname)-1], Pname3)
-	log.Printf("第二张图片上传时间:%s", scsj3)
+	log.Printf("第二张图片上传时间:%v", scsj3)
 
 	if code == utils.UPloadOK && code2 == utils.UPloadOK && code3 == utils.UPloadOK {
 		NewOSSCount = NewOSSCount + 3
@@ -988,8 +988,12 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, ossDZ2,
 
 		}
 		//	log.Println("data.LpaResult.EngineId:", data.LpaResult.EngineId)
-
-		data.LpaResult.PlateNo = Result.PlateNo //`xml:"plateNo"`         //plateNo>     车牌编号
+		if "" == Result.PlateNo {
+			log.Println("车牌编号不能为空呀，需要抓拍程序定位")
+			data.LpaResult.PlateNo = "unrecognized"
+		} else {
+			data.LpaResult.PlateNo = Result.PlateNo //`xml:"plateNo"`         //plateNo>     车牌编号
+		}
 
 		data.LpaResult.PlateColor = ChepZH(Result.PlateColor) // `xml:"plateColor"`      //plateColor>     车牌颜色
 		data.LpaResult.ComputeInterval = 0                    //int64 `xml:"computeInterval"` //computeInterval>  计算时间
@@ -1076,8 +1080,13 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, ossDZ2,
 
 		}
 		//log.Println("data.LpaResult.EngineId:", data.LpaResult.EngineId)
+		if "" == Result.PlateNo {
+			log.Println("车牌编号不能为空呀，需要抓拍程序定位")
+			data.LpaResult.PlateNo = "unrecognized"
+		} else {
+			data.LpaResult.PlateNo = Result.PlateNo //`xml:"plateNo"`         //plateNo>     车牌编号
+		}
 
-		data.LpaResult.PlateNo = Result.PlateNo               //`xml:"plateNo"`         //plateNo>     车牌编号
 		data.LpaResult.PlateColor = ChepZH(Result.PlateColor) // `xml:"plateColor"`      //plateColor>     车牌颜色
 		data.LpaResult.ComputeInterval = 0                    //int64 `xml:"computeInterval"` //computeInterval>  计算时间
 		data.LpaResult.VehicleColor = ""                      //`xml:"vehicleColor"`    //vehicleColor>       车辆颜色
@@ -1234,7 +1243,6 @@ XT:
 			Pid[port] = h.Pid
 
 		}
-
 		now := time.Now()
 		//upd时间差
 		updsjcstr := utils.TimeDifference(xtbeginsj, now)
@@ -1413,7 +1421,8 @@ func HandleDayTasks() {
 		AgainCount = 0
 		ResultOKCount = 0
 		//	log.Println("执行重置OSS上传数量与抓拍结果上传数量OSSCount, ResultCount,AgainCount ,ResultOKCount：", OSSCount, ResultCount, AgainCount, ResultOKCount, time.Now().Format("2006-01-02T15:04:05"))
-
+		content = "重新计数时间:" + time.Now().Format("2006-01-02T15:04:05")
+		StatisticalFile(content)
 		//删除前几天日期文件夹中为空的文件夹
 		log.Println("执行删除前几天日期文件夹中为空的文件夹", time.Now())
 		//2、处理文件

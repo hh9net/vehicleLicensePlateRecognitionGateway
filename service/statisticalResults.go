@@ -248,6 +248,17 @@ func GetStrValue(cfg *ini.File, key string) string {
 }
 
 func StatisticalFile(content string) {
+	if _, err := os.Stat("./statisticalResults/"); err == nil {
+		log.Println("path exists 1", "./statisticalResults/")
+	} else {
+		log.Println("path not exists ", "./statisticalResults/")
+		err := os.MkdirAll("./statisticalResults/", 0711)
+
+		if err != nil {
+			log.Println("Error creating directory")
+			log.Println(err)
+		}
+	}
 	//用OpenFile创建一个可读可写的文件
 	f, err := os.OpenFile("./statisticalResults/statisticalResultsFile.txt", os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
@@ -263,11 +274,11 @@ func StatisticalFile(content string) {
 
 func VersionFile(content string) {
 
-	if _, err := os.Stat("./Mainversion/"); err == nil {
-		log.Println("path exists 1", "./Mainversion/")
+	if _, err := os.Stat("./MainVersion/"); err == nil {
+		log.Println("path exists 1", "./MainVersion/")
 	} else {
-		log.Println("path not exists ", "./Mainversion/")
-		err := os.MkdirAll("./Mainversion/", 0711)
+		log.Println("path not exists ", "./MainVersion/")
+		err := os.MkdirAll("./MainVersion/", 0711)
 
 		if err != nil {
 			log.Println("Error creating directory")
@@ -275,7 +286,7 @@ func VersionFile(content string) {
 		}
 	}
 	//用OpenFile创建一个可读可写的文件
-	f, err := os.OpenFile("./Mainversion/MainVersionFile.txt", os.O_RDWR|os.O_CREATE, 0666)
+	f, err := os.OpenFile("./MainVersion/MainVersionFile.txt", os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
 		log.Println(err)
 	}
