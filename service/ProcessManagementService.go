@@ -646,15 +646,11 @@ func UploadFileToOSS(snapxmlPathdir, xmlnamepath string) error {
 			//	return mverr
 			//}
 
-			//删除本地图片 result.VehicleImgPath
-			utils.DelFile(result.VehicleImgPath)
-			//上传抓拍结果到云平台早晚都会成功
+			//上传抓拍结果到云平台，早晚都会成功
 			DelFile(xmlnamepath)
 			log.Println("第一次上传抓拍结果xml文件到云平台失败,xml文件移动到error文件夹成功")
 			return nil
 		} else {
-			//删除本地图片 result.VehicleImgPath
-			utils.DelFile(result.VehicleImgPath)
 			//上传抓拍结果到云平台成功
 			DelFile(xmlnamepath)
 			Parsed = Parsed + 1
@@ -662,6 +658,8 @@ func UploadFileToOSS(snapxmlPathdir, xmlnamepath string) error {
 			log.Println("Parsexmlcount:", Parsexmlcount)
 			log.Println("第一次上传抓拍结果xml文件到云平台成功，进程抓拍结果xml移动到parsed 成功,Parsed:", Parsed, time.Now())
 		}
+		//删除本地图片 result.VehicleImgPath
+		utils.DelFile(result.VehicleImgPath)
 	} else {
 		log.Println("上传oss失败", code)
 		UploadFailImgCnt = UploadFailImgCnt + 1
@@ -768,10 +766,7 @@ func SignalwayNewUpload(result dto.CaptureDateXML, xmlnamepath, snapxmlPathdir s
 		NewOSSCount = NewOSSCount + 3
 		log.Println("新版信路威上传到oss 3图都成功，开始返回抓拍结果给云平台")
 		log.Println("新版信路威上传到oss 3图都成功，NewOSSCount:", NewOSSCount)
-		//删除本地图片 result.VehicleImgPath
-		utils.DelFile(result.VehicleImgPath)
-		utils.DelFile(result.VehicleImgPath1)
-		utils.DelFile(result.VehicleImgPath2)
+
 		//生产xml返回给云平台 [暂时上传到模拟云平台]
 		// check
 		if _, err := os.Stat(snapxmlPathdir + "/error/upload/"); err == nil {
@@ -793,14 +788,14 @@ func SignalwayNewUpload(result dto.CaptureDateXML, xmlnamepath, snapxmlPathdir s
 			//xml/error
 			UploadFailCnt = UploadFailCnt + 1
 			UploadFailZeroCnt = UploadFailZeroCnt + 1
-			source := snapxmlPathdir + "/" + Xmlname
-			d := snapxmlPathdir + "/error/" + Xmlname
-			mverr := utils.MoveFile(source, d)
-			if mverr != nil {
-				log.Println("第一次上传3图抓拍结果xml文件到云平台失败，进程抓拍结果的xml文件移动到error文件夹失败！")
-				log.Println(mverr)
-				return mverr
-			}
+			//source := snapxmlPathdir + "/" + Xmlname
+			//d := snapxmlPathdir + "/error/" + Xmlname
+			//mverr := utils.MoveFile(source, d)
+			//if mverr != nil {
+			//	log.Println("第一次上传3图抓拍结果xml文件到云平台失败，进程抓拍结果的xml文件移动到error文件夹失败！")
+			//	log.Println(mverr)
+			//	return mverr
+			//}
 			log.Println("第一次上传3图抓拍结果xml文件到云平台失败，xml文件移动到error文件夹成功")
 			return nil
 		} else {
@@ -825,12 +820,19 @@ func SignalwayNewUpload(result dto.CaptureDateXML, xmlnamepath, snapxmlPathdir s
 			//}
 			//	source := snapxmlPathdir + "/" + Xmlname
 			//d := snapxmlPathDir + "/parsed/" + fileList[i].Name()
-			DelFile(xmlnamepath)
+
 			Parsed = Parsed + 1
 			Parsexmlcount = Parsexmlcount + 1
 			log.Println("Parsexmlcount:", Parsexmlcount)
 			log.Println("第一次上传3图抓拍结果xml文件到云平台成功，进程抓拍结果xml移动到parsed 成功,Parsed:", Parsed, time.Now())
 		}
+
+		//最终都是要删除的
+		DelFile(xmlnamepath)
+		//删除本地图片 result.VehicleImgPath
+		utils.DelFile(result.VehicleImgPath)
+		utils.DelFile(result.VehicleImgPath1)
+		utils.DelFile(result.VehicleImgPath2)
 	} else {
 		log.Println("上传oss失败", code)
 		UploadFailImgCnt = UploadFailImgCnt + 1
@@ -861,6 +863,139 @@ func SignalwayNewUpload(result dto.CaptureDateXML, xmlnamepath, snapxmlPathdir s
 			return mverr
 		}
 		log.Println("上传3图的oss失败，进程抓拍结果的xml文件移动到error文件夹成功")
+		return nil
+	}
+	return nil
+}
+
+func SignalwayNewOssErrorUpload(result dto.CaptureDateXML, xmlnamepath string) error {
+
+	//把图片上传到oss上
+	strfname := strings.Split(result.VehicleImgPath, "\\") //windows
+	//上传到oss                    日期文件夹     图片名称               前缀"/jiangsu/suhuaiyangs"
+	log.Println("上传到oss图片1的地址，result.VehicleImgPath1:", result.VehicleImgPath)
+	log.Println("上传到oss图片的名称", strfname[len(strfname)-1])
+
+	//
+	str2fname := strings.Split(result.VehicleImgPath1, "\\") //windows
+	log.Println("上传到oss图片2的地址，result.VehicleImgPath2:", result.VehicleImgPath1)
+	log.Println("上传到oss图片的名称", str2fname[len(str2fname)-1])
+
+	//
+	str3fname := strings.Split(result.VehicleImgPath2, "\\") //windows
+	log.Println("上传到oss图片3的地址，result.VehicleImgPath3:", result.VehicleImgPath2)
+	log.Println("上传到oss图片的名称", str3fname[len(str3fname)-1])
+
+	log.Println("上传到oss的前缀", ObjectPrefix)
+
+	ImgPath := strings.Split(result.VehicleImgPath, strfname[len(strfname)-1])
+	// check，防止被删除文件夹
+	//新建图片文件夹
+	if _, err := os.Stat(ImgPath[0]); err == nil {
+		fmt.Println("path exists 1", ImgPath[0])
+	} else {
+		fmt.Println("path not exists ", ImgPath[0])
+		err := os.MkdirAll(ImgPath[0], 0711)
+
+		if err != nil {
+			log.Println("Error creating directory")
+			log.Println(err)
+		}
+	}
+
+	//xml的文件路径
+	strxmlnamepath := strings.Split(xmlnamepath, "/")
+	//获取文件名称
+	Xmlname := strxmlnamepath[len(strxmlnamepath)-1]
+	log.Println("xml的文件路径中Xmlname:", Xmlname)
+	//上传oss图片
+	Stationid := ""
+	if val, ok := StationId[result.CamId]; ok == true {
+		Stationid = val //   string   `xml:"stationid"`//	stationid站点编号
+	}
+	//log.Println("站点IdStationid:", Stationid)
+	//前缀/站点Id/摄像机ID/日期/passid
+	Pname := ObjectPrefix + "/" + Stationid + "/" + result.CamId + "/" + time.Now().Format("2006-01-02") + "/" + strfname[len(strfname)-1]
+	log.Printf("前缀/站点Id/摄像机ID/日期/passid==:%s", Pname)
+	code, scsj, ossDZ := utils.QingStorUpload(result.VehicleImgPath, strfname[len(strfname)-1], Pname)
+
+	Pname2 := ObjectPrefix + "/" + Stationid + "/" + result.CamId + "/" + time.Now().Format("2006-01-02") + "/" + str2fname[len(str2fname)-1]
+	log.Printf("前缀/站点Id/摄像机ID/日期/passid==:%s", Pname2)
+	code2, scsj2, ossDZ2 := utils.QingStorUpload(result.VehicleImgPath1, str2fname[len(str2fname)-1], Pname2)
+	log.Printf("第二张图片上传时间:%v", scsj2)
+
+	Pname3 := ObjectPrefix + "/" + Stationid + "/" + result.CamId + "/" + time.Now().Format("2006-01-02") + "/" + str3fname[len(str3fname)-1]
+	log.Printf("前缀/站点Id/摄像机ID/日期/passid==:%s", Pname3)
+	code3, scsj3, ossDZ3 := utils.QingStorUpload(result.VehicleImgPath2, str3fname[len(str3fname)-1], Pname3)
+	log.Printf("第二张图片上传时间:%v", scsj3)
+
+	if code == utils.UPloadOK && code2 == utils.UPloadOK && code3 == utils.UPloadOK {
+		UploadRecordCnt = UploadRecordCnt + 1
+		UploadImgCnt = UploadImgCnt + 1
+		UploadImgZeroCnt = UploadImgZeroCnt + 1
+		UploadRecordZeroCnt = UploadRecordZeroCnt + 1
+		NewOSSCount = NewOSSCount + 3
+		log.Println("新版信路威上传到oss 3图都成功，开始返回抓拍结果给云平台")
+		log.Println("新版信路威上传到oss 3图都成功，NewOSSCount:", NewOSSCount)
+
+		//生产xml返回给云平台 [暂时上传到模拟云平台]
+		// check
+		if _, err := os.Stat("./snap/xml/error/upload/"); err == nil {
+			fmt.Println("path exists 1", "./snap/xml/error/upload/")
+		} else {
+			fmt.Println("path not exists ", "./snap/xml/error/upload/")
+			err := os.MkdirAll("./snap/xml/error/upload/", 0711)
+			if err != nil {
+				log.Println("Error creating directory")
+				log.Println(err)
+			}
+		}
+
+		//第一次上传失败的抓拍结果存储于【errorpathname】：snapxmlPathDir+"/error/upload/"+fileList[i].Name()
+		uploaderr := GwCaptureInforUpload(&result, scsj, ossDZ, ossDZ2, ossDZ3, "./snap/xml/error/upload/"+Xmlname)
+		if uploaderr != nil {
+			//删除抓拍xml文件
+			//xml/error
+			UploadFailCnt = UploadFailCnt + 1
+			UploadFailZeroCnt = UploadFailZeroCnt + 1
+			//source := snapxmlPathdir + "/" + Xmlname
+			//d := snapxmlPathdir + "/error/" + Xmlname
+			//mverr := utils.MoveFile(source, d)
+			//if mverr != nil {
+			//	log.Println("第一次上传3图抓拍结果xml文件到云平台失败，进程抓拍结果的xml文件移动到error文件夹失败！")
+			//	log.Println(mverr)
+			//	return mverr
+			//}
+
+			log.Println("OssError中第一次上传3图抓拍结果xml文件到云平台失败，xml文件移动到error文件夹成功")
+			return nil
+		} else {
+			//删除抓拍xml文件
+
+			Parsed = Parsed + 1
+			Parsexmlcount = Parsexmlcount + 1
+			log.Println("Parsexmlcount:", Parsexmlcount)
+			log.Println("第一次上传3图抓拍结果xml文件到云平台成功，进程抓拍结果xml移动到parsed 成功,Parsed:", Parsed, time.Now())
+		}
+		//
+		DelFile(xmlnamepath)
+
+		//删除本地图片 result.VehicleImgPath
+		utils.DelFile(result.VehicleImgPath)
+		utils.DelFile(result.VehicleImgPath1)
+		utils.DelFile(result.VehicleImgPath2)
+	} else {
+		log.Println("OssError中 上传oss失败", code)
+		UploadFailImgCnt = UploadFailImgCnt + 1
+		UploadFailImgZeroCnt = UploadFailImgZeroCnt + 1
+
+		//上传oss失败
+		//删除抓拍xml文件
+		//xml/error
+		// check
+		// ossError 图片不存在或者是上传oos的其他问题
+
+		log.Println("OssError中 上传3图的oss失败，进程抓拍结果的xml文件移动到error文件夹成功")
 		return nil
 	}
 	return nil
@@ -911,11 +1046,6 @@ func HandleFileAgainUpload() {
 				log.Println(err)
 			}
 		}
-
-		/*// check again
-		if _, err := os.Stat(AgainUpsnapxmlpathDir); err == nil {
-			fmt .Println("path exists 2", AgainUpsnapxmlpathDir)
-		}*/
 
 		fileList, err := ioutil.ReadDir(AgainUpsnapxmlpathDir) //不需要加"/"
 		if err != nil {
@@ -975,7 +1105,7 @@ func HandleFileAgainUpload() {
 
 func HandleOssAgainUpload() {
 	//定期检查抓拍文件夹文件夹 captureXml
-	log.Println(" HandleOssAgainUpload 执行处理xml_suffix数据包解析以及抓拍结果再次上传")
+	log.Println("HandleOssAgainUpload 执行处理xml_suffix数据包解析以及抓拍结果再次上传")
 	//2、处理文件
 	//扫描 captureXml 文件夹 读取文件信息
 	dir, _ := os.Getwd()
@@ -1033,93 +1163,99 @@ func HandleOssAgainUpload() {
 
 				log.Println("获取抓拍结果中，图片路径result.VehicleImgPath:", xmlresult.VehicleImgPath)
 
-				//1、读取图片内容
+				//处理新版本的信路威有三种图片上传情况
+				if xmlresult.VehicleImgPath1 != "" {
+					swlNewerr := SignalwayNewOssErrorUpload(xmlresult, OssAgainUpsnapxmlpathDir+"/"+fileList[i].Name())
+					if swlNewerr != nil {
+						return
+					}
 
-				imgcontent, err := ioutil.ReadFile(xmlresult.VehicleImgPath)
+					return
+				}
+
+				//1、读取图片内容
+				_, err = ioutil.ReadFile(xmlresult.VehicleImgPath)
 				//2、判断图片是否存在
 				if err != nil {
 					//4、如果不存在，需要去getoss
 					if fmt.Sprintf("%v", err) == "open "+xmlresult.VehicleImgPath+": no such file or directory" {
 						log.Println("判断图片是否存在时，读的图片不存在:", err)
-						//getOss
-
 					} else {
 						log.Println("判断图片是否存在时，读的图片错误信息:", err)
 					}
-					continue
-
+					//continue
 					//3、如果存在直接上传
 				} else {
-
+					log.Println("再次上传oss时，os.Open imgfname ok:", xmlresult.VehicleImgPath)
 				}
 
-				log.Println("再次上传oss时，os.Open imgfname ok:", xmlresult.VehicleImgPath, imgcontent, err)
+				//把图片上传到oss上
+				strfname := strings.Split(xmlresult.VehicleImgPath, "\\") //windows
+				//上传到oss                    日期文件夹     图片名称               前缀"/jiangsu/suhuaiyangs"
+				log.Println("上传到oss图片的地址", xmlresult.VehicleImgPath)
+				log.Println("上传到oss图片的名称", strfname[len(strfname)-1])
+				log.Println("上传到oss的前缀", ObjectPrefix)
+				//获取文件名称
+				Xmlname := fileList[i].Name()
+				log.Println("xml的文件路径中Xmlname:", Xmlname)
+				//上传oss图片
+				Stationid := ""
+				if val, ok := StationId[xmlresult.CamId]; ok == true {
+					Stationid = val //   string   `xml:"stationid"`//	stationid站点编号
+				}
+				log.Println("站点IdStationid:", Stationid)
+				//前缀/站点Id/摄像机ID/日期/passid
+				Pname := ObjectPrefix + "/" + Stationid + "/" + xmlresult.CamId + "/" + time.Now().Format("2006-01-02") + "/" + strfname[len(strfname)-1]
+				log.Printf("前缀/站点Id/摄像机ID/日期/passid==:%s", Pname)
 
-				/*		//把图片上传到oss上
-						strfname := strings.Split(xmlresult.VehicleImgPath, "\\") //windows
-						//上传到oss                    日期文件夹     图片名称               前缀"/jiangsu/suhuaiyangs"
-						log.Println("上传到oss图片的地址", xmlresult.VehicleImgPath)
-						log.Println("上传到oss图片的名称", strfname[len(strfname)-1])
-						log.Println("上传到oss的前缀", ObjectPrefix)
+				code, scsj, ossDZ := utils.QingStorUpload(xmlresult.VehicleImgPath, strfname[len(strfname)-1], Pname)
 
-						ImgPath := strings.Split(xmlresult.VehicleImgPath, strfname[len(strfname)-1])
-						// check，防止被删除文件夹
-						//新建图片文件夹
-						if _, err := os.Stat(ImgPath[0]); err == nil {
-							fmt.Println("path exists 1", ImgPath[0])
-						} else {
-							fmt.Println("path not exists ", ImgPath[0])
-							err := os.MkdirAll(ImgPath[0], 0711)
+				if code == utils.UPloadOK {
+					UploadRecordCnt = UploadRecordCnt + 1
+					UploadImgCnt = UploadImgCnt + 1
+					UploadRecordZeroCnt = UploadRecordZeroCnt + 1
+					UploadImgZeroCnt = UploadImgZeroCnt + 1
+					OSSCount = OSSCount + 1
+					log.Println("上传到oss   成功，开始返回抓拍结果给云平台")
+					log.Println("上传到oss   成功，OSSCount:", OSSCount, time.Now().Format("2006-01-02 15:04:05"))
 
-							if err != nil {
-								log.Println("Error creating directory")
-								log.Println(err)
-							}
-						}
-						//xml的文件路径
-						strxmlnamepath := strings.Split(xmlnamepath, "/")
-						//获取文件名称
-						Xmlname := strxmlnamepath[len(strxmlnamepath)-1]
-						log.Println("xml的文件路径中Xmlname:", Xmlname)
-						//上传oss图片
-						Stationid := ""
-						if val, ok := StationId[result.CamId]; ok == true {
-							Stationid = val //   string   `xml:"stationid"`//	stationid站点编号
-						}
-						log.Println("站点IdStationid:", Stationid)
-						//前缀/站点Id/摄像机ID/日期/passid
-						Pname := ObjectPrefix + "/" + Stationid + "/" + result.CamId + "/" + time.Now().Format("2006-01-02") + "/" + strfname[len(strfname)-1]
-						log.Printf("前缀/站点Id/摄像机ID/日期/passid==:%s", Pname)
-
-				*/
-				//	code, scsj, ossDZ := utils.QingStorUpload(xmlresult.VehicleImgPath, strfname[len(strfname)-1], Pname)
-
-				result, UploadPostWithXMLerr := GwCaptureInformationUploadPostWithXML(&content)
-				if UploadPostWithXMLerr != nil {
-					log.Println("需要再再次上传的抓拍结果xml文件pathname:", OssAgainUpsnapxmlpathDir+"/"+fileList[i].Name())
-					log.Println("需要再次上传的抓拍结果xml文件失败：", UploadPostWithXMLerr)
-					continue
+					ossDZ3 := ""
+					ossDZ2 := ossDZ3
+					//第一次上传失败的抓拍结果存储于【errorpathname】：snapxmlPathDir+"/error/upload/"+fileList[i].Name()
+					uploaderr := GwCaptureInforUpload(&xmlresult, scsj, ossDZ, ossDZ2, ossDZ3, "./snap/xml/error/upload/"+Xmlname)
+					if uploaderr != nil {
+						UploadFailCnt = UploadFailCnt + 1
+						UploadFailZeroCnt = UploadFailZeroCnt + 1
+						//删除抓拍xml文件
+						//上传抓拍结果到云平台，早晚都会成功
+						DelFile(OssAgainUpsnapxmlpathDir + "/" + fileList[i].Name())
+						log.Println("上传抓拍结果xml文件到云平台失败,xml文件移动到error文件夹成功")
+						continue
+					} else {
+						//上传抓拍结果到云平台成功
+						DelFile(OssAgainUpsnapxmlpathDir + "/" + fileList[i].Name())
+						Parsed = Parsed + 1
+						Parsexmlcount = Parsexmlcount + 1
+						log.Println("Parsexmlcount:", Parsexmlcount)
+						log.Println("ossError中的xml，第一次上传抓拍结果xml文件到云平台成功，进程抓拍结果xml移动到parsed 成功,Parsed:", Parsed, time.Now())
+					}
+					//删除本地图片 result.VehicleImgPath
+					utils.DelFile(xmlresult.VehicleImgPath)
 				} else {
-					//删除抓拍xml文件
-					//xml/error/upload/
-					source := OssAgainUpsnapxmlpathDir + "/" + fileList[i].Name()
-					utils.DelFile(source)
-					//log.Println("再次上传的抓拍结果成功,已经删除再次上传的抓拍结果的xml",source)
-					//再次上传的数量或者说第一次上传失败的
-					AgainCount = AgainCount + 1
-					log.Println("再次上传的数量或者说第一次上传失败的数量")
-					log.Println("再次上传的抓拍结果成功,AgainCount:", AgainCount)
+					log.Println("ossError中的进程抓拍结果的xml，上传oss失败", code)
+					//UploadFailImgCnt = UploadFailImgCnt + 1
+					//UploadFailImgZeroCnt = UploadFailImgZeroCnt + 1
+					//上传oss失败
+					// ossError 图片不存在或者是上传oos的其他问题
+
+					log.Println("上传oss失败，ossError中的进程抓拍结果的xml文件移动到ossError文件夹成功")
+					//需要对上传oss失败的进行二次上传
+					continue
 				}
-				if (*result).Code == 0 {
-					fmt.Println("再次上传的抓拍结果成功")
-					continue
-				} /*else {
-					fmt .Println("再次上传的抓拍结果失败")
-					continue
-				}*/
+
 			}
 		}
-		time.Sleep(time.Minute * 3)
+		time.Sleep(time.Minute * 10)
 	}
 }
 

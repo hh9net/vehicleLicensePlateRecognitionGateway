@@ -55,20 +55,22 @@ func main() {
 	//初始化配置文件
 	Init()
 	//进程管理
-	//service.ProcessManagementService()
+	service.ProcessManagementService()
 	//goroutine1
 	//开线程读取xml文件 上传图片到oss  上传抓拍结果到车牌识别云端服务器
-	//go service.UploadFile()
+	go service.UploadFile()
 	//goroutine2
-	//	go service.HandleDayTasks()
+	go service.HandleDayTasks()
 	//goroutine3 抓拍结果再次上传
-	//	go service.HandleFileAgainUpload()
-	//goroutine4 定时20秒网关上报自身状态、摄像机状态状态至平台
-	//go service.StatisticalReport()
-	//goroutine5 网关每隔10分钟轮询请求服务器的版本
-	//	go service.VersionQeq()
-	//goroutine6 凌晨零点清零
-	//	go service.HandleDayZeroTasks()
+	go service.HandleFileAgainUpload()
+	//goroutine4 OssError中抓拍结果再次上传
+	go service.HandleOssAgainUpload()
+	//goroutine5 定时20秒网关上报自身状态、摄像机状态状态至平台
+	go service.StatisticalReport()
+	//goroutine6 网关每隔10分钟轮询请求服务器的版本
+	go service.VersionQeq()
+	//goroutine7 凌晨零点清零
+	go service.HandleDayZeroTasks()
 
 	go web.GatawayWeb()
 
