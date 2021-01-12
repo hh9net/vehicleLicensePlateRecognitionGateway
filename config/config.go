@@ -1,12 +1,16 @@
 package config
 
 import (
+	"fmt"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/ini.v1"
+	"io/ioutil"
+	"os"
 )
 
-var conffilepath = "./conf/config.toml" // go run gwWeb.go
-//var conffilepath = "../conf/config.toml"
+var conffilepath = "./conf/config.toml"      // go run gwWeb.go
+var confGofilepath = "./conf/config_go.toml" // go run gwWeb.go
+//var conffilepath = "../conf/config_c.toml"
 
 type Config struct { //配置文件要通过tag来指定配置文件中的名称
 	//日志
@@ -53,11 +57,46 @@ func ReadConfig(path string) (Config, error) {
 
 //获取mysql 配置文件信息
 func ConfigInit() *Config {
+
+	//生成新配置文件
+	ConfigNewFile()
 	//读配置文件
-	config, err := ReadConfig(conffilepath) //也可以通过os.arg或flag从命令行指定配置文件路径
+	config, err := ReadConfig(confGofilepath) //也可以通过os.arg或flag从命令行指定配置文件路径
 	if err != nil {
 		log.Println(err)
 	}
 	//log.Println(config)
 	return &config
+}
+
+func ConfigNewFile() {
+	//读配置文件
+	content, err := ioutil.ReadFile(conffilepath)
+	if err != nil {
+		if fmt.Sprintf("%v", err) == "open "+conffilepath+": no such file or directory" {
+			log.Println("生成新配置文件时，读配置的文件不存在:", err)
+		} else {
+			log.Println("生成新配置文件时，读配置文件错误信息:", err)
+		}
+
+		return
+	}
+
+	//创建一个目标文件，存储源文件数据，完成拷贝
+	f_w, err := os.Create("./conf/config_go.toml")
+	if err != nil {
+		log.Println(err)
+	}
+
+	defer func() {
+		_ = f_w.Close()
+	}()
+
+	//创建一个缓冲区buf 用于存储源文件的数据，数据为字节切片类型[]byte
+	_, err = f_w.Write(content[8:])
+	if err != nil {
+		log.Println(err)
+	}
+
+	log.Println("生成新配置文件 ./conf/config_go.toml 成功！")
 }

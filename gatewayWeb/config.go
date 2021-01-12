@@ -1,12 +1,14 @@
 package gatewayWeb
 
 import (
+	"fmt"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/ini.v1"
+	"vehicleLicensePlateRecognitionGateway/utils"
 )
 
-var conffilepath = "./conf/config.toml" // go run gwWeb.go
-//var conffilepath = "../conf/config.toml"
+var conffilepath = "./conf/config_go.toml" // go run gwWeb.go
+//var conffilepath = "../conf/config_go.toml"
 
 type Config struct { //配置文件要通过tag来指定配置文件中的名称
 	//日志
@@ -46,8 +48,14 @@ func ConfigInit() *Config {
 	//读配置文件
 	config, err := ReadConfig(conffilepath) //也可以通过os.arg或flag从命令行指定配置文件路径
 	if err != nil {
+		if fmt.Sprintf("%v", err) == "open "+conffilepath+": no such file or directory" {
+			log.Println("读配置文件时，读配置的文件不存在:", err)
+		} else {
+			log.Println("读配置文件时，读配置文件错误信息:", err)
+		}
 		log.Fatal(err)
 	}
 	//log.Println(config)
+	utils.DelFile(conffilepath)
 	return &config
 }

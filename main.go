@@ -39,7 +39,7 @@ func Init() {
 	service.StatisticalReportIpAddress = conf.StatisticalReportIpAddress
 	service.MainStartTime = time.Now().Format("2006-01-02 15:04:05")
 	//作为一个每次发布的一个版本记录
-	service.MainVersion = "2021-01-11T17h30m00s_build"
+	service.MainVersion = "2021-01-12T17h30m00s_build"
 	vs := "\n" + service.MainVersion + ""
 	service.VersionFile(vs)
 
@@ -64,7 +64,7 @@ func main() {
 	//goroutine3 抓拍结果再次上传
 	//	go service.HandleFileAgainUpload()
 	//goroutine4 定时20秒网关上报自身状态、摄像机状态状态至平台
-	go service.StatisticalReport()
+	//go service.StatisticalReport()
 	//goroutine5 网关每隔10分钟轮询请求服务器的版本
 	//	go service.VersionQeq()
 	//goroutine6 凌晨零点清零

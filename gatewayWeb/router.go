@@ -30,8 +30,16 @@ func APIV1Init(route *gin.RouterGroup) {
 	AuthAPIInit(route)
 }
 
+//网关组路由
 func GwApiV1Init(route *gin.RouterGroup) {
-	AuthAPIInit(route)
+	GWAuthAPIInit(route)
+}
+
+func GWAuthAPIInit(route *gin.RouterGroup) {
+	//Gataway
+	route.GET("/gatewaybasicdata", GatewayBasicDataQuery)
+	route.GET("/gatewaydynamicdata", GatewayDynamicDataQuery)
+	route.GET("/camerainfodata", CameraInfoDataQuery)
 }
 
 func AuthAPIInit(route *gin.RouterGroup) {
@@ -40,11 +48,6 @@ func AuthAPIInit(route *gin.RouterGroup) {
 	//用户登录
 	//route.GET("/user/imagecaptcha", controller.Imagecaptcha)
 	route.POST("/user/login", Login)
-
-	//Gataway
-	route.GET("/gatewaybasicdata", GatewayBasicDataQuery)
-	route.GET("/gatewaydynamicdata", GatewayDynamicDataQuery)
-	route.GET("/camerainfodata", CameraInfoDataQuery)
 }
 
 //以下为cors实现

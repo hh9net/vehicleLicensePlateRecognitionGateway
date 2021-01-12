@@ -8,10 +8,11 @@ import (
 )
 
 func GatawayWeb() {
-
+	GatawayWebData()
 	conf := ConfigInit() //初始化配置文件
-	log.Println("配置文件信息：", *conf)
+	log.Println("GatawayWeb 配置文件信息：", *conf)
 	utils.InitLogrus(conf.WebLogPath, conf.WebLogFileName, time.Duration(24*conf.WebLogMaxAge)*time.Hour, conf.WebLogRotationSize, time.Duration(conf.WebLogRotationTime)*time.Hour, conf.WebRotationCount)
+
 	IpAddress := conf.IpAddress
 
 	UserName = conf.UserName
@@ -34,8 +35,8 @@ func GatawayWebData() {
 
 	service.MainStartTime = time.Now().Format("2006-01-02 15:04:05") //3、启动时间
 
-	service.CameraCount = 4         //4、摄像头数量
-	Gatewaylocation = "2" + "|紫东A区" //5、网关类型  1门架、2、服务区[默认] 3、收费站 +站点
+	service.CameraCount = 4 //4、摄像头数量
+	Gatewaylocation = "2"   //5、网关类型  1门架、2、服务区[默认] 3、收费站 +站点
 
 	service.CapCnt = 100    //1、网关启动后共抓拍照片数量
 	service.CameraCount = 4 //2、正常摄像头数量

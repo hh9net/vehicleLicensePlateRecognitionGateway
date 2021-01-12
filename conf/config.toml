@@ -1,5 +1,4 @@
-
-
+[COMMON]
 ;日志配置
 ;[logconf]
 weblog_maxAge       = 7 ;//日志最大保存时间（天）
@@ -10,7 +9,7 @@ weblog_Path         = "./log"
 weblog_FileName     = "gwWeb.log"
 
 ;[ip_address]
-ip_address          =127.0.0.1:3021
+ip_address          ="127.0.0.1:3021"
 
 ;用户登陆
 user_name       =admin
@@ -18,35 +17,35 @@ password        =admin
 
 ;网关位置 1门架、2、服务区 3、收费站
 gatewaylocation="2";
-
 ;日志配置
 ;[logconf]
-log_maxAge       =1;//日志最大保存时间（天）365
+log_maxAge       = 7 ;//日志最大保存时间（天）
 log_rotationTime = 24  ;//日志切割时间间隔（小时）
 log_rotationCount = 5  ;//
 log_rotationSize = 1000000000;   ;//10M[10485760] 日志切割时间间隔（["104857600" //100M] ["1048576" //1M] ["102400" //100K] ["1024" //1KB]    1kB ）
 log_Path         = "./log"
 log_FileName     = "vehicleLicensePlateRecognition.log"
 
-;1.前置机抓拍信息上传接口 http://172.31.49.252/data-collect/report/frontend
-gwCaptureInformationUpload_ip_address = http://192.168.26.248/data-collect/report/frontend
+
+
+;1.前置机抓拍信息上传接口  
+gwCaptureInformationUpload_ip_address =http://172.31.49.252/data-collect/report/frontend
 
 ;2.获取token
-get_token           =http://192.168.26.248:9898/gw/api/v1/getToken/
-;get_token            =http://172.31.49.252/processor-control/collect/token/
+get_token            =http://172.31.49.252/processor-control/collect/token/
 
 ;3.根据token获取camera列表
-;get_camera_list     =http://172.31.49.252/processor-control/collect/cameras/
-get_camera_list      =http://192.168.26.248:9898/gw/api/v1/getList/
+get_camera_list     =http://172.31.49.252/processor-control/collect/cameras/
+
 
 ;//网关设备id 据此获取网关token
-deviceid        = "f9555afb-56c0-4bf8-a067-63b8ca4be538"
+deviceid        =37975594-19ca-4623-9e00-658ca2f28f71
+
+
 ;[1] http://172.31.49.252/processor-control/collect/token/f9555afb-56c0-4bf8-a067-63b8ca4be538
 ;http://172.31.49.252/processor-control/collect/cameras/a2caedfcb22b21bedafe
 
 ;网关上报http IpAddress
 ;StatisticalReportIpAddress
 statistical_report_ipAddress="https://newydcpsbxt.jchc.cn/gateway-report"
-
-
 
