@@ -1169,7 +1169,7 @@ func GwCaptureInforUpload(Result *dto.CaptureDateXML, scsj int64, ossDZ, ossDZ2,
 //创建xml文件
 func createXml(xmlname string, outputxml []byte) string {
 
-	fw, f_werr := os.Create(xmlname) //go run main.go
+	fw, f_werr := os.Create(xmlname) //go run gwWeb.go
 	if f_werr != nil {
 		log.Println("Read:", f_werr)
 		return ""
@@ -1246,14 +1246,17 @@ XT:
 				ycdata.CamStatus = -5 //4	0	摄像机状态 0 : 正常 -1: 连接摄像机网络失败； -2：摄像机注册/登陆失败； -3：摄像机异常(接口返回)； -4：24小时无数据；-5心跳时间差大于60秒，需要重启程序
 
 				ycdata.CamStatusDes = "心跳时间差大于60秒，需要重启程序" //5	camStatusDes	正常	摄像机状态描述
+				log.Println(ycdata)
 				ycsberr := ExcprptStuUploadPostWithJson(ycdata)
 				if ycsberr != nil {
 
 				}
+
 				//重启程序
 				rsudperr := RestartUpdmain(port)
 				if rsudperr != nil {
 					log.Println("重启程序时，error:", rsudperr)
+					return
 				}
 			}
 			xtbeginsj = now
@@ -1279,7 +1282,7 @@ XT:
 			//log.Println(address, "UDP接收数据data:", string(data[:256]))
 		} else {
 			//接收到数据
-			log.Println(address, "接收到数据1、心跳,2、新数据通知;h.Type:", h.Type, h.Uuid)
+			log.Println(address, "接收到数据h.Type:", h.Type, h.Uuid)
 			//port 6002
 			Pid[port] = h.Pid
 
@@ -1339,7 +1342,7 @@ XT:
 				log.Println(herr)
 			} else {
 				NewDataNotificationCount = NewDataNotificationCount + 1
-				log.Println(address, "新数据通知:", h.Type, h.Uuid, "NewDataNotificationCount:", NewDataNotificationCount)
+				log.Println(address, "2新数据通知:", h.Type, h.Uuid, "NewDataNotificationCount:", NewDataNotificationCount)
 				heartbeatresp.Uuid = h.Uuid
 				heartbeatresp.Type = h.Type       //<type>    1、心跳   2、新数据通知  3、 日志  4、采集进程被动关闭命令
 				heartbeatresp.Version = h.Version //<version>        抓拍程序版本号
@@ -1353,13 +1356,15 @@ XT:
 			herr := xml.Unmarshal(buffer, h)
 			if herr != nil {
 				log.Println(herr)
+
 			} else {
-				log.Println(address, "抓拍进程的摄像机状态数据：", h)
+				log.Println(address, "5抓拍进程的摄像机状态数据：", h)
 				//heartbeatresp.Uuid = h.Uuid
 				heartbeatresp.Type = h.Type       //<type>    1、心跳   2、新数据通知  3、 日志  4、采集进程被动关闭命令
 				heartbeatresp.Version = h.VerNum  //<version>   抓拍程序版本号
 				heartbeatresp.Time = h.ReportTime //<time>     字符串2020-11-12 12:12:12
 			}
+
 			Camrpt(h)
 		default:
 			continue
@@ -1461,12 +1466,12 @@ func HandleDayTasks() {
 	for {
 		now := time.Now()                                                                    //获取当前时间，放到now里面，要给next用
 		next := now.Add(time.Hour * 24)                                                      //通过now偏移24小时
-		next = time.Date(next.Year(), next.Month(), next.Day(), 1, 0, 0, 0, next.Location()) //获取下一个20点的日期
+		next = time.Date(next.Year(), next.Month(), next.Day(), 0, 0, 0, 0, next.Location()) //获取下一个20点的日期
 		t := time.NewTimer(next.Sub(now))                                                    //计算当前时间到凌晨的时间间隔，设置一个定时器
 		<-t.C                                                                                //阻塞等待第二天到来才执行
 
 		sj := time.Now().Format("2006-01-02T15:04:05")
-		content := sj + "上传到oss成功数量，OSSCount=" + strconv.Itoa(OSSCount)
+		content := sj + "\n上传到oss成功数量，OSSCount=" + strconv.Itoa(OSSCount)
 		content = content + "\n前置机抓拍信息第一次上传抓拍结果成功ok,并接收成功 ResultOKCount:" + strconv.Itoa(ResultOKCount)
 		content = content + "\n第一次上传抓拍结果xml文件到云平台成功，进程抓拍结果xml移动到parsed成功,Parsed:" + strconv.Itoa(Parsed)
 		content = content + "\n再次上传的抓拍结果成功,AgainCount:" + strconv.Itoa(AgainCount)

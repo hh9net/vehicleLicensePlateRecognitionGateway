@@ -189,7 +189,7 @@ func Gatewayrpt() {
 	gwstudata.UnUploadCnt = CapCnt - UploadRecordCnt      //当前未上传的数据总和
 
 	gwstudata.DiskUsed = "70.54" //utils.GetDisk() //21diskUsed31使用当前硬盘盘符百分比
-
+	log.Println("网关上报数据:", gwstudata)
 	//上报数据
 	sbaoerr := GwStatusUploadPostWithJson(gwstudata)
 	if sbaoerr != nil {
@@ -205,7 +205,8 @@ func Camrpt(data *dto.StatusResult) {
 	Camerastudata := new(dto.CameraStuQeq)
 	//数据赋值
 	Camerastudata.GatewayId = Deviceid //1	gatewayId		网关id
-	Camerastudata.CameraId = data.Uuid //2	cameraId		摄像机id
+	CameraId := data.Uuid
+	Camerastudata.CameraId = CameraId  //2	cameraId		摄像机id
 	Camerastudata.VerDes = MainVersion //3	verDes	v1.0.21_20201221_cam	程序版本号
 	Camerastudata.VerNum = data.VerNum //4	verNum	54	数字版本号
 
@@ -221,6 +222,7 @@ func Camrpt(data *dto.StatusResult) {
 	Camerastudata.LastCaptime = data.LastCaptime           //13	lastCaptime	2020-05-10 15:01:02	最近一次抓拍的时间
 
 	//上报数据
+	log.Println("摄像机上报数据:", Camerastudata)
 	sbaoerr := CameraStuUploadPostWithJson(Camerastudata)
 	if sbaoerr != nil {
 		log.Println(sbaoerr)

@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 	"vehicleLicensePlateRecognitionGateway/config"
+	web "vehicleLicensePlateRecognitionGateway/gatewayWeb"
 	"vehicleLicensePlateRecognitionGateway/service"
 	"vehicleLicensePlateRecognitionGateway/utils"
 )
@@ -17,6 +18,7 @@ func Init() {
 	//初始化日志
 	utils.InitLogrus(conf.LogPath, conf.LogFileName, time.Duration(24*conf.LogMaxAge)*time.Hour, conf.LogRotationSize, time.Duration(conf.LogRotationTime)*time.Hour, conf.RotationCount)
 	service.DelcameraConfigDir() //删除旧cameraConfigDir文件夹
+
 	//
 	go func() {
 		Listenerr := http.ListenAndServe("0.0.0.0:3020", nil)
@@ -27,6 +29,8 @@ func Init() {
 			os.Exit(0)
 		}
 	}()
+
+	web.Gatewaylocation = conf.Gatewaylocation //1门架、2、服务区 3、收费站
 	service.GwCaptureInformationUploadIpAddress = conf.GwCaptureInformationUploadIpAddress
 	service.Gettoken = conf.Gettoken             //http://172.31.49.252/processor-control/collect/token/
 	service.GetCameraListip = conf.GetCameraList //http://172.31.49.252/processor-control/collect/cameras/
@@ -35,7 +39,7 @@ func Init() {
 	service.StatisticalReportIpAddress = conf.StatisticalReportIpAddress
 	service.MainStartTime = time.Now().Format("2006-01-02 15:04:05")
 	//作为一个每次发布的一个版本记录
-	service.MainVersion = "2021-01-07T11h30m00s_build"
+	service.MainVersion = "2021-01-11T17h30m00s_build"
 	vs := "\n" + service.MainVersion + ""
 	service.VersionFile(vs)
 
@@ -47,23 +51,26 @@ func Init() {
 }
 
 func main() {
+
 	//初始化配置文件
 	Init()
 	//进程管理
-	service.ProcessManagementService()
+	//service.ProcessManagementService()
 	//goroutine1
 	//开线程读取xml文件 上传图片到oss  上传抓拍结果到车牌识别云端服务器
-	go service.UploadFile()
+	//go service.UploadFile()
 	//goroutine2
-	go service.HandleDayTasks()
+	//	go service.HandleDayTasks()
 	//goroutine3 抓拍结果再次上传
-	go service.HandleFileAgainUpload()
+	//	go service.HandleFileAgainUpload()
 	//goroutine4 定时20秒网关上报自身状态、摄像机状态状态至平台
 	go service.StatisticalReport()
 	//goroutine5 网关每隔10分钟轮询请求服务器的版本
 	//	go service.VersionQeq()
 	//goroutine6 凌晨零点清零
-	go service.HandleDayZeroTasks()
+	//	go service.HandleDayZeroTasks()
+
+	go web.GatawayWeb()
 
 	tiker := time.NewTicker(time.Minute * 5) //每15秒执行一下
 	for {

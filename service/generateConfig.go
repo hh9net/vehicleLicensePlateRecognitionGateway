@@ -99,7 +99,7 @@ func createxml(xmlname string, outputxml []byte) string {
 		log.Println("path exists 2", cameraConfigpathDir)
 	}
 
-	fw, f_werr := os.Create("./cameraConfig/" + xmlname + ".xml") //go run main.go
+	fw, f_werr := os.Create("./cameraConfig/" + xmlname + ".xml") //go run gwWeb.go
 	if f_werr != nil {
 		log.Println("Read:", f_werr)
 		return ""

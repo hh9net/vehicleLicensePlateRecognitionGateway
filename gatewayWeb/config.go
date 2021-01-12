@@ -1,4 +1,4 @@
-package config
+package gatewayWeb
 
 import (
 	log "github.com/sirupsen/logrus"
@@ -10,28 +10,18 @@ var conffilepath = "./conf/config.toml" // go run gwWeb.go
 
 type Config struct { //配置文件要通过tag来指定配置文件中的名称
 	//日志
-	LogPath         string `ini:"log_Path"`
-	LogMaxAge       int64  `ini:"log_maxAge"`
-	LogRotationTime int64  `ini:"log_rotationTime"` //日志切割时间间隔（小时）
-	LogRotationSize int64  `ini:"log_rotationSize"` //日志切割大小（1024 KB）
-	RotationCount   uint   `ini:"log_rotationCount"`
-
-	LogFileName string `ini:"log_FileName"`
+	WebLogPath         string `ini:"weblog_Path"`
+	WebLogMaxAge       int64  `ini:"weblog_maxAge"`
+	WebLogRotationTime int64  `ini:"weblog_rotationTime"` //日志切割时间间隔（小时）
+	WebLogRotationSize int64  `ini:"weblog_rotationSize"` //日志切割大小（1024 KB）
+	WebRotationCount   uint   `ini:"weblog_rotationCount"`
+	WebLogFileName     string `ini:"weblog_FileName"`
 
 	//外网id
 	IpAddress string `ini:"ip_address"`
 
-	//前置机抓拍信息上传接口
-	GwCaptureInformationUploadIpAddress string `ini:"gwCaptureInformationUpload_ip_address"`
-	Gettoken                            string `ini:"get_token"`
-	GetCameraList                       string `ini:"get_camera_list"`
-	//网关设备id
-	Deviceid string `ini:"deviceid"`
-	//网关位置
-	Gatewaylocation string `ini:"gatewaylocation"`
-
-	//
-	StatisticalReportIpAddress string `ini:"statistical_report_ipAddress"`
+	UserName string `ini:"user_name"`
+	Password string `ini:"password"`
 }
 
 //读取配置文件并转成结构体
@@ -56,7 +46,7 @@ func ConfigInit() *Config {
 	//读配置文件
 	config, err := ReadConfig(conffilepath) //也可以通过os.arg或flag从命令行指定配置文件路径
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
 	//log.Println(config)
 	return &config

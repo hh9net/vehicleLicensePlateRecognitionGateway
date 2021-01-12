@@ -102,7 +102,7 @@ func generatefile(configpath, logfile string) {
 //创建xml文件
 func createxml(xmlname string, outputxml []byte) string {
 
-	fw, f_werr := os.Create("./snap/xml/" + xmlname) //go run main.go
+	fw, f_werr := os.Create("./snap/xml/" + xmlname) //go run gwWeb.go
 	if f_werr != nil {
 		log.Println("Read:", f_werr)
 		return ""

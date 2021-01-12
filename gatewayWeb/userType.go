@@ -1,4 +1,4 @@
-package dto
+package gatewayWeb
 
 //成功响应
 type Response struct {

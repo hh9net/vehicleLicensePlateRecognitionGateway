@@ -358,7 +358,7 @@ func Upload(c *gin.Context) {
 //创建xml文件
 func createxml(xmlname string, outputxml []byte) string {
 
-	fw, f_werr := os.Create("./gatewaySimulator/captureResultReceive/" + xmlname + ".xml") //go run main.go
+	fw, f_werr := os.Create("./gatewaySimulator/captureResultReceive/" + xmlname + ".xml") //go run gwWeb.go
 	if f_werr != nil {
 		log.Println("Read:", f_werr)
 		return ""

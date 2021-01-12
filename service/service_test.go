@@ -53,6 +53,7 @@ func TestGetCameraList(t *testing.T) {
 }
 
 func TestHeartbeat(t *testing.T) {
+	StatisticalReportIpAddress = "https://newydcpsbxt.jchc.cn/gateway-report"
 	//Runmain()
 	Heartbeat("6002")
 

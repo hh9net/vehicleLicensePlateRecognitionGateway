@@ -67,7 +67,7 @@ func StatisticalResults(ImgAllCount, ResultAllCount, ImgDayAllCount, ResultDayAl
 	}
 	m = new(sync.RWMutex)
 
-	cfg, err := ini.Load("../statisticalResults/statisticalResults.txt") //读配置文件  goland不能使用 ./ 方式  go run main.go 可以
+	cfg, err := ini.Load("../statisticalResults/statisticalResults.txt") //读配置文件  goland不能使用 ./ 方式  go run gwWeb.go 可以
 	if err != nil {
 		log.Print("Fail to read file:", err)
 		return
@@ -230,7 +230,7 @@ func StatisticalResults(ImgAllCount, ResultAllCount, ImgDayAllCount, ResultDayAl
 	cfg.Section("").Key("ResultDayUpOkCountStr").SetValue(newvalue)       //  修改后值然后进行保存
 	cfg.Section("").Key("ImgDayUpErrorCountStr").SetValue(newvalue)       //  修改后值然后进行保存
 	cfg.Section("").Key("ResultDayUpErrorCountStr").SetValue(newvalue)    //  修改后值然后进行保存
-	Saveerr := cfg.SaveTo("../statisticalResults/statisticalResults.txt") //读配置文件  goland不能使用 ./ 方式  go run main.go 可以
+	Saveerr := cfg.SaveTo("../statisticalResults/statisticalResults.txt") //读配置文件  goland不能使用 ./ 方式  go run gwWeb.go 可以
 	m.Unlock()
 	if Saveerr != nil {
 		log.Print("Fail to SaveTo file:", Saveerr)
@@ -248,21 +248,25 @@ func GetStrValue(cfg *ini.File, key string) string {
 }
 
 func StatisticalFile(content string) {
-	if _, err := os.Stat("./statisticalResults/"); err == nil {
-		log.Println("path exists 1", "./statisticalResults/")
+	dir, _ := os.Getwd()
+	log.Println("当前路径：", dir)
+	var statisticalResultspathDir = filepath.Join(dir, "statisticalResults")
+	if _, err := os.Stat(statisticalResultspathDir); err == nil {
+		log.Println("path exists 1", statisticalResultspathDir)
 	} else {
-		log.Println("path not exists ", "./statisticalResults/")
-		err := os.MkdirAll("./statisticalResults/", 0711)
+		log.Println("path not exists ", statisticalResultspathDir)
+		err := os.MkdirAll(statisticalResultspathDir, 0711)
 
 		if err != nil {
 			log.Println("Error creating directory")
 			log.Println(err)
 		}
 	}
+
 	//用OpenFile创建一个可读可写的文件
 	f, err := os.OpenFile("./statisticalResults/statisticalResultsFile.txt", os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
-		log.Println(err)
+		log.Println("用OpenFile创建一个可读可写的文件:", err)
 	}
 	defer func() {
 		_ = f.Close()

@@ -5,7 +5,7 @@ import (
 	"gopkg.in/ini.v1"
 )
 
-//var conffilepath = "./snap/conf/config.toml" // go run main.go
+//var conffilepath = "./snap/conf/config.toml" // go run gwWeb.go
 var conffilepath = "../snap/conf/config.toml"
 
 type Config struct { //配置文件要通过tag来指定配置文件中的名称

@@ -1,11 +1,23 @@
 
-;token =         bb9bd44eb659e74cefc2c5624c58fab009aba4f8
-; [mysql本地]
-mysql_hostname     =127.0.0.1
-mysql_port         = 3306
-mysql_user         = root
-mysql_pass         = shx19930509321
-mysql_databasename = payflow
+
+;日志配置
+;[logconf]
+weblog_maxAge       = 7 ;//日志最大保存时间（天）
+weblog_rotationTime = 24  ;//日志切割时间间隔（小时）
+weblog_rotationCount = 5  ;//
+weblog_rotationSize = 1000000000;   ;//10M[10485760] 日志切割时间间隔（["104857600" //100M] ["1048576" //1M] ["102400" //100K] ["1024" //1KB]    1kB ）
+weblog_Path         = "./log"
+weblog_FileName     = "gwWeb.log"
+
+;[ip_address]
+ip_address          =127.0.0.1:3021
+
+;用户登陆
+user_name       =admin
+password        =admin
+
+;网关位置 1门架、2、服务区 3、收费站
+gatewaylocation="2";
 
 ;日志配置
 ;[logconf]
@@ -15,13 +27,6 @@ log_rotationCount = 5  ;//
 log_rotationSize = 1000000000;   ;//10M[10485760] 日志切割时间间隔（["104857600" //100M] ["1048576" //1M] ["102400" //100K] ["1024" //1KB]    1kB ）
 log_Path         = "./log"
 log_FileName     = "vehicleLicensePlateRecognition.log"
-
-;[redis开发]
-redis_addr          = "192.168.26.248:6379"
-redis_databasename  = 2
-
-;[ip_address]结算监控6089 运维管理6077 车牌识别6066 192.168.150.164 192.168.26.248
-ip_address          =192.168.150.164:6066
 
 ;1.前置机抓拍信息上传接口 http://172.31.49.252/data-collect/report/frontend
 gwCaptureInformationUpload_ip_address = http://192.168.26.248/data-collect/report/frontend

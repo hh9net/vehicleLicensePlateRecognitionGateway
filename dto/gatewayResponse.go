@@ -72,7 +72,7 @@ type CameraListData struct {
 	StationId   string   `xml:"stationId"`   //站ID 3a6e449a18ed435e80bff3782709e6dd
 	LaneType    string   `xml:"laneType"`    //车道 0
 	DevCompId   string   `xml:"devCompId"`   //HIK 相机品牌
-	Description string   `xml:"description"` //描述 常用1
+	Description string   `xml:"description"` //描述 常用1\2
 	DevIp       string   `xml:"devIp"`       //devIp 相机IP 10.25.50.94
 	Port        string   `xml:"port"`        //8000 相机P
 	UserName    string   `xml:"userName"`    //admin

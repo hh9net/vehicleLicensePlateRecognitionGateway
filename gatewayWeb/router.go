@@ -1,28 +1,22 @@
-package router
+package gatewayWeb
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"strings"
-	"vehicleLicensePlateRecognitionGateway/gatawayWeb/controller"
-
-	"github.com/gin-gonic/gin"
-	//swaggerFiles "github.com/swaggo/files"
-	//ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func RouteInit(IpAddress string) {
 	logrus.Print("服务端 IpAddress：", IpAddress)
 	router := gin.New()
 	router.Use(Cors()) //跨域资源共享
-
-	//url := ginSwagger.URL("http://127.0.0.1:8077/swagger/doc.json")
-	//router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
-
 	apiV1 := router.Group("/vehicleLicensePlateRecognitionGateway/api/v1")
 	APIV1Init(apiV1)
 
+	gwApi := router.Group("/vehicleLicensePlateRecognitionGateway/api/v1/gw")
+	GwApiV1Init(gwApi)
 	http.Handle("/", router)
 	gin.SetMode(gin.ReleaseMode)
 
@@ -36,13 +30,21 @@ func APIV1Init(route *gin.RouterGroup) {
 	AuthAPIInit(route)
 }
 
+func GwApiV1Init(route *gin.RouterGroup) {
+	AuthAPIInit(route)
+}
+
 func AuthAPIInit(route *gin.RouterGroup) {
 	//用户注册
 	//route.POST("/user/register", controller.Register)
 	//用户登录
 	//route.GET("/user/imagecaptcha", controller.Imagecaptcha)
-	route.POST("/user/login", controller.Login)
+	route.POST("/user/login", Login)
 
+	//Gataway
+	route.GET("/gatewaybasicdata", GatewayBasicDataQuery)
+	route.GET("/gatewaydynamicdata", GatewayDynamicDataQuery)
+	route.GET("/camerainfodata", CameraInfoDataQuery)
 }
 
 //以下为cors实现
