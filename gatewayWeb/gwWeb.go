@@ -20,7 +20,7 @@ func GatawayWeb() {
 
 	RouteInit(IpAddress)
 
-	tiker := time.NewTicker(time.Second * 15) //每15秒执行一下
+	tiker := time.NewTicker(time.Minute * 30) //每15秒执行一下
 	for {
 		<-tiker.C
 		log.Println("gwWeb程序")

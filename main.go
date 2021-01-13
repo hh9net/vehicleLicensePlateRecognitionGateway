@@ -39,7 +39,7 @@ func Init() {
 	service.StatisticalReportIpAddress = conf.StatisticalReportIpAddress
 	service.MainStartTime = time.Now().Format("2006-01-02 15:04:05")
 	//作为一个每次发布的一个版本记录
-	service.MainVersion = "2021-01-12T17h30m00s_build"
+	service.MainVersion = "2021-01-13T14h30m00s_build"
 	vs := "\n" + service.MainVersion + ""
 	service.VersionFile(vs)
 
@@ -74,7 +74,7 @@ func main() {
 
 	go web.GatawayWeb()
 
-	tiker := time.NewTicker(time.Minute * 5) //每15秒执行一下
+	tiker := time.NewTicker(time.Minute * 10) //每15秒执行一下
 	for {
 		log.Println("主go程执行 抓拍进程管理程序 OK呢！")
 		<-tiker.C

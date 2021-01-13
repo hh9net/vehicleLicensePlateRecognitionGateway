@@ -1790,7 +1790,7 @@ func HandleDayTasks() {
 		AgainCount = 0
 		ResultOKCount = 0
 		//	log.Println("执行重置OSS上传数量与抓拍结果上传数量OSSCount, ResultCount,AgainCount ,ResultOKCount：", OSSCount, ResultCount, AgainCount, ResultOKCount, time.Now().Format("2006-01-02T15:04:05"))
-		content = "重新计数时间:" + time.Now().Format("2006-01-02T15:04:05")
+		content = "\n重新计数时间:" + time.Now().Format("2006-01-02T15:04:05")
 		StatisticalFile(content)
 		//删除前几天日期文件夹中为空的文件夹
 		log.Println("执行删除前几天日期文件夹中为空的文件夹", time.Now())
