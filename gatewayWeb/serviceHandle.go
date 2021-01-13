@@ -40,33 +40,29 @@ func QueryGatewayDynamicData() (int, error, *GatewayDynamicDataResp) {
 
 //查询摄像头基本信息列表查询
 func QueryCameraInfoData() (int, error, *[]CameraInfo) {
-	cameraInfo := new(CameraInfo)
-	cameraInfo.CameraId = "bbbbb"                         //1、摄像头id
-	cameraInfo.BrandName = "HIk"                          //2、品牌名称
-	cameraInfo.CameraIMGCnt = 666                         //3、抓拍统计图片的数量
-	cameraInfo.LatestSnapshotTime = "2021-01-12 12:12:12" //4、最近抓拍时间
-	cameraInfo.MainrestartCnt = 0                         //5、进程重启次数
-	l := ""
-	switch Gatewaylocation {
-	case "1":
-		l = "门架"
-	case "2":
-		l = "服务区"
-	case "3":
-		l = "收费站"
-	}
-	cameraInfo.Location = l + "|紫东A区" //6、所在位置 1门架、2、服务区 3、收费站
-	//	CameraInfosResp := make(map[string]CameraInfo, service.CameraCount)
 	Resp := make([]CameraInfo, service.CameraCount)
-	for i, _ := range Resp {
-		Resp[i] = *cameraInfo
-		cameraInfo.CameraIMGCnt = cameraInfo.CameraIMGCnt + 100
-	}
+	for id, cmeraid := range service.Cmeraid {
+		i := 0
+		cameraInfo := new(CameraInfo)
+		cameraInfo.CameraId = cmeraid                                  //1、摄像头id
+		cameraInfo.BrandName = service.EngineId[id]                    //2、品牌名称
+		cameraInfo.CameraIMGCnt = service.CmeraCapCnt[id]              //3、抓拍统计图片的数量
+		cameraInfo.LatestSnapshotTime = service.LatestSnapshotTime[id] //4、最近抓拍时间
 
-	//获取数据
-	//for k, v := range CameraInfosResp {
-	//	CameraInfosResp[]
-	//}
+		cameraInfo.MainrestartCnt = 0 //5、进程重启次数
+		l := ""
+		switch Gatewaylocation {
+		case "1":
+			l = "门架"
+		case "2":
+			l = "服务区"
+		case "3":
+			l = "收费站"
+		}
+		cameraInfo.Location = l + service.Name[id] //6、所在位置 1门架、2、服务区 3、收费站
+		Resp[i] = *cameraInfo
+		i = i + 1
+	}
 
 	//返回数据
 	return StatusSuccessfully, nil, &Resp

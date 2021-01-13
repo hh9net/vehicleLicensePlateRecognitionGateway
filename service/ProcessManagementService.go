@@ -45,13 +45,18 @@ var (
 	ResultOKCount int //
 	AgainCount    int //二次上传成功的数量
 
-	Deviceid                 string //网关设备id Token
-	StationId                map[string]string
-	DeviceId                 map[string]string
-	CmeraId                  map[string]string
+	Deviceid  string //网关设备id Token
+	StationId map[string]string
+	DeviceId  map[string]string
+
 	LaneType                 map[string]string
 	ImageType                map[string]string
+	Name                     map[string]string
+	CmeraId                  map[string]string
+	Cmeraid                  map[string]string
 	EngineId                 map[string]string
+	CmeraCapCnt              map[string]int
+	LatestSnapshotTime       map[string]string
 	Token                    string
 	NewDataNotificationCount int //新数据通知
 	// HasUploadFile []string
@@ -122,8 +127,12 @@ CmlistQ:
 	StationId = make(map[string]string, len(CameraList.Data))
 	LaneType = make(map[string]string, len(CameraList.Data))
 	ImageType = make(map[string]string, len(CameraList.Data))
-	EngineId = make(map[string]string, len(CameraList.Data))
+	Name = make(map[string]string, len(CameraList.Data))
 	CmeraId = make(map[string]string, len(CameraList.Data))
+	EngineId = make(map[string]string, len(CameraList.Data))
+	Cmeraid = make(map[string]string, len(CameraList.Data))
+	CmeraCapCnt = make(map[string]int, len(CameraList.Data))
+	LatestSnapshotTime = make(map[string]string, len(CameraList.Data))
 	Pid = make(map[string]string, len(CameraList.Data))
 	log.Println(" 相机列表数据的len:", len(CameraList.Data))
 	log.Println(" 相机列表数据:", CameraList.Data)
@@ -138,6 +147,8 @@ CmlistQ:
 		DeviceId[cmera.Id] = cmera.Gantryid //deviceid应该用gantryID
 		LaneType[cmera.Id] = cmera.LaneType
 		ImageType[cmera.Id] = cmera.Description
+		Name[cmera.Id] = cmera.Name //入口004
+		Cmeraid[cmera.Id] = cmera.Id
 		EngineId[cmera.Id] = cmera.DevCompId //相机品牌
 
 		log.Println(i, "StationId:", StationId[cmera.Id], cmera.StationId)

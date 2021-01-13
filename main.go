@@ -68,7 +68,7 @@ func main() {
 	//goroutine5 定时20秒网关上报自身状态、摄像机状态状态至平台
 	go service.StatisticalReport()
 	//goroutine6 网关每隔10分钟轮询请求服务器的版本
-	go service.VersionQeq()
+	//	go service.VersionQeq()
 	//goroutine7 凌晨零点清零
 	go service.HandleDayZeroTasks()
 

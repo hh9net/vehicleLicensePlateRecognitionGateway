@@ -8,7 +8,7 @@ import (
 )
 
 func GatawayWeb() {
-	GatawayWebData()
+	//GatawayWebData()
 	conf := ConfigInit() //初始化配置文件
 	log.Println("GatawayWeb 配置文件信息：", *conf)
 	utils.InitLogrus(conf.WebLogPath, conf.WebLogFileName, time.Duration(24*conf.WebLogMaxAge)*time.Hour, conf.WebLogRotationSize, time.Duration(conf.WebLogRotationTime)*time.Hour, conf.WebRotationCount)

@@ -132,14 +132,14 @@ func StatisticalReport() {
 
 //网关每隔10分钟轮询请求服务器的版本
 func VersionQeq() {
-	tiker := time.NewTicker(time.Minute * 3) //暂时3分钟
+	tiker := time.NewTicker(time.Minute * 10) //暂时3分钟
 	for {
 		<-tiker.C
 		vs := new(dto.VersionQeq)
-		vs.GatewayId = "" //1	gatewayId		网关id
-		vs.Curver = ""    //2	curver	v1.0.21_20201221gateway	版本号
-		vs.CurverNum = 0  //3	curverNum	21	数字版本号，打包一次版本号+1
-		vs.ReqTime = ""   //4	reqTime	2020-02-04 15:01:04	版本请求时间
+		vs.GatewayId = Deviceid //1	gatewayId		网关id
+		vs.Curver = ""          //2	curver	v1.0.21_20201221gateway	版本号
+		vs.CurverNum = 0        //3	curverNum	21	数字版本号，打包一次版本号+1
+		vs.ReqTime = ""         //4	reqTime	2020-02-04 15:01:04	版本请求时间
 		qverr := VersionQeqUploadPostWithJson(vs)
 		if qverr != nil {
 			log.Println(qverr)
@@ -217,9 +217,13 @@ func Camrpt(data *dto.StatusResult) {
 	Camerastudata.CamStatus = data.CamStatus               //8	camStatus	0	摄像机状态 0 : 正常； -1: 连接摄像机网络失败； -2：摄像机注册/登陆失败； -3：摄像机异常(接口返回)； -4：24小时无数据；
 	Camerastudata.CamStatusDes = data.CamStatusDes         //9	camStatusDes	正常	摄像机状态描述
 	Camerastudata.ReConnCnt = data.ReConnCnt               //10	reConnCnt	15	进程启动到目前为止，网络重连次数
-	Camerastudata.CapCnt = data.CapCnt                     //11	capCnt	1221	启动后摄像机抓拍总和
-	Camerastudata.CapZeroCnt = data.CapZeroCnt             //12	capZeroCnt	112	启动后每日零时统计的总和
-	Camerastudata.LastCaptime = data.LastCaptime           //13	lastCaptime	2020-05-10 15:01:02	最近一次抓拍的时间
+
+	Camerastudata.CapCnt = data.CapCnt //11	capCnt	1221	启动后摄像机抓拍总和
+	CmeraCapCnt[CameraId] = data.CapCnt
+	Camerastudata.CapZeroCnt = data.CapZeroCnt //12	capZeroCnt	112	启动后每日零时统计的总和
+
+	LatestSnapshotTime[CameraId] = data.LastCaptime
+	Camerastudata.LastCaptime = data.LastCaptime //13	lastCaptime	2020-05-10 15:01:02	最近一次抓拍的时间
 
 	//上报数据
 	log.Println("摄像机上报数据:", Camerastudata)
