@@ -229,12 +229,7 @@ func Camrpt(data *dto.StatusResult) {
 	log.Println("摄像机上报数据:", Camerastudata)
 	sbaoerr := CameraStuUploadPostWithJson(Camerastudata)
 	if sbaoerr != nil {
-		log.Println(sbaoerr)
+		//已经打印了不要重复记录 log.Println(sbaoerr)
 		return
 	}
-}
-
-//有异常就上报
-func Excprpt() {
-
 }

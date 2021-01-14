@@ -14,13 +14,16 @@ import (
 
 func Init() {
 	conf := config.ConfigInit() //初始化配置文件
-	log.Println("配置文件信息：", *conf)
+
 	//初始化日志
 	utils.InitLogrus(conf.LogPath, conf.LogFileName, time.Duration(24*conf.LogMaxAge)*time.Hour, conf.LogRotationSize, time.Duration(conf.LogRotationTime)*time.Hour, conf.RotationCount)
+	log.Println("main配置文件信息：", *conf)
 	service.DelcameraConfigDir() //删除旧cameraConfigDir文件夹
 
 	//
 	go func() {
+		//本机ip
+		//http://192.168.128.99:3020/debug/pprof/
 		Listenerr := http.ListenAndServe("0.0.0.0:3020", nil)
 		if Listenerr != nil {
 			//进程互斥
@@ -39,7 +42,7 @@ func Init() {
 	service.StatisticalReportIpAddress = conf.StatisticalReportIpAddress
 	service.MainStartTime = time.Now().Format("2006-01-02 15:04:05")
 	//作为一个每次发布的一个版本记录
-	service.MainVersion = "2021-01-13T14h30m00s_build"
+	service.MainVersion = "2021-01-14T17h30m00s_build" + "｜启动时间:" + service.MainStartTime
 	vs := "\n" + service.MainVersion + ""
 	service.VersionFile(vs)
 
@@ -71,12 +74,14 @@ func main() {
 	//	go service.VersionQeq()
 	//goroutine7 凌晨零点清零
 	go service.HandleDayZeroTasks()
+	//goroutine8 再次上传3图车型
+	go service.HandleSignalwayNewOssAgainUpload()
 
 	go web.GatawayWeb()
 
 	tiker := time.NewTicker(time.Minute * 10) //每15秒执行一下
 	for {
-		log.Println("主go程执行 抓拍进程管理程序 OK呢！")
+		log.Println("主go程执行 抓拍进程管理程序main OK呢！")
 		<-tiker.C
 
 	}

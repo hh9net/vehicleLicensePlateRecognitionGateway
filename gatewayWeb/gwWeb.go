@@ -4,15 +4,13 @@ import (
 	log "github.com/sirupsen/logrus"
 	"time"
 	"vehicleLicensePlateRecognitionGateway/service"
-	"vehicleLicensePlateRecognitionGateway/utils"
 )
 
 func GatawayWeb() {
 	//GatawayWebData()
 	conf := ConfigInit() //初始化配置文件
+	//utils.InitLogrus(conf.WebLogPath, conf.WebLogFileName, time.Duration(24*conf.WebLogMaxAge)*time.Hour, conf.WebLogRotationSize, time.Duration(conf.WebLogRotationTime)*time.Hour, conf.WebRotationCount)
 	log.Println("GatawayWeb 配置文件信息：", *conf)
-	utils.InitLogrus(conf.WebLogPath, conf.WebLogFileName, time.Duration(24*conf.WebLogMaxAge)*time.Hour, conf.WebLogRotationSize, time.Duration(conf.WebLogRotationTime)*time.Hour, conf.WebRotationCount)
-
 	IpAddress := conf.IpAddress
 
 	UserName = conf.UserName
@@ -20,7 +18,7 @@ func GatawayWeb() {
 
 	RouteInit(IpAddress)
 
-	tiker := time.NewTicker(time.Minute * 30) //每15秒执行一下
+	tiker := time.NewTicker(time.Second * 20) //此处被阻塞了
 	for {
 		<-tiker.C
 		log.Println("gwWeb程序")

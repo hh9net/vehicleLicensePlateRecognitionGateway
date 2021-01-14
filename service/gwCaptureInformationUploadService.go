@@ -23,10 +23,7 @@ func GwCaptureInformationUploadPostWithXML(data *[]byte) (*dto.ResultRespXML, er
 	if err != nil {
 		log.Println("post请求指标信息查询接口失败:", err)
 		return nil, err
-	} else {
-		log.Println("")
 	}
-
 	body, _ := ioutil.ReadAll(resp.Body)
 	Resp := new(dto.ResultRespXML)
 	log.Println("前置机抓拍信息上传接口调用OK,前置机抓拍信息上传接口返回body OK")
@@ -46,7 +43,7 @@ func GwCaptureInformationUploadPostWithXML(data *[]byte) (*dto.ResultRespXML, er
 
 //2.获取token
 func GetToken(deviceid string) (*dto.GetTokenRespXML, error) {
-	log.Println("Gettoken + deviceid：", Gettoken+deviceid)
+	log.Println("Gettoken + deviceid:", Gettoken+deviceid)
 	//http://172.31.49.252/processor-control/collect/token/fe0442b5-2d40-486f-9682-d1043ceca4e5
 	resp, err := http.Get(Gettoken + deviceid)
 	if err != nil {
@@ -82,21 +79,16 @@ func GetCameraList(token string) (*dto.GetCameraList, error) {
 		log.Println("GetCameraList http error!:", err)
 		return nil, err
 	}
-
 	defer func() {
 		_ = resp.Body.Close()
 	}()
-
 	body, _ := ioutil.ReadAll(resp.Body)
-
 	Resp := new(dto.GetCameraList)
 	unmerr := xml.Unmarshal(body, &Resp)
 	if unmerr != nil {
 		log.Println("根据token获取camera列表 xml.Unmarshal error:", unmerr)
-		log.Println("body:", string(body))
+		log.Println("根据token获取camera列表 body:", string(body))
 		return nil, unmerr
 	}
-
-	log.Println("Post request GetCameraList  with  xml result:", len(Resp.Data), Resp.Data[0].Name)
 	return Resp, nil
 }

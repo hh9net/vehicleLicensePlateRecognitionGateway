@@ -1,6 +1,6 @@
 [COMMON]
 ;日志配置
-;[logconf]
+;[weblogconf]
 weblog_maxAge       = 7 ;//日志最大保存时间（天）
 weblog_rotationTime = 24  ;//日志切割时间间隔（小时）
 weblog_rotationCount = 5  ;//
@@ -17,12 +17,14 @@ password        =admin
 
 ;网关位置 1门架、2、服务区 3、收费站
 gatewaylocation="2";
+
+
 ;日志配置
 ;[logconf]
-log_maxAge       = 7 ;//日志最大保存时间（天）
-log_rotationTime = 24  ;//日志切割时间间隔（小时）
+log_maxAge       = 1 ;//日志最大保存时间（天）
+log_rotationTime = 12  ;//日志切割时间间隔（小时）
 log_rotationCount = 5  ;//
-log_rotationSize = 1000000000;   ;//10M[10485760] 日志切割时间间隔（["104857600" //100M] ["1048576" //1M] ["102400" //100K] ["1024" //1KB]    1kB ）
+log_rotationSize = 104857600;   ;//10M[10485760] 日志切割时间间隔（["104857600" //100M] ["1048576" //1M] ["102400" //100K] ["1024" //1KB]    1kB ）
 log_Path         = "./log"
 log_FileName     = "vehicleLicensePlateRecognition.log"
 

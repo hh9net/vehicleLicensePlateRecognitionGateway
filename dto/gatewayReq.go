@@ -169,6 +169,7 @@ type TBXJVehicleInfo struct {
 //车牌抓拍的结果xml
 type CaptureDateXML struct {
 	XMLName         xml.Name `xml:"PlateInfo"`
+	BrandName       string   `xml:"brandName"`       //品牌名称 SignalwayNew
 	PassId          string   `xml:"passId"`          //<passId>sxjgl_yzjtd_320200_G2_K1071_2_0_004_20201124_000031</passId>
 	CamId           string   `xml:"camId"`           //<camId>sxjgl_yzjtd_320200_G2_K1071_2_0_004</camId>摄像机编号
 	PassTime        string   `xml:"passTime"`        //<passTime>2020-11-24 14:35:17</passTime>
