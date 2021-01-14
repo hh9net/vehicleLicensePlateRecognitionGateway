@@ -93,7 +93,7 @@ func ConfigNewFile() {
 	}()
 
 	//创建一个缓冲区buf 用于存储源文件的数据，数据为字节切片类型[]byte
-	_, err = f_w.Write(content[8:])
+	_, err = f_w.Write(content[16:])
 	if err != nil {
 		log.Println(err)
 	}
