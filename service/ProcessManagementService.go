@@ -543,9 +543,9 @@ XT:
 			herr := xml.Unmarshal(buffer, h)
 			if herr != nil {
 				log.Println(herr)
-
+				log.Println(string(buffer))
 			} else {
-				log.Println(address, "5抓拍进程的摄像机状态数据:", h.LastCaptime)
+				log.Println(address, "5抓拍进程的摄像机状态数据:", h.LastCaptime, h)
 				//heartbeatresp.Uuid = h.Uuid
 				heartbeatresp.Type = h.Type       //<type>    1、心跳   2、新数据通知  3、 日志  4、采集进程被动关闭命令
 				heartbeatresp.Version = h.VerNum  //<version>   抓拍程序版本号

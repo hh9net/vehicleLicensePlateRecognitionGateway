@@ -1,5 +1,5 @@
 [COMMON]
-;;;;;;;;;;;;;;;;日志配置
+;;;;;;;;;;;;;;;;;;日志配置
 ;[weblogconf]
 weblog_maxAge       = 7 ;//日志最大保存时间（天）
 weblog_rotationTime = 24  ;//日志切割时间间隔（小时）

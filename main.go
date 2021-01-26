@@ -42,7 +42,7 @@ func Init() {
 	service.StatisticalReportIpAddress = conf.StatisticalReportIpAddress
 	service.MainStartTime = time.Now().Format("2006-01-02 15:04:05")
 	//作为一个每次发布的一个版本记录
-	service.MainVersion = "2021-01-14T17h30m00s_build" + "｜启动时间:" + service.MainStartTime
+	service.MainVersion = "2021-01-20T19h30m00s_build" + "｜启动时间:" + service.MainStartTime
 	vs := "\n" + service.MainVersion + ""
 	service.VersionFile(vs)
 
@@ -59,23 +59,23 @@ func main() {
 	Init()
 	//进程管理
 	service.ProcessManagementService()
-	//goroutine1
-	//开线程读取xml文件 上传图片到oss  上传抓拍结果到车牌识别云端服务器
-	go service.UploadFile()
-	//goroutine2
-	go service.HandleDayTasks()
-	//goroutine3 抓拍结果再次上传
-	go service.HandleFileAgainUpload()
-	//goroutine4 OssError中抓拍结果再次上传
-	go service.HandleOssAgainUpload()
-	//goroutine5 定时20秒网关上报自身状态、摄像机状态状态至平台
-	go service.StatisticalReport()
-	//goroutine6 网关每隔10分钟轮询请求服务器的版本
-	//	go service.VersionQeq()
-	//goroutine7 凌晨零点清零
-	go service.HandleDayZeroTasks()
-	//goroutine8 再次上传3图车型
-	go service.HandleSignalwayNewOssAgainUpload()
+	////goroutine1
+	////开线程读取xml文件 上传图片到oss  上传抓拍结果到车牌识别云端服务器
+	//go service.UploadFile()
+	////goroutine2
+	//go service.HandleDayTasks()
+	////goroutine3 抓拍结果再次上传
+	//go service.HandleFileAgainUpload()
+	////goroutine4 OssError中抓拍结果再次上传
+	//go service.HandleOssAgainUpload()
+	////goroutine5 定时20秒网关上报自身状态、摄像机状态状态至平台
+	//go service.StatisticalReport()
+	////goroutine6 网关每隔10分钟轮询请求服务器的版本
+	////	go service.VersionQeq()
+	////goroutine7 凌晨零点清零
+	//go service.HandleDayZeroTasks()
+	////goroutine8 再次上传3图车型
+	//go service.HandleSignalwayNewOssAgainUpload()
 
 	go web.GatawayWeb()
 

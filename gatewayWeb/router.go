@@ -12,10 +12,10 @@ func RouteInit(IpAddress string) {
 	logrus.Print("gwWeb服务端 IpAddress：", IpAddress)
 	router := gin.New()
 	router.Use(Cors()) //跨域资源共享
-	apiV1 := router.Group("/vehicleLicensePlateRecognitionGateway/api/v1")
+	apiV1 := router.Group("/vpGateWay/api/v1")
 	APIV1Init(apiV1)
 
-	gwApi := router.Group("/vehicleLicensePlateRecognitionGateway/api/v1/gw")
+	gwApi := router.Group("/vpGateWay/api/v1/gw")
 	GwApiV1Init(gwApi)
 	http.Handle("/", router)
 	gin.SetMode(gin.ReleaseMode)

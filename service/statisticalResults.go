@@ -277,7 +277,6 @@ func StatisticalFile(content string) {
 }
 
 func VersionFile(content string) {
-
 	if _, err := os.Stat("./MainVersion/"); err == nil {
 		log.Println("path exists 1", "./MainVersion/")
 	} else {
