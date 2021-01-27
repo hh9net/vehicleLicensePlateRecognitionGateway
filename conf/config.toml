@@ -9,7 +9,7 @@ weblog_Path         = "./log"
 weblog_FileName     = "gwWeb.log"
 
 ;[ip_address]
-ip_address          ="127.0.0.1:3021"
+ip_address          ="192.168.128.99:3021"
 
 ;用户登陆
 user_name       =admin

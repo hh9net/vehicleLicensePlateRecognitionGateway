@@ -118,7 +118,7 @@ CmlistQ:
 	}
 
 	CameraCount = len(CameraList.Data)
-	log.Println(" 相机列表数据的len:", 0)
+	log.Println(" 相机列表数据的len:", CameraCount)
 	log.Println(" 相机列表数据:", CameraList.Data)
 
 	DeviceId = make(map[string]string, 0)
