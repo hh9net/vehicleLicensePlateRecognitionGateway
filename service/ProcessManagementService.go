@@ -225,43 +225,45 @@ CmlistQ:
 		return
 	}
 
-	YSconfdata := new(MoreToMoreConfig)
-	//多对多启动
-	P = P + 2
-	YSconfdata.Uuid = UNIVIEW + "+" + strconv.Itoa(P) //方便确定是哪一个进程发出的数据 我取品牌名称+进程端口号
-	YSconfdata.Udplistenport = P                      //我向进程拨号的端口号
-	YSconfdata.Udptxport = P - 1                      // 进程向我拨号的的端口
+	if len(uniview) != 0 {
+		YSconfdata := new(MoreToMoreConfig)
+		//多对多启动
+		P = P + 2
+		YSconfdata.Uuid = UNIVIEW + "+" + strconv.Itoa(P) //方便确定是哪一个进程发出的数据 我取品牌名称+进程端口号
+		YSconfdata.Udplistenport = P                      //我向进程拨号的端口号
+		YSconfdata.Udptxport = P - 1                      // 进程向我拨号的的端口
 
-	for _, ys := range uniview {
-		YSconfdata.DevCompId = ys.DevCompId //品牌名称
-		devdata := new(MoreToMoreConfigDev)
+		for _, ys := range uniview {
+			YSconfdata.DevCompId = ys.DevCompId //品牌名称
+			devdata := new(MoreToMoreConfigDev)
 
-		devdata.Id = ys.Id
-		devdata.DevIp = ys.DevIp
-		devdata.Port = ys.Port
-		devdata.UserName = ys.UserName
-		devdata.Password = ys.Password
+			devdata.Id = ys.Id
+			devdata.DevIp = ys.DevIp
+			devdata.Port = ys.Port
+			devdata.UserName = ys.UserName
+			devdata.Password = ys.Password
 
-		YSconfdata.Devlist.Dev = append(YSconfdata.Devlist.Dev, *devdata)
-		Chan := new(MoreToMoreConfigChannel)
-		Chan.Id = ys.Id
-		Chan.Index = ys.Channel
-		YSconfdata.Channellist.Channel = append(YSconfdata.Channellist.Channel, *Chan)
+			YSconfdata.Devlist.Dev = append(YSconfdata.Devlist.Dev, *devdata)
+			Chan := new(MoreToMoreConfigChannel)
+			Chan.Id = ys.Id
+			Chan.Index = ys.Channel
+			YSconfdata.Channellist.Channel = append(YSconfdata.Channellist.Channel, *Chan)
+		}
+		CmeraId[strconv.Itoa(P)] = YSconfdata.Uuid
+		YSConfigfname := ""
+		//宇视生成xml配置文件
+		ysfname := generateYSConfig(YSconfdata)
+		if ysfname != "" {
+			YSConfigfname = ysfname
+			//启动宇视的程序
+			go Runmain(YSConfigfname)
+
+		} else {
+			log.Println("宇视生成xml配置文件为空,YSConfigfname:", YSConfigfname)
+			return
+		}
+		//time.Sleep(time.Minute * 1)
 	}
-	CmeraId[strconv.Itoa(P)] = YSconfdata.Uuid
-	YSConfigfname := ""
-	//宇视生成xml配置文件
-	ysfname := generateYSConfig(YSconfdata)
-	if ysfname != "" {
-		YSConfigfname = ysfname
-		//启动宇视的程序
-		go Runmain(YSConfigfname)
-
-	} else {
-		log.Println("宇视生成xml配置文件为空,YSConfigfname:", YSConfigfname)
-		return
-	}
-	//time.Sleep(time.Minute * 1)
 
 	if len(hikITS) == 0 {
 		log.Println("该网关设备没有海康ITS相机")
